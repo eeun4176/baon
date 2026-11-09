@@ -1,24 +1,44 @@
+/*
+ * index.css — Global styles for Baon.
+ * Loads Tailwind, the Nunito font, and the design tokens from plan §12.2.
+ * Tokens become Tailwind utilities, e.g. --color-ink → `text-ink`, `bg-ink`.
+ */
 @import "tailwindcss";
+
+/* Nunito weights used by the design (600 body, 800 labels, 900 titles/money).
+   Each file loads only the character subsets a page actually uses;
+   ₱ (U+20B1) lives in the latin-ext subset. */
 @import "@fontsource/nunito/600.css";
 @import "@fontsource/nunito/800.css";
 @import "@fontsource/nunito/900.css";
 
 @theme {
-  /* Set Nunito as the default sans font */
+  /* Nunito is the only typeface (plan §12.2) */
   --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
 
-  /* §12.2 Color Tokens — replace placeholder hexes with your spec values */
-  --color-brand-primary: #1E5EFF;
-  --color-surface-bg: #F3F4F4;
-  --color-surface-card: #FFFFFF;
-  --color-text-primary: #111827;
-  --color-text-muted: #6B7280;
+  /* Color tokens — values from plan §12.2 */
+  --color-ink: #1d1f1e;       /* text, dark hero cards, selected chips, "over" map cells */
+  --color-blue: #1e5eff;      /* primary buttons, (+) button, streak, active nav, links */
+  --color-page: #f3f4f4;      /* app background */
+  --color-card: #ffffff;      /* cards, nav pill */
+  --color-pebble: #eeefef;    /* secondary pills, chips */
+  --color-pebble-2: #e6e7e7;  /* keypad tray */
+  --color-blue-tint: #e8efff; /* active nav item, soft badges */
+  --color-muted: #5f6361;     /* secondary text (passes 4.5:1 on page and white) */
+  --color-coin: #ffc94d;      /* logo only */
+
+  /* Spending map scale (plan §5.1): none → light → mid → full, plus over */
+  --color-map-0: #e3e4e4;
+  --color-map-1: #c9d8ff;
+  --color-map-2: #86a8ff;
+  --color-map-3: #1e5eff;
+  --color-map-over: #1d1f1e;
 }
 
 @layer base {
   body {
-    background-color: var(--color-surface-bg);
-    color: var(--color-text-primary);
+    background-color: var(--color-page);
+    color: var(--color-ink);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
