@@ -1,0 +1,25 @@
+@import "tailwindcss";
+@import "@fontsource/nunito/600.css";
+@import "@fontsource/nunito/800.css";
+@import "@fontsource/nunito/900.css";
+
+@theme {
+  /* Set Nunito as the default sans font */
+  --font-sans: "Nunito", ui-sans-serif, system-ui, sans-serif;
+
+  /* §12.2 Color Tokens — replace placeholder hexes with your spec values */
+  --color-brand-primary: #1E5EFF;
+  --color-surface-bg: #F3F4F4;
+  --color-surface-card: #FFFFFF;
+  --color-text-primary: #111827;
+  --color-text-muted: #6B7280;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-surface-bg);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
