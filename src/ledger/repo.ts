@@ -3,7 +3,7 @@
  * Every record is checked with Zod on the way in AND on the way out (plan §8:
  * "validate decrypted payloads"), so a corrupted or tampered record can't reach the math.
  */
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import type { Vault } from '../vault/vault.ts'
 import { checkTransaction, TransactionSchema, WalletSchema, type Transaction, type Wallet } from './ledger.ts'
 

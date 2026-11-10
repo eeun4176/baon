@@ -13,28 +13,33 @@
  *   save      spending −, savings +   (shown as "Saved", not spending)
  *   withdraw  savings −, spending +
  */
-import { z } from 'zod'
+// zod/mini: same checks as full Zod at ~6 KB instead of ~30+ KB (plan C4: small bundle).
+// Rules are written as .check(...) instead of chained methods.
+import * as z from 'zod/mini'
+
+/** A non-empty id string. */
+const id = () => z.string().check(z.minLength(1))
 
 /** Spending wallets count toward safe-to-spend; savings wallets never do. */
 export const WalletSchema = z.object({
-  id: z.string().min(1),
-  name: z.string().trim().min(1).max(40),
+  id: id(),
+  name: z.string().check(z.trim(), z.minLength(1), z.maxLength(40)),
   type: z.enum(['spending', 'savings']),
-  openingCentavos: z.int().min(0), // what the student had when the wallet was added
+  openingCentavos: z.int().check(z.minimum(0)), // what the student had when the wallet was added
   archived: z.boolean(),
 })
 export type Wallet = z.infer<typeof WalletSchema>
 
 export const TransactionSchema = z.object({
-  id: z.string().min(1),
+  id: id(),
   kind: z.enum(['expense', 'refund', 'income', 'transfer', 'save', 'withdraw']),
-  amountCentavos: z.int().positive(),
-  walletId: z.string().min(1), // the wallet money leaves (or arrives in, for income/refund)
-  toWalletId: z.string().min(1).optional(), // only for transfer/save/withdraw
-  categoryId: z.string().optional(), // expenses (and refunds) only
+  amountCentavos: z.int().check(z.positive()),
+  walletId: id(), // the wallet money leaves (or arrives in, for income/refund)
+  toWalletId: z.optional(id()), // only for transfer/save/withdraw
+  categoryId: z.optional(z.string()), // expenses (and refunds) only
   occurredAt: z.iso.datetime({ offset: true }), // when it happened; days are cut in Asia/Manila
-  note: z.string().max(200).optional(),
-  linkedId: z.string().optional(), // refund → original expense; paid school expense → its plan item
+  note: z.optional(z.string().check(z.maxLength(200))),
+  linkedId: z.optional(z.string()), // refund → original expense; paid school expense → its plan item
 })
 export type Transaction = z.infer<typeof TransactionSchema>
 

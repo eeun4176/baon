@@ -3,19 +3,19 @@
  * how much, how often, when the next one comes, and which days are class days.
  * Stored encrypted in the vault as a single record.
  */
-import { z } from 'zod'
+import * as z from 'zod/mini'
 import type { Vault } from '../vault/vault.ts'
 import { addDays, addMonth } from './days.ts'
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
 export const AllowanceSchema = z.object({
-  amountCentavos: z.int().min(0), // usual amount, prefilled in "Did your baon arrive?"
+  amountCentavos: z.int().check(z.minimum(0)), // usual amount, prefilled in "Did your baon arrive?"
   frequency: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'irregular']),
   // Next expected allowance (Manila day). For "irregular" it's the "make it last until" date.
-  nextDate: z.string().regex(DAY),
+  nextDate: z.string().check(z.regex(DAY)),
   countClassDays: z.boolean(),
-  classWeekdays: z.array(z.int().min(0).max(6)), // 0 = Sunday … 6 = Saturday
+  classWeekdays: z.array(z.int().check(z.minimum(0), z.maximum(6))), // 0 = Sunday … 6 = Saturday
 })
 export type Allowance = z.infer<typeof AllowanceSchema>
 
