@@ -1,14 +1,33 @@
 /*
- * session.ts — The unlocked account, shared with every screen through React context
- * so pages don't pass the vault around by hand. Holds only the vault handle
- * (which keeps the key in memory) and the display name — nothing is persisted.
+ * session.ts — The unlocked account, shared with every screen through React context.
+ * Records are decrypted ONCE when the app opens and kept in memory (never persisted
+ * in plain text); saving or undoing updates every screen at once (plan §8 "State:
+ * UI + unlocked session only"). The provider lives in shell/SessionProvider.tsx.
  */
 import { createContext, useContext } from 'react'
+import type { Allowance } from './budget/allowance.ts'
+import type { Transaction, Wallet } from './ledger/ledger.ts'
 import type { Vault } from './vault/vault.ts'
+
+/** A short message at the bottom of the screen, optionally with Undo (plan §4.2: 5 s). */
+export interface Toast {
+  message: string
+  undo?: () => void
+}
 
 export interface Session {
   vault: Vault
   name: string
+  wallets: Wallet[]
+  transactions: Transaction[] // oldest first
+  allowance: Allowance
+  /** Validates, encrypts and saves a transaction; throws a friendly message if a rule is broken. */
+  addTransaction(tx: Transaction): Promise<void>
+  /** Deletes a transaction (Undo, delete in History). */
+  removeTransaction(id: string): Promise<void>
+  toast: Toast | null
+  showToast(toast: Toast): void
+  dismissToast(): void
 }
 
 export const SessionContext = createContext<Session | null>(null)

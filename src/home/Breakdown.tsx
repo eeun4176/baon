@@ -68,21 +68,18 @@ export function Breakdown() {
         <Link to="/" className="grid min-h-11 place-items-center rounded-full bg-card px-5 font-black">Done</Link>
       </div>
 
-      {t === null && <p role="alert" className="mt-6 font-bold">Couldn’t open your records.</p>}
-      {t && (
-        <div className="mx-auto mt-6 max-w-xl space-y-3">
-          <section className="rounded-[30px] bg-ink p-6 text-center text-white">
-            <p className="font-extrabold text-white/70">Safe to spend today</p>
-            <BigMoney centavos={t.result.dailyBudget} className="mt-1 block text-[clamp(3.5rem,20vw,5.25rem)]" />
-            <p className="mt-2 mb-5 text-lg font-extrabold text-white/70">{divisionText(t)}</p>
-            <DayPills t={t} dark />
-          </section>
-          <MoneyTiles t={t} />
-          <p className="px-4 pt-6 text-center font-semibold text-muted">
-            Savings aren’t counted. Spend a bit more today and tomorrow’s budget adjusts on its own.
-          </p>
-        </div>
-      )}
+      <div className="mx-auto mt-6 max-w-xl space-y-3">
+        <section className="rounded-[30px] bg-ink p-6 text-center text-white">
+          <p className="font-extrabold text-white/70">Safe to spend today</p>
+          <BigMoney centavos={t.result.dailyBudget} className="mt-1 block text-[clamp(3.5rem,20vw,5.25rem)]" />
+          <p className="mt-2 mb-5 text-lg font-extrabold text-white/70">{divisionText(t)}</p>
+          <DayPills t={t} dark />
+        </section>
+        <MoneyTiles t={t} />
+        <p className="px-4 pt-6 text-center font-semibold text-muted">
+          Savings aren’t counted. Spend a bit more today and tomorrow’s budget adjusts on its own.
+        </p>
+      </div>
     </Page>
   )
 }

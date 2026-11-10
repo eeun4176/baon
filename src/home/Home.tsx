@@ -18,6 +18,7 @@ import { useSession } from '../session.ts'
 import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
 import { DayPills, MoneyTiles } from './Breakdown.tsx'
 import { randomGreeting } from './greetings.ts'
+import { OneTapAdd } from './OneTapAdd.tsx'
 import { divisionText, useToday, type Today } from './useToday.ts'
 
 const SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
@@ -100,30 +101,27 @@ export function Home() {
       <p className="text-sm font-extrabold tracking-[0.12em] text-muted uppercase">{dateLine.format(new Date())}</p>
       <h1 className="mt-1 text-[clamp(1.5rem,7vw,2rem)] leading-tight font-black lg:text-4xl">{greeting}</h1>
 
-      {t === undefined && <p className="mt-8 font-bold text-muted">Loading…</p>}
-      {t === null && <p role="alert" className="mt-8 font-bold">Couldn’t open your records. Close and reopen baon.</p>}
-      {t && (
-        <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-6">
-          <section className="lg:col-start-2 lg:row-start-1 lg:rounded-[28px] lg:bg-card lg:p-5">
-            <h2 className="mb-3 hidden text-lg font-black lg:block">This week</h2>
-            <WeekRow today={t.result.today} />
-          </section>
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start lg:gap-6">
+        <section className="lg:col-start-2 lg:row-start-1 lg:rounded-[28px] lg:bg-card lg:p-5">
+          <h2 className="mb-3 hidden text-lg font-black lg:block">This week</h2>
+          <WeekRow today={t.result.today} />
+        </section>
 
-          <div className="lg:col-start-1 lg:row-span-2 lg:row-start-1">
-            <Hero t={t} />
-          </div>
-
-          {/* Desktop: the breakdown sits beside the hero instead of on its own screen. */}
-          <section className="hidden space-y-3 lg:col-start-2 lg:block" aria-labelledby="how-counted">
-            <Card className="text-center">
-              <h2 id="how-counted" className="text-lg font-black">How it’s counted</h2>
-              <p className="mt-1 mb-4 font-extrabold text-muted">{divisionText(t)}</p>
-              <DayPills t={t} />
-            </Card>
-            <MoneyTiles t={t} />
-          </section>
+        <div className="space-y-4 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:space-y-6">
+          <Hero t={t} />
+          <OneTapAdd />
         </div>
-      )}
+
+        {/* Desktop: the breakdown sits beside the hero instead of on its own screen. */}
+        <section className="hidden space-y-3 lg:col-start-2 lg:block" aria-labelledby="how-counted">
+          <Card className="text-center">
+            <h2 id="how-counted" className="text-lg font-black">How it’s counted</h2>
+            <p className="mt-1 mb-4 font-extrabold text-muted">{divisionText(t)}</p>
+            <DayPills t={t} />
+          </Card>
+          <MoneyTiles t={t} />
+        </section>
+      </div>
     </Page>
   )
 }

@@ -4,14 +4,15 @@
  * - account exists → open its encrypted vault and show the app (works offline)
  * Signed-in pages live inside AppShell (sidebar on desktop, bottom nav on phones).
  */
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { QuickAdd } from './add/QuickAdd.tsx'
 import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
 import { Onboarding } from './onboarding/Onboarding.tsx'
-import { SessionContext } from './session.ts'
 import { AppShell } from './shell/AppShell.tsx'
 import { ComingSoon } from './shell/ComingSoon.tsx'
+import { SessionProvider } from './shell/SessionProvider.tsx'
 import { Screen } from './ui/kit.tsx'
 import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
 
@@ -30,9 +31,8 @@ async function boot(): Promise<State> {
 
 /** Signed-in routes. */
 function SignedInApp({ vault, name }: { vault: Vault; name: string }) {
-  const session = useMemo(() => ({ vault, name }), [vault, name])
   return (
-    <SessionContext.Provider value={session}>
+    <SessionProvider vault={vault} name={name}>
       <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
@@ -41,12 +41,12 @@ function SignedInApp({ vault, name }: { vault: Vault; name: string }) {
             <Route path="history" element={<ComingSoon title="History" text="Your past expenses, by day, with search and charts — coming next." />} />
             <Route path="plan" element={<ComingSoon title="Plan" text="Set money aside for printing, projects and org fees — coming next." />} />
             <Route path="me" element={<ComingSoon title="Me" text="Your wallets, backup and settings — coming next." />} />
-            <Route path="add" element={<ComingSoon title="Add expense" text="Quick Add with the big keypad and one-tap presets — coming next." />} />
+            <Route path="add" element={<QuickAdd />} />
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </SessionContext.Provider>
+    </SessionProvider>
   )
 }
 
