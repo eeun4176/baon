@@ -13,6 +13,7 @@ import type { Vault } from './vault/vault.ts'
 export interface Toast {
   message: string
   undo?: () => void
+  leaving?: boolean // set while it animates out
 }
 
 export interface Session {

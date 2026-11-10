@@ -4,23 +4,25 @@
  * Load, School, Snacks, More).
  */
 import type { Transaction } from '../ledger/ledger.ts'
+import type { IconName } from '../ui/kit.tsx'
 
 export interface Category {
   id: string
   label: string
+  icon: IconName
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'fare', label: 'Fare' },
-  { id: 'food', label: 'Food' },
-  { id: 'load', label: 'Load' },
-  { id: 'school', label: 'School' },
-  { id: 'snacks', label: 'Snacks' },
-  { id: 'shopping', label: 'Shopping' },
-  { id: 'health', label: 'Health' },
-  { id: 'gifts', label: 'Gifts' },
-  { id: 'fun', label: 'Fun' },
-  { id: 'other', label: 'Other' },
+  { id: 'fare', icon: 'bus', label: 'Fare' },
+  { id: 'food', icon: 'utensils', label: 'Food' },
+  { id: 'load', icon: 'phone', label: 'Load' },
+  { id: 'school', icon: 'book', label: 'School' },
+  { id: 'snacks', icon: 'cup', label: 'Snacks' },
+  { id: 'shopping', icon: 'wallet', label: 'Shopping' },
+  { id: 'health', icon: 'help', label: 'Health' },
+  { id: 'gifts', icon: 'piggy', label: 'Gifts' },
+  { id: 'fun', icon: 'flame', label: 'Fun' },
+  { id: 'other', icon: 'dots', label: 'Other' },
 ]
 
 /** Category label for an id (falls back to "Other" for unknown ids). */

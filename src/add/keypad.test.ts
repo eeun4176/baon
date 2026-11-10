@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { Transaction } from '../ledger/ledger.ts'
 import { parsePeso } from '../ledger/money.ts'
 import { byMostUsed, categoryLabel, lastUsedWalletId } from './categories.ts'
-import { displayAmount, pressKey, type Key } from './keypad.ts'
+import { acceptTyped, centavosToText, displayAmount, pressKey, type Key } from './keypad.ts'
 
 /** Presses keys in order from an empty amount. */
 const type = (...keys: Key[]) => keys.reduce(pressKey, '')
@@ -26,6 +26,19 @@ describe('pressKey', () => {
     for (const keys of [['1', '5'], ['0', '.', '5'], ['1', '.'], ['9', '9', '.', '9', '9']] as Key[][]) {
       expect(parsePeso(type(...keys))).not.toBeNull()
     }
+  })
+})
+
+describe('acceptTyped / centavosToText', () => {
+  it.each([['15', '15'], ['1,500', '1500'], ['15.50', '15.50'], ['007', '7'], ['0.5', '0.5'], ['', '']])('accepts %s → %s', (typed, text) => {
+    expect(acceptTyped(typed)).toBe(text)
+  })
+  it.each(['abc', '1.234', '12345678', '1.2.3', '-5'])('ignores %s', (typed) => {
+    expect(acceptTyped(typed)).toBeNull()
+  })
+  it.each([[1550, '15.50'], [1500, '15'], [5, '0.05'], [999999999, '9999999.99']])('%i → %s and back', (c, text) => {
+    expect(centavosToText(c)).toBe(text)
+    expect(parsePeso(centavosToText(c))).toBe(c)
   })
 })
 

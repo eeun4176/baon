@@ -39,6 +39,8 @@ export default defineConfig({
         background_color: '#F3F4F4',
         display: 'standalone',
         orientation: 'portrait',
+        // Long-press the app icon on Android → "Add expense" (plan §4.2)
+        shortcuts: [{ name: 'Add expense', short_name: 'Add', url: '/?add=1', icons: [{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' }] }],
         // Icons are generated from the 1024px wallet logo (Design canvas → baon-icon.png)
         icons: [
           { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },

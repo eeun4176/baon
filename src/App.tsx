@@ -6,7 +6,7 @@
  */
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
-import { QuickAdd } from './add/QuickAdd.tsx'
+import { History } from './history/History.tsx'
 import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
 import { Onboarding } from './onboarding/Onboarding.tsx'
@@ -38,11 +38,15 @@ function SignedInApp({ vault, name }: { vault: Vault; name: string }) {
           <Route element={<AppShell />}>
             <Route index element={<Home />} />
             <Route path="breakdown" element={<Breakdown />} />
-            <Route path="history" element={<ComingSoon title="History" text="Your past expenses, by day, with search and charts — coming next." />} />
+            <Route path="history" element={<History />} />
             <Route path="plan" element={<ComingSoon title="Plan" text="Set money aside for printing, projects and org fees — coming next." />} />
-            <Route path="me" element={<ComingSoon title="Me" text="Your wallets, backup and settings — coming next." />} />
-            <Route path="add" element={<QuickAdd />} />
+            <Route path="streak" element={<ComingSoon title="Streak" text="Your on-budget streak, free pass and spending map — coming next." />} />
+            <Route path="me" element={<ComingSoon title="Me" text="Your profile, wallets and settings — coming next." />} />
+            <Route path="backup" element={<ComingSoon title="Backup" text="Export an encrypted copy of your records so a broken phone doesn’t lose them — coming next." />} />
+            <Route path="help" element={<ComingSoon title="Help & privacy" text="How baon keeps your records private, and answers to common questions — coming next." />} />
           </Route>
+          {/* Old Quick Add address and the home-screen shortcut open the Add dialog on Home. */}
+          <Route path="add" element={<Navigate to="/?add=1" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
