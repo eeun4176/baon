@@ -4,11 +4,12 @@
  * Google sign-in leaves the page and comes back; on return we detect the session
  * and continue at "Whose phone?" so nothing has to be re-typed.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
 import { manilaDate } from '../budget/days.ts'
 import type { Vault } from '../vault/vault.ts'
 import { initialBaon, initialMoney, toAllowance, toBalances, type BaonAnswers, type MoneyAnswers } from './answers.ts'
+import { BrandPanel } from './BrandPanel.tsx'
 import { setupAccount } from './setupAccount.ts'
 import { SignIn } from './SignIn.tsx'
 import { Welcome } from './Welcome.tsx'
@@ -72,16 +73,21 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
     }
   }
 
-  switch (step) {
-    case 'welcome':
-      return <Welcome onStart={() => go(user ? 'phone' : 'signin')} />
-    case 'signin':
-      return <SignIn onBack={() => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />
-    case 'phone':
-      return <WhosePhone onContinue={() => go('baon')} />
-    case 'baon':
-      return <YourBaon value={baon} onChange={setBaon} today={today} error={error} onBack={() => go('phone')} onContinue={continueFromBaon} />
-    case 'money':
-      return <YourMoney value={money} onChange={setMoney} error={error} busy={busy} onBack={() => go('baon')} onFinish={finish} />
+  const screens: Record<Step, ReactNode> = {
+    welcome: <Welcome onStart={() => go(user ? 'phone' : 'signin')} />,
+    signin: <SignIn onBack={() => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />,
+    phone: <WhosePhone onContinue={() => go('baon')} />,
+    baon: <YourBaon value={baon} onChange={setBaon} today={today} error={error} onBack={() => go('phone')} onContinue={continueFromBaon} />,
+    money: <YourMoney value={money} onChange={setMoney} error={error} busy={busy} onBack={() => go('baon')} onFinish={finish} />,
   }
+
+  // Phone/tablet: just the step. Desktop (≥ 1024px): brand panel left, step centered right.
+  return (
+    <div className="lg:grid lg:min-h-dvh lg:grid-cols-2">
+      <BrandPanel />
+      <div className="lg:flex lg:items-center">
+        <div className="w-full">{screens[step]}</div>
+      </div>
+    </div>
+  )
 }
