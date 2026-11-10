@@ -5,6 +5,7 @@
  * Routing and real screens (Home, History, Plan, Me) replace this in Week 3+.
  */
 import { Suspense, lazy } from 'react'
+import logoIcon from './assets/logo-icon.png'
 
 // TEMPORARY: /dev-auth sign-in test page. Lazy-loaded so the Neon SDK stays out of
 // the main bundle (it's only needed online). Remove with src/dev/DevAuth.tsx.
@@ -18,7 +19,11 @@ export default function App() {
 
   return (
     <main className="mx-auto min-h-dvh max-w-md px-5 py-8">
-      <h1 className="text-3xl font-black tracking-tight">baon</h1>
+      {/* Header logo: wallet icon + "baon" wordmark in Nunito 900 (design: App header) */}
+      <h1 className="flex items-center gap-2.5 text-[34px] font-black tracking-tight">
+        <img src={logoIcon} alt="" className="size-10" />
+        baon
+      </h1>
       <p className="mt-1 text-sm font-extrabold tracking-widest text-muted uppercase">
         Setup check
       </p>
