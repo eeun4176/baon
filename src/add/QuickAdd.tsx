@@ -212,7 +212,7 @@ export function QuickAdd({ editId, onClose }: { editId: string | null; onClose: 
                   onClick={() => setCategoryId(c.id)}
                   className={`flex min-h-12 items-center justify-center gap-2 rounded-full border-2 font-extrabold md:rounded-2xl ${
                     categoryId === c.id
-                      ? 'border-ink bg-ink text-white md:border-blue md:bg-blue-tint md:text-blue'
+                      ? 'border-ink bg-ink text-card md:border-blue md:bg-blue-tint md:text-blue'
                       : 'border-transparent bg-pebble-2 md:bg-pebble md:hover:bg-pebble-2'
                   }`}
                 >
@@ -276,7 +276,7 @@ export function QuickAdd({ editId, onClose }: { editId: string | null; onClose: 
               type="button"
               onClick={() => press(k)}
               aria-label={k === 'back' ? 'Delete' : k === '.' ? 'Decimal point' : k}
-              className="grid h-[clamp(3rem,7dvh,4rem)] place-items-center rounded-[20px] bg-card text-[26px] font-black active:bg-pebble"
+              className="grid h-[clamp(3rem,7dvh,4rem)] place-items-center rounded-[20px] bg-card text-[1.625rem] font-black active:bg-pebble"
             >
               {k === 'back' ? <Icon name="backspace" className="size-7" /> : k}
             </button>

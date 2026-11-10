@@ -90,7 +90,7 @@ export function History() {
 
   const summary = (
     <>
-      <section className="animate-rise rounded-[28px] bg-ink p-6 text-white">
+      <section className="animate-rise rounded-[28px] bg-hero p-6 text-white">
         <p className="font-extrabold text-white/70">Spent since Sunday</p>
         <p key={week.total} className="mt-1 animate-pop text-5xl font-black">{formatPeso(week.total)}</p>
         <p className="mt-1 font-semibold text-white/70">{formatPeso(week.perDay)} a day on average</p>
@@ -143,7 +143,7 @@ export function History() {
               role="radio"
               aria-checked={categoryId === c.categoryId}
               onClick={() => setCategoryId(c.categoryId)}
-              className={`min-h-10 rounded-full px-5 font-extrabold ${categoryId === c.categoryId ? 'bg-ink text-white' : 'bg-card hover:bg-pebble'}`}
+              className={`min-h-10 rounded-full px-5 font-extrabold ${categoryId === c.categoryId ? 'bg-ink text-card' : 'bg-card hover:bg-pebble'}`}
             >
               {c.label}
             </button>

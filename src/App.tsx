@@ -13,26 +13,68 @@ import { Onboarding } from './onboarding/Onboarding.tsx'
 import { AppShell } from './shell/AppShell.tsx'
 import { ComingSoon } from './shell/ComingSoon.tsx'
 import { SessionProvider } from './shell/SessionProvider.tsx'
-import { Screen } from './ui/kit.tsx'
+import logoIcon from './assets/logo-icon.png'
+import { firstName } from './home/greetings.ts'
+import { Button, Screen } from './ui/kit.tsx'
 import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
 
 type State =
   | { kind: 'loading' }
   | { kind: 'onboarding' }
   | { kind: 'app'; vault: Vault; name: string }
+  | { kind: 'signedOut'; userId: string; name: string }
   | { kind: 'error' }
+
+// Remembers "signed out" on this device so a reload doesn't reopen the app by itself.
+// (UX only, not security: My phone mode is protected by the phone's own screen lock.)
+const SIGNED_OUT_KEY = 'baon.signedOut'
+
+/** Reads/writes the signed-out flag; storage errors just mean it isn't remembered. */
+function signedOutFlag(value?: string | null): string | null {
+  try {
+    if (value === undefined) return localStorage.getItem(SIGNED_OUT_KEY)
+    if (value === null) localStorage.removeItem(SIGNED_OUT_KEY)
+    else localStorage.setItem(SIGNED_OUT_KEY, value)
+  } catch {
+    // storage blocked
+  }
+  return null
+}
 
 /** Opens the first account on this device, if any. (Account picker comes with Shared mode.) */
 async function boot(): Promise<State> {
   const [account] = await listDeviceAccounts()
   if (!account) return { kind: 'onboarding' }
+  if (signedOutFlag() === account.userId) return { kind: 'signedOut', userId: account.userId, name: account.label }
   return { kind: 'app', vault: await openVault(account.userId), name: account.label }
 }
 
-/** Signed-in routes. */
-function SignedInApp({ vault, name }: { vault: Vault; name: string }) {
+/** "You're signed out" screen: records stay on the device; continue reopens the vault. */
+function SignedOut({ name, onContinue }: { name: string; onContinue: () => void }) {
   return (
-    <SessionProvider vault={vault} name={name}>
+    <Screen footer={<Button onClick={onContinue}>Continue as {firstName(name)}</Button>}>
+      <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight">
+        <img src={logoIcon} alt="" className="size-10" />
+        baon
+      </header>
+      <div className="mt-16 animate-rise">
+        <h1 className="text-[2rem] leading-tight font-black">You’re signed out</h1>
+        <p className="mt-2 text-lg font-semibold text-muted">Your records are still here, encrypted on this device.</p>
+        <div className="mt-6 flex items-center gap-3 rounded-[28px] bg-card p-4">
+          <span className="grid size-12 place-items-center rounded-full bg-blue-tint text-lg font-black text-blue" aria-hidden="true">
+            {firstName(name).charAt(0).toUpperCase()}
+          </span>
+          <span className="font-black">{name}</span>
+        </div>
+      </div>
+    </Screen>
+  )
+}
+
+/** Signed-in routes. */
+function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; onSignOut: () => void }) {
+  return (
+    <SessionProvider vault={vault} name={name} onSignOut={onSignOut}>
       <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
@@ -67,8 +109,32 @@ export default function App() {
       return null // IndexedDB opens in milliseconds; avoids a flash of the wrong screen
     case 'onboarding':
       return <Onboarding onDone={(vault, name) => setState({ kind: 'app', vault, name })} />
-    case 'app':
-      return <SignedInApp vault={state.vault} name={state.name} />
+    case 'app': {
+      const { vault, name } = state
+      return (
+        <SignedInApp
+          vault={vault}
+          name={name}
+          onSignOut={() => {
+            signedOutFlag(vault.userId)
+            window.history.replaceState(null, '', '/') // next sign-in starts on Home
+            setState({ kind: 'signedOut', userId: vault.userId, name })
+          }}
+        />
+      )
+    }
+    case 'signedOut': {
+      const { userId, name } = state
+      return (
+        <SignedOut
+          name={name}
+          onContinue={() => {
+            signedOutFlag(null)
+            openVault(userId).then((vault) => setState({ kind: 'app', vault, name }), () => setState({ kind: 'error' }))
+          }}
+        />
+      )
+    }
     case 'error':
       return (
         <Screen>

@@ -27,7 +27,7 @@ async function loadRecords(vault: Vault): Promise<Records> {
 const byTime = (a: Transaction, b: Transaction) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt)
 
 /** Provides the unlocked session to everything inside it. */
-export function SessionProvider({ vault, name, children }: { vault: Vault; name: string; children: ReactNode }) {
+export function SessionProvider({ vault, name, onSignOut, children }: { vault: Vault; name: string; onSignOut: () => void; children: ReactNode }) {
   const [records, setRecords] = useState<Records | null | undefined>(undefined)
   const [toast, setToast] = useState<Toast | null>(null)
 
@@ -62,9 +62,16 @@ export function SessionProvider({ vault, name, children }: { vault: Vault; name:
 
   const dismissToast = useCallback(() => setToast((t) => t && { ...t, leaving: true }), [])
 
+  const signOut = useCallback(() => {
+    // Best effort online sign-out (skipped when offline); the local lock happens either way.
+    import('../auth/auth.ts').then((auth) => auth.signOut()).catch(() => {})
+    vault.lock()
+    onSignOut()
+  }, [vault, onSignOut])
+
   const session = useMemo<Session | null>(
-    () => records ? { vault, name, ...records, addTransaction, removeTransaction, toast, showToast: setToast, dismissToast } : null,
-    [vault, name, records, addTransaction, removeTransaction, toast, dismissToast],
+    () => records ? { vault, name, ...records, addTransaction, removeTransaction, toast, showToast: setToast, dismissToast, signOut } : null,
+    [vault, name, records, addTransaction, removeTransaction, toast, dismissToast, signOut],
   )
 
   if (records === undefined) return null // decrypting takes a moment; avoid flashing empty screens

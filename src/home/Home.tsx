@@ -37,7 +37,7 @@ function WeekRow({ today, dark = false }: { today: string; dark?: boolean }) {
         const isToday = day === today
         return (
           <li key={day} aria-current={isToday ? 'date' : undefined} aria-label={`${LONG[i]}${isToday ? ', today' : ''}`}>
-            <span className={`text-[15px] font-extrabold ${dark ? 'text-white/70' : ''}`} aria-hidden="true">{label}</span>
+            <span className={`text-[0.9375rem] font-extrabold ${dark ? 'text-white/70' : ''}`} aria-hidden="true">{label}</span>
             <span
               aria-hidden="true"
               className={`mx-auto mt-2 block aspect-square w-full max-w-11 animate-rise rounded-full ${
@@ -63,7 +63,7 @@ function Hero({ t }: { t: Today }) {
   const leftShare = allowance > 0 ? Math.min(1, Math.max(0, r.readyToSpend / allowance)) : 0
   return (
     <Card className="h-full animate-rise px-4 py-8 text-center sm:px-6 lg:px-7 lg:py-7 lg:text-left">
-      <p className="text-[17px] font-extrabold text-muted">{label}</p>
+      <p className="text-[1.0625rem] font-extrabold text-muted">{label}</p>
       <p className="mt-2" aria-live="polite">
         <BigMoney centavos={Math.abs(r.leftToday)} className="text-[clamp(3.5rem,22vw,5.25rem)] lg:text-[5.5rem]" />
         {over && <span className="ml-1 text-3xl font-black">over</span>}
@@ -113,7 +113,7 @@ function Hero({ t }: { t: Today }) {
 /** Desktop dark streak card (design p18). Real streak numbers arrive with feat/streak. */
 function StreakCard({ today }: { today: string }) {
   return (
-    <section className="flex h-full animate-rise flex-col rounded-[28px] bg-ink p-6 text-white" aria-labelledby="streak-title">
+    <section className="flex h-full animate-rise flex-col rounded-[28px] bg-hero p-6 text-white" aria-labelledby="streak-title">
       <div className="flex items-center gap-3">
         <Icon name="flame" className="size-10 text-[#ff8a3d]" />
         <div>
@@ -168,7 +168,7 @@ export function Home() {
   return (
     <Page>
       {/* Phone: logo header (the sidebar shows it on larger screens). */}
-      <header className="mb-6 flex items-center gap-2.5 text-[34px] font-black tracking-tight md:hidden">
+      <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
         <img src={logoIcon} alt="" className="size-10" />
         baon
       </header>

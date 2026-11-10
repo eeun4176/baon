@@ -69,7 +69,7 @@ export function Breakdown() {
       </div>
 
       <div className="mx-auto mt-6 max-w-xl space-y-3">
-        <section className="rounded-[30px] bg-ink p-6 text-center text-white">
+        <section className="rounded-[30px] bg-hero p-6 text-center text-white">
           <p className="font-extrabold text-white/70">Safe to spend today</p>
           <BigMoney centavos={t.result.dailyBudget} className="mt-1 block text-[clamp(3.5rem,20vw,5.25rem)]" />
           <p className="mt-2 mb-5 text-lg font-extrabold text-white/70">{divisionText(t)}</p>

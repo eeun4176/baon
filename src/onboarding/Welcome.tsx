@@ -12,13 +12,13 @@ export function Welcome({ onStart }: { onStart: () => void }) {
       footer={
         <>
           <Button onClick={onStart}>Get started</Button>
-          <p className="mt-3 text-center text-[15px] font-semibold text-muted">
+          <p className="mt-3 text-center text-[0.9375rem] font-semibold text-muted">
             Connect once to set up. After that, it works offline.
           </p>
         </>
       }
     >
-      <header className="flex items-center gap-2.5 text-[34px] font-black tracking-tight lg:hidden">
+      <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight lg:hidden">
         <img src={logoIcon} alt="" className="size-10" />
         baon
       </header>

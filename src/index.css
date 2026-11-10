@@ -26,6 +26,8 @@
   --color-blue-tint: #e8efff; /* active nav item, soft badges */
   --color-muted: #5f6361;     /* secondary text (passes 4.5:1 on page and white) */
   --color-coin: #ffc94d;      /* logo only */
+  --color-hero: #1d1f1e;      /* dark hero cards + toast: stay dark in both themes */
+  --color-bar: #cfd0d0;       /* gray chart bars, switch "off" track */
 
   /* Spending map scale (plan §5.1): none → light → mid → full, plus over */
   --color-map-0: #e3e4e4;
@@ -33,6 +35,62 @@
   --color-map-2: #86a8ff;
   --color-map-3: #1e5eff;
   --color-map-over: #1d1f1e;
+}
+
+/* ── Dark theme (plan C11) ──────────────────────────────────────────
+ * Same tokens, dark values. Chosen in the profile menu: Light / Dark / Device.
+ * "Device" = no data-theme attribute → follows the phone/computer setting. */
+@layer base {
+  :root[data-theme='dark'] {
+    color-scheme: dark; /* dark date pickers, scrollbars, etc. */
+    --color-ink: #eef0ef;
+    --color-page: #111312;
+    --color-card: #1c1e1d;
+    --color-pebble: #272a28;
+    --color-pebble-2: #303331;
+    --color-blue-tint: #1a2747;
+    --color-muted: #a5aaa7;
+    --color-hero: #2a2d2c;
+    --color-bar: #3a3e3c;
+    --color-map-0: #2a2d2c;
+    --color-map-over: #eef0ef;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      color-scheme: dark;
+      --color-ink: #eef0ef;
+      --color-page: #111312;
+      --color-card: #1c1e1d;
+      --color-pebble: #272a28;
+      --color-pebble-2: #303331;
+      --color-blue-tint: #1a2747;
+      --color-muted: #a5aaa7;
+      --color-hero: #2a2d2c;
+      --color-bar: #3a3e3c;
+      --color-map-0: #2a2d2c;
+      --color-map-over: #eef0ef;
+    }
+  }
+}
+/* Blue stays #1E5EFF for filled buttons (white text passes contrast), but blue TEXT on
+   dark cards needs a lighter shade to stay readable (WCAG AA 4.5:1). */
+:root[data-theme='dark'] .text-blue {
+  color: #7ea2ff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .text-blue {
+    color: #7ea2ff;
+  }
+}
+
+/* ── Desktop scale ──────────────────────────────────────────────────
+ * Phones/tablets keep big touch sizes. On laptops (≥ 1024px) everything sized in rem
+ * shrinks to normal web proportions (16px → 14px body). A percentage, not px,
+ * so the user's own browser font-size setting still applies. */
+@media (min-width: 1024px) {
+  html {
+    font-size: 87.5%;
+  }
 }
 
 /* ── Motion ────────────────────────────────────────────────────────
