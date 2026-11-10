@@ -30,12 +30,12 @@ export function TxRow({ tx, wallets, withDay = false, index = 0 }: { tx: Transac
           {d.title.charAt(0).toUpperCase()}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[17px] font-black">{d.title}</span>
+          <span className="block truncate text-[1.0625rem] font-black">{d.title}</span>
           <span className="block truncate text-sm font-semibold text-muted">
             {d.detail} · {when}
           </span>
         </span>
-        <span className={`shrink-0 text-[17px] font-black ${d.tone === 'in' ? 'text-blue' : d.tone === 'move' ? 'text-muted' : ''}`}>{d.amount}</span>
+        <span className={`shrink-0 text-[1.0625rem] font-black ${d.tone === 'in' ? 'text-blue' : d.tone === 'move' ? 'text-muted' : ''}`}>{d.amount}</span>
       </button>
     </li>
   )

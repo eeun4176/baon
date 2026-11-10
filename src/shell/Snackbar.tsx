@@ -20,7 +20,7 @@ export function Snackbar() {
       {toast && (
         <div
           key={toast.message}
-          className={`pointer-events-auto flex min-h-14 w-full max-w-md items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-2 text-white shadow-[0_16px_40px_-12px_rgba(29,31,30,0.6)] ${
+          className={`pointer-events-auto flex min-h-14 w-full max-w-md items-center gap-3 rounded-full bg-hero py-2 pr-2 pl-2 text-white shadow-[0_16px_40px_-12px_rgba(29,31,30,0.6)] ${
             toast.leaving ? 'animate-toast-out' : 'animate-toast-in'
           }`}
         >

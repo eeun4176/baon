@@ -43,7 +43,7 @@ export function OneTapAdd() {
             disabled={busy !== null}
             onClick={() => log(p)}
             aria-label={`Add ${p.label}, ${formatPeso(p.amountCentavos)}`}
-            className="flex min-h-14 items-center gap-2.5 rounded-[20px] bg-page px-4 text-left text-[17px] font-black active:bg-pebble disabled:opacity-60"
+            className="flex min-h-14 items-center gap-2 rounded-[20px] bg-page px-3 text-left text-[1.0625rem] font-black active:bg-pebble disabled:opacity-60"
           >
             <Icon name={p.icon} className="size-6 shrink-0 text-blue" />
             <span className="truncate">{p.label} {formatPeso(p.amountCentavos)}</span>

@@ -29,6 +29,8 @@ export interface Session {
   toast: Toast | null
   showToast(toast: Toast): void
   dismissToast(): void
+  /** Ends the online session (if reachable), locks the vault and leaves the app. Records stay on the device. */
+  signOut(): void
 }
 
 export const SessionContext = createContext<Session | null>(null)

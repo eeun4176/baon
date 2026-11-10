@@ -11,9 +11,8 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useSearchParams } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
 import { QuickAdd } from '../add/QuickAdd.tsx'
-import { firstName } from '../home/greetings.ts'
-import { useSession } from '../session.ts'
 import { Icon, type IconName } from '../ui/kit.tsx'
+import { ProfileMenu } from './ProfileMenu.tsx'
 import { Snackbar } from './Snackbar.tsx'
 import { useAddDialog } from './useAddDialog.ts'
 
@@ -74,7 +73,6 @@ function SideLink({ to, label, icon, collapsed }: { to: string; label: string; i
 
 /** Signed-in layout: sidebar (tablet/desktop) or bottom nav (phone) around the current page. */
 export function AppShell() {
-  const { name } = useSession()
   const [collapsed, setCollapsed] = useState(initialCollapsed)
   const [params] = useSearchParams()
   const addDialog = useAddDialog()
@@ -97,26 +95,38 @@ export function AppShell() {
     <div className="flex min-h-dvh">
       {/* ── Sidebar: tablet & desktop (design p18) ───────────────────── */}
       <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) md:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
-        <nav aria-label="Main" className="flex h-full flex-col overflow-hidden rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
-          <div className={`flex gap-2.5 px-1 pt-1 pb-4 ${collapsed ? 'flex-col items-center' : 'items-center'}`}>
-            <img src={logoIcon} alt="" className="size-11 shrink-0" />
-            {!collapsed && (
-              <div className="min-w-0 flex-1 animate-fade">
-                <p className="text-2xl leading-none font-black tracking-tight">baon</p>
-                <p className="truncate text-xs font-bold text-muted">Your baon, sakto every day</p>
-              </div>
-            )}
+        <nav aria-label="Main" className="flex h-full flex-col rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+          {collapsed ? (
+            // Collapsed: the logo itself expands the sidebar (no separate toggle button).
             <button
               type="button"
               onClick={toggle}
-              aria-expanded={!collapsed}
-              aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-page hover:text-ink"
+              aria-expanded={false}
+              aria-label="Expand sidebar"
+              title="Expand sidebar"
+              className="mx-auto mt-1 mb-4 rounded-xl ring-blue/40 hover:ring-4"
             >
-              <Icon name="sidebar" className="size-5" />
+              <img src={logoIcon} alt="" className="size-11" />
             </button>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2.5 px-1 pt-1 pb-4">
+              <img src={logoIcon} alt="" className="size-11 shrink-0" />
+              <div className="min-w-0 flex-1 animate-fade">
+                <p className="text-2xl leading-none font-black tracking-tight">baon</p>
+                <p className="text-xs leading-tight font-bold text-muted">Your baon, sakto every day</p>
+              </div>
+              <button
+                type="button"
+                onClick={toggle}
+                aria-expanded={true}
+                aria-label="Collapse sidebar"
+                title="Collapse sidebar"
+                className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-page hover:text-ink"
+              >
+                <Icon name="sidebar" className="size-5" />
+              </button>
+            </div>
+          )}
 
           <Link
             to="?add=1"
@@ -143,15 +153,7 @@ export function AppShell() {
                 {storage} · saved on this device
               </p>
             )}
-            <Link to="/me" title={collapsed ? name : undefined} className={`flex items-center gap-3 rounded-2xl p-1.5 hover:bg-page ${collapsed ? 'justify-center' : ''}`}>
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-blue-tint font-black text-blue" aria-hidden="true">
-                {firstName(name).charAt(0).toUpperCase()}
-              </span>
-              <span className={collapsed ? 'sr-only' : 'min-w-0'}>
-                <span className="block truncate font-black">{name}</span>
-                <span className="block text-sm font-semibold text-muted">My phone · works offline</span>
-              </span>
-            </Link>
+            <ProfileMenu collapsed={collapsed} />
           </div>
         </nav>
       </aside>

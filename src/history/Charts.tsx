@@ -30,7 +30,7 @@ export function SpentPerDay({ days, today, budget }: { days: { day: string; spen
           {days.map((d, i) => (
             <span key={d.day} className="mx-auto flex h-full w-full max-w-12 items-end overflow-hidden rounded-xl bg-page">
               <span
-                className={`w-full origin-bottom animate-grow-y rounded-xl ${d.day === today ? 'bg-blue' : 'bg-[#cfd0d0]'}`}
+                className={`w-full origin-bottom animate-grow-y rounded-xl ${d.day === today ? 'bg-blue' : 'bg-bar'}`}
                 style={{ height: `${(d.spent / top) * 100}%`, animationDelay: `${i * 50}ms` }}
               />
             </span>

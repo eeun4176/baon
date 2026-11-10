@@ -16,8 +16,8 @@ const PROMISES = [
 export function BrandPanel() {
   return (
     <aside className="sticky top-0 hidden h-dvh p-4 lg:block">
-      <div className="flex h-full flex-col justify-between rounded-[32px] bg-ink p-12 text-white">
-        <div className="flex items-center gap-3 text-[34px] font-black tracking-tight">
+      <div className="flex h-full flex-col justify-between rounded-[32px] bg-hero p-12 text-white">
+        <div className="flex items-center gap-3 text-[2.125rem] font-black tracking-tight">
           <img src={logoIcon} alt="" className="size-12 rounded-xl ring-1 ring-white/20" />
           baon
         </div>
