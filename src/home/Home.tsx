@@ -5,7 +5,7 @@
  * Desktop (design p18): greeting row with search; hero (with "₱720 of ₱1,500 left" bar)
  *   beside a dark streak card; One-tap add + Set aside for school; Wallets;
  *   Spent per day + Recent.
- * Still to come: ✓ marks and 🔥 count (feat/streak), set-aside items (feat/school-expenses).
+ * Still to come: ✓ marks and 🔥 count (feat/streak).
  */
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -16,6 +16,7 @@ import { spentPerDay } from '../history/history.ts'
 import { TxRow } from '../history/TxRow.tsx'
 import { balances } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
+import { sortForList, statusOf } from '../plan/school.ts'
 import { useSession } from '../session.ts'
 import { useAddDialog } from '../shell/useAddDialog.ts'
 import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
@@ -25,7 +26,8 @@ import { useToday, type Today } from './useToday.ts'
 
 const SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const dateLine = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+const dueDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
+const dateLine =new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
 /** Su–Sa row for this week: today is a blue ring with a dot; ✓ marks arrive with streaks. */
 function WeekRow({ today, dark = false }: { today: string; dark?: boolean }) {
@@ -159,8 +161,9 @@ function Wallets() {
 
 /** Home screen. */
 export function Home() {
-  const { name, transactions, wallets } = useSession()
+  const { name, transactions, wallets, schoolExpenses } = useSession()
   const t = useToday()
+  const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid').slice(0, 3)
   const [greeting] = useState(() => randomGreeting(name))
   const today = t.result.today
   const recent = [...transactions].reverse().slice(0, 5)
@@ -198,8 +201,24 @@ export function Home() {
             <h2 className="text-xl font-black">Set aside for school</h2>
             <Link to="/plan" className="font-extrabold text-blue">See all</Link>
           </div>
-          <p className="mt-1 text-4xl font-black">{formatPeso(t.result.setAside)}</p>
-          <p className="mt-3 font-semibold text-muted">Nothing set aside yet. Plan printing, projects and org fees so your daily budget stays honest.</p>
+          <p key={t.result.setAside} className="mt-1 animate-pop text-4xl font-black">{formatPeso(t.result.setAside)}</p>
+          {upcoming.length ? (
+            <ul className="mt-2 divide-y divide-page">
+              {upcoming.map((i) => (
+                <li key={i.id} className="flex items-center justify-between gap-3 py-2.5">
+                  <span className="min-w-0">
+                    <span className="block truncate font-black">{i.title}</span>
+                    <span className="block text-sm font-semibold text-muted">
+                      {i.status === 'setAside' ? 'Set aside' : 'Planned'} · due {dueDay.format(new Date(`${i.dueDate}T00:00:00Z`))}
+                    </span>
+                  </span>
+                  <span className="font-black">{formatPeso(i.estimatedCentavos)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="mt-3 font-semibold text-muted">Nothing set aside yet. Plan printing, projects and org fees so your daily budget stays honest.</p>
+          )}
         </Card>
 
         <div className="hidden md:block lg:col-span-12"><Wallets /></div>

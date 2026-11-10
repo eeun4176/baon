@@ -33,6 +33,17 @@ export function nextAllowanceDate(current: string, frequency: Allowance['frequen
   }
 }
 
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+/** Which days the budget counts, in words: "Mon–Sat", "Mon, Wed, Fri", "Every day" or "None". */
+export function classDaysText(allowance: Allowance): string {
+  const days = [...new Set(allowance.classWeekdays)].sort()
+  if (!allowance.countClassDays || days.length === 7) return 'Every day'
+  if (days.length === 0) return 'None'
+  const inARow = days.length >= 3 && days.at(-1)! - days[0] === days.length - 1
+  return inARow ? `${DAY_NAMES[days[0]]}–${DAY_NAMES[days.at(-1)!]}` : days.map((d) => DAY_NAMES[d]).join(', ')
+}
+
 const RECORD_ID = 'allowance'
 
 /** Validates and saves the allowance setup. */

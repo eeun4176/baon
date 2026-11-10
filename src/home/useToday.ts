@@ -8,6 +8,7 @@ import type { Allowance } from '../budget/allowance.ts'
 import { budgetDayList, safeToSpend, type SafeToSpend } from '../budget/safeToSpend.ts'
 import type { Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
+import { setAsideTotal } from '../plan/school.ts'
 import { useSession } from '../session.ts'
 
 export interface Today {
@@ -19,16 +20,16 @@ export interface Today {
 
 /** Today's numbers for the signed-in student. */
 export function useToday(): Today {
-  const { wallets, transactions, allowance } = useSession()
+  const { wallets, transactions, allowance, schoolExpenses } = useSession()
   return useMemo(() => {
-    const result = safeToSpend({ wallets, transactions, allowance, setAsideCentavos: 0 }) // set-asides: feat/school-expenses
+    const result = safeToSpend({ wallets, transactions, allowance, setAsideCentavos: setAsideTotal(schoolExpenses, transactions) })
     return {
       result,
       allowance,
       spendingWallets: wallets.filter((w) => w.type === 'spending' && !w.archived),
       budgetDays: budgetDayList(result.today, allowance),
     }
-  }, [wallets, transactions, allowance])
+  }, [wallets, transactions, allowance, schoolExpenses])
 }
 
 /** "₱720 ÷ 4 class days" — the division behind the daily budget. */
