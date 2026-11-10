@@ -3,6 +3,7 @@
  * keeps them in memory, and gives every screen the same data plus save/undo actions.
  */
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { loadPresets, savePresets as storePresets, type Presets } from '../add/presets.ts'
 import { loadAllowance, saveAllowance, type Allowance } from '../budget/allowance.ts'
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
 import { deleteTransaction, loadTransactions, loadWallets, saveTransaction } from '../ledger/repo.ts'
@@ -18,15 +19,16 @@ interface Records {
   allowance: Allowance
   schoolExpenses: SchoolExpense[]
   snapshots: DaySnapshot[]
+  presets: Presets
 }
 
 /** Decrypts everything the screens need (a student has a few thousand records a year at most). */
 async function loadRecords(vault: Vault): Promise<Records> {
-  const [wallets, transactions, allowance, schoolExpenses, snapshots] = await Promise.all([
-    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault),
+  const [wallets, transactions, allowance, schoolExpenses, snapshots, presets] = await Promise.all([
+    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault), loadPresets(vault),
   ])
   if (!allowance) throw new Error('Allowance not set up')
-  return { wallets, transactions, allowance, schoolExpenses, snapshots }
+  return { wallets, transactions, allowance, schoolExpenses, snapshots, presets }
 }
 
 /** Keeps transactions in time order after adding one. */
@@ -90,6 +92,14 @@ export function SessionProvider({ vault, name, onSignOut, children }: { vault: V
     [vault],
   )
 
+  const savePresets = useCallback(
+    async (presets: Presets) => {
+      await storePresets(vault, presets)
+      setRecords((r) => r && { ...r, presets })
+    },
+    [vault],
+  )
+
   // Each toast stays 5 s (plan §4.2: Undo for 5 s), then is marked "leaving" so it can
   // slide away, and is removed 200 ms later. A newer toast restarts the timer.
   useEffect(() => {
@@ -108,8 +118,8 @@ export function SessionProvider({ vault, name, onSignOut, children }: { vault: V
   }, [vault, onSignOut])
 
   const session = useMemo<Session | null>(
-    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, toast, showToast: setToast, dismissToast, signOut } : null,
-    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, toast, dismissToast, signOut],
+    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, toast, showToast: setToast, dismissToast, signOut } : null,
+    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, toast, dismissToast, signOut],
   )
 
   if (records === undefined) return null // decrypting takes a moment; avoid flashing empty screens

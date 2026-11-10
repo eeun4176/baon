@@ -5,6 +5,7 @@
  * UI + unlocked session only"). The provider lives in shell/SessionProvider.tsx.
  */
 import { createContext, useContext } from 'react'
+import type { Presets } from './add/presets.ts'
 import type { Allowance } from './budget/allowance.ts'
 import type { Transaction, Wallet } from './ledger/ledger.ts'
 import type { SchoolExpense } from './plan/school.ts'
@@ -26,6 +27,7 @@ export interface Session {
   allowance: Allowance
   schoolExpenses: SchoolExpense[]
   snapshots: DaySnapshot[] // each day's budget, for the streak
+  presets: Presets // one-tap buttons on Home
   /** Validates, encrypts and saves a transaction; throws a friendly message if a rule is broken. */
   addTransaction(tx: Transaction): Promise<void>
   /** Deletes a transaction (Undo, delete in History). */
@@ -38,6 +40,8 @@ export interface Session {
   updateAllowance(allowance: Allowance): Promise<void>
   /** Saves (or replaces) one day's snapshot. */
   saveSnapshot(snap: DaySnapshot): Promise<void>
+  /** Saves the one-tap buttons (order = button order). */
+  savePresets(presets: Presets): Promise<void>
   toast: Toast | null
   showToast(toast: Toast): void
   dismissToast(): void
