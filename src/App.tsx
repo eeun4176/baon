@@ -1,41 +1,50 @@
 /*
- * App.tsx — Root component of Baon.
- * For now it is a placeholder screen that proves the setup works:
- * Nunito loads, the §12.2 color tokens apply, and the ₱ sign renders.
- * Routing and real screens (Home, History, Plan, Me) replace this in Week 3+.
+ * App.tsx — Root component. Decides what to show when baon opens:
+ * - no account on this phone yet → Onboarding (needs internet once)
+ * - account exists → open its encrypted vault and show Home (works offline)
+ * Tabs/routing (History, Plan, Me) arrive with the screens that need them.
  */
-import { Suspense, lazy } from 'react'
-import logoIcon from './assets/logo-icon.png'
+import { useEffect, useState } from 'react'
+import { Home } from './home/Home.tsx'
+import { Onboarding } from './onboarding/Onboarding.tsx'
+import { Screen } from './ui/kit.tsx'
+import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
 
-// TEMPORARY: /dev-auth sign-in test page. Lazy-loaded so the Neon SDK stays out of
-// the main bundle (it's only needed online). Remove with src/dev/DevAuth.tsx.
-const DevAuth = lazy(() => import('./dev/DevAuth.tsx'))
+type State =
+  | { kind: 'loading' }
+  | { kind: 'onboarding' }
+  | { kind: 'home'; vault: Vault; name: string }
+  | { kind: 'error' }
 
-/** Placeholder home screen: wordmark + a sample "safe to spend" card. */
+/** Opens the first account on this device, if any. (Account picker comes with Shared mode.) */
+async function boot(): Promise<State> {
+  const [account] = await listDeviceAccounts()
+  if (!account) return { kind: 'onboarding' }
+  return { kind: 'home', vault: await openVault(account.userId), name: account.label }
+}
+
+/** App root. */
 export default function App() {
-  if (location.pathname === '/dev-auth') {
-    return <Suspense><DevAuth /></Suspense>
+  const [state, setState] = useState<State>({ kind: 'loading' })
+
+  useEffect(() => {
+    boot().then(setState, () => setState({ kind: 'error' }))
+  }, [])
+
+  switch (state.kind) {
+    case 'loading':
+      return null // IndexedDB opens in milliseconds; avoids a flash of the wrong screen
+    case 'onboarding':
+      return <Onboarding onDone={(vault, name) => setState({ kind: 'home', vault, name })} />
+    case 'home':
+      return <Home vault={state.vault} name={state.name} />
+    case 'error':
+      return (
+        <Screen>
+          <p role="alert" className="mt-10 text-lg font-bold">
+            baon couldn’t open its storage on this phone. Close the app and open it again.
+          </p>
+        </Screen>
+      )
   }
-
-  return (
-    <main className="mx-auto min-h-dvh max-w-md px-5 py-8">
-      {/* Header logo: wallet icon + "baon" wordmark in Nunito 900 (design: App header) */}
-      <h1 className="flex items-center gap-2.5 text-[34px] font-black tracking-tight">
-        <img src={logoIcon} alt="" className="size-10" />
-        baon
-      </h1>
-      <p className="mt-1 text-sm font-extrabold tracking-widest text-muted uppercase">
-        Setup check
-      </p>
-
-      <section className="mt-6 rounded-[28px] bg-card p-6">
-        <p className="font-extrabold">Safe to spend today</p>
-        <p className="text-7xl font-black">₱120</p>
-        <p className="mt-1 font-semibold text-muted">₱720 left until Sunday · 6 class days</p>
-        <button className="mt-5 min-h-11 rounded-full bg-blue px-6 font-extrabold text-white">
-          + Add expense
-        </button>
-      </section>
-    </main>
-  )
 }

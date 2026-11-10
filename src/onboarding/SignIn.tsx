@@ -1,0 +1,148 @@
+/*
+ * SignIn.tsx — Onboarding screen 2 (design "2 Sign in"): Continue with Google,
+ * or "Use email instead" → 6-digit code. Needs internet; shows a calm message offline.
+ * The auth module is loaded on demand so the offline app never downloads it.
+ */
+import { useState, useSyncExternalStore } from 'react'
+import type { SignedInUser } from '../auth/auth.ts'
+import { Button, Card, Icon, Screen, StepHeader, Title } from '../ui/kit.tsx'
+
+/** Subscribes to the browser's online/offline events. */
+function subscribeOnline(onChange: () => void) {
+  window.addEventListener('online', onChange)
+  window.addEventListener('offline', onChange)
+  return () => {
+    window.removeEventListener('online', onChange)
+    window.removeEventListener('offline', onChange)
+  }
+}
+
+/** True while the phone has a connection (re-renders when it changes). */
+function useOnline() {
+  return useSyncExternalStore(subscribeOnline, () => navigator.onLine)
+}
+
+/** Sign-in step. Calls onSignedIn after the email code works (Google returns via redirect). */
+export function SignIn({ onBack, onSignedIn }: { onBack: () => void; onSignedIn: (user: SignedInUser) => void }) {
+  const online = useOnline()
+  const [mode, setMode] = useState<'choose' | 'email' | 'code'>('choose')
+  const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')
+
+  /** Runs an auth action with a busy state and a friendly error message. */
+  async function attempt(action: () => Promise<void>) {
+    setBusy(true)
+    setError('')
+    try {
+      await action()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const google = () =>
+    attempt(async () => {
+      const auth = await import('../auth/auth.ts')
+      await auth.signInWithGoogle(`${location.origin}/`)
+    })
+
+  const sendCode = () =>
+    attempt(async () => {
+      const auth = await import('../auth/auth.ts')
+      await auth.sendEmailCode(email.trim())
+      setMode('code')
+    })
+
+  const verify = () =>
+    attempt(async () => {
+      const auth = await import('../auth/auth.ts')
+      await auth.verifyEmailCode(email.trim(), code)
+      const user = await auth.currentUser()
+      if (!user) throw new Error('Signed in, but we couldn’t read your account. Try again.')
+      onSignedIn(user)
+    })
+
+  return (
+    <Screen
+      footer={
+        <Card className="flex items-center gap-4">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue">
+            <Icon name="shield" />
+          </span>
+          <p className="font-semibold">Your records are encrypted and stored on your phone. Signing in doesn’t send them anywhere.</p>
+        </Card>
+      }
+    >
+      <StepHeader step={1} onBack={onBack} />
+      <Title sub="No new password to make. We only use this to know it’s you.">Sign in to get started</Title>
+
+      {!online && (
+        <p role="status" className="mb-4 rounded-2xl bg-pebble p-4 font-bold">
+          You’re offline. Connect to Wi‑Fi or data once to set up — after that, baon works offline.
+        </p>
+      )}
+
+      <Card className="space-y-3">
+        {mode === 'choose' && (
+          <>
+            <Button variant="dark" disabled={!online || busy} onClick={google}>
+              <span className="grid size-7 place-items-center rounded-full bg-white text-sm font-black text-ink" aria-hidden="true">G</span>
+              Continue with Google
+            </Button>
+            <Button variant="secondary" disabled={!online || busy} onClick={() => setMode('email')}>
+              <Icon name="mail" />
+              Use email instead
+            </Button>
+            <p className="text-center font-semibold text-muted">With email, we’ll send you a 6‑digit code.</p>
+          </>
+        )}
+
+        {mode === 'email' && (
+          <form onSubmit={(e) => { e.preventDefault(); sendCode() }} className="space-y-3">
+            <label className="block font-extrabold">
+              Your email
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                autoFocus
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-2 block min-h-14 w-full rounded-full bg-pebble px-5 text-lg font-bold outline-blue"
+              />
+            </label>
+            <Button type="submit" disabled={!online || busy || !email.includes('@')}>{busy ? 'Sending…' : 'Send code'}</Button>
+            <Button variant="secondary" onClick={() => setMode('choose')}>Back to Google</Button>
+          </form>
+        )}
+
+        {mode === 'code' && (
+          <form onSubmit={(e) => { e.preventDefault(); verify() }} className="space-y-3">
+            <label className="block font-extrabold">
+              6‑digit code sent to {email}
+              <input
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                autoFocus
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
+                className="mt-2 block min-h-14 w-full rounded-full bg-pebble px-5 text-center text-2xl font-black tracking-[0.4em] outline-blue"
+              />
+            </label>
+            <Button type="submit" disabled={!online || busy || code.length !== 6}>{busy ? 'Checking…' : 'Continue'}</Button>
+            <button type="button" onClick={() => setMode('email')} className="min-h-11 w-full font-extrabold text-blue">
+              Use a different email
+            </button>
+          </form>
+        )}
+
+        {error && <p role="alert" className="rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
+      </Card>
+    </Screen>
+  )
+}
