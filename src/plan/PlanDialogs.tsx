@@ -3,44 +3,19 @@
  *   ItemDialog  add / edit a school expense (template, title, amount, due date, set aside now)
  *   PayDialog   "Mark paid": creates the real expense (prefilled amount, editable) which
  *               releases the reservation in the same step (plan §4.4)
- *   Modal       the shared shell: bottom sheet on phones, centered card on desktop
  * Everything saves through the session, so Home's safe-to-spend updates at once, with Undo.
  */
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useState, type FormEvent } from 'react'
 import { lastUsedWalletId } from '../add/categories.ts'
 import { acceptTyped, centavosToText } from '../add/keypad.ts'
 import { addDays, manilaDate } from '../budget/days.ts'
 import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Icon, Switch } from '../ui/kit.tsx'
+import { Modal } from '../ui/Modal.tsx'
 import { paidWith, TEMPLATES, templateLabel, type SchoolExpense } from './school.ts'
 
 const paidDay = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric' })
-
-/** Native <dialog> shell (focus trap + Esc): sheet from the bottom on phones, card on desktop. */
-export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
-  const ref = useRef<HTMLDialogElement>(null)
-  useEffect(() => ref.current?.showModal(), [])
-  return (
-    <dialog
-      ref={ref}
-      aria-label={title}
-      onCancel={(e) => { e.preventDefault(); onClose() }}
-      onClick={(e) => e.target === ref.current && onClose()} // click on the dimmed backdrop
-      className="m-0 mt-auto max-h-[92dvh] w-full max-w-none animate-sheet overflow-y-auto rounded-t-[32px] border-0 bg-card p-0 text-ink shadow-2xl md:m-auto md:max-w-lg md:animate-dialog md:rounded-[32px]"
-    >
-      <div className="p-5 pb-[max(env(safe-area-inset-bottom),1.25rem)] md:p-6">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h2 className="text-xl font-black md:text-2xl">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="grid size-11 shrink-0 place-items-center rounded-full bg-pebble hover:bg-pebble-2">
-            <Icon name="x" className="size-5" />
-          </button>
-        </div>
-        {children}
-      </div>
-    </dialog>
-  )
-}
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'

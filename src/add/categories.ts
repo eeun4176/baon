@@ -1,7 +1,7 @@
 /*
  * categories.ts — Expense categories and the starter one-tap presets (plan §4.2).
  * Quick Add shows the 5 most-used categories plus "More" (design: Fare, Food,
- * Load, School, Snacks, More).
+ * Load, School, Snacks, More). One-tap buttons live in presets.ts.
  */
 import type { Transaction } from '../ledger/ledger.ts'
 import type { IconName } from '../ui/kit.tsx'
@@ -38,24 +38,6 @@ export function byMostUsed(transactions: Transaction[]): Category[] {
   }
   return [...CATEGORIES].sort((a, b) => (uses.get(b.id) ?? 0) - (uses.get(a.id) ?? 0))
 }
-
-/** A one-tap button on Home: logs this expense immediately. */
-export interface Preset {
-  id: string
-  label: string
-  amountCentavos: number
-  categoryId: string
-  icon: 'bus' | 'utensils' | 'printer' | 'phone'
-}
-
-// shortcut: everyone starts with the design's four presets and can't edit them yet;
-// add create/edit (and "suggest after 3 same expenses", plan §4.2) in a later branch.
-export const DEFAULT_PRESETS: Preset[] = [
-  { id: 'jeep', label: 'Jeep', amountCentavos: 1500, categoryId: 'fare', icon: 'bus' },
-  { id: 'lunch', label: 'Lunch', amountCentavos: 8000, categoryId: 'food', icon: 'utensils' },
-  { id: 'print', label: 'Print', amountCentavos: 500, categoryId: 'school', icon: 'printer' },
-  { id: 'load', label: 'Load', amountCentavos: 5000, categoryId: 'load', icon: 'phone' },
-]
 
 /** Wallet the student used for their latest expense, so it's the default next time. */
 export function lastUsedWalletId(transactions: Transaction[], fallback: string): string {

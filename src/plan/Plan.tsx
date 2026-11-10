@@ -13,7 +13,8 @@ import { addDays, manilaDate } from '../budget/days.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Switch } from '../ui/kit.tsx'
-import { ItemDialog, Modal, PayDialog } from './PlanDialogs.tsx'
+import { Modal } from '../ui/Modal.tsx'
+import { ItemDialog, PayDialog } from './PlanDialogs.tsx'
 import { paidWith, setAsideTotal, sortForList, statusOf, TEMPLATES, templateLabel, type SchoolExpense, type Status } from './school.ts'
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']

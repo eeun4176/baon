@@ -9,7 +9,7 @@
  */
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
-  ArrowRight, Book, Bus, Calendar, ChartPie, Check, ChevronLeft, ChevronRight, CircleHelp, CloudUpload, Coffee, Delete, Download,
+  ArrowRight, Book, Bus, Calendar, ChartPie, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
   Ellipsis, Flame, HardDrive, History, House, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pencil, PiggyBank, Plus, Printer,
   Search, Shield, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
@@ -200,6 +200,8 @@ export function MoneyField({ label, value, onChange, autoFocus }: { label: strin
 const ICONS = {
   'chevron-left': ChevronLeft,
   'chevron-right': ChevronRight,
+  'chevron-up': ChevronUp,
+  'chevron-down': ChevronDown,
   phone: Smartphone,
   users: Users,
   shield: Shield,
