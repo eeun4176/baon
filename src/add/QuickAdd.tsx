@@ -99,6 +99,8 @@ export function QuickAdd({ editId, onClose }: { editId: string | null; onClose: 
       walletId,
       ...(isMove ? { toWalletId: to?.id } : {}),
       ...(mode === 'expense' ? { categoryId } : {}),
+      // Keep the link to a paid school expense, or editing would put it back to "Set aside".
+      ...(mode === 'expense' && editing?.linkedId ? { linkedId: editing.linkedId } : {}),
       occurredAt: keepTime ? editing.occurredAt : day === today ? new Date().toISOString() : `${day}T12:00:00+08:00`,
       ...(note.trim() ? { note: note.trim() } : {}),
     }
