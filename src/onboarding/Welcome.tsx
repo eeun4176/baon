@@ -18,7 +18,7 @@ export function Welcome({ onStart }: { onStart: () => void }) {
         </>
       }
     >
-      <header className="flex items-center gap-2.5 text-[34px] font-black tracking-tight">
+      <header className="flex items-center gap-2.5 text-[34px] font-black tracking-tight lg:hidden">
         <img src={logoIcon} alt="" className="size-10" />
         baon
       </header>

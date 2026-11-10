@@ -36,13 +36,18 @@ function counts(day: string, allowance: Allowance): boolean {
   return !allowance.countClassDays || allowance.classWeekdays.includes(weekday(day))
 }
 
-/** Budget days from `today` (inclusive) to the day before the next allowance; at least 1. */
-export function budgetDaysLeft(today: string, allowance: Allowance): number {
-  let days = 0
+/** The days the money must cover: `today` … the day before the next allowance (class days only if on). */
+export function budgetDayList(today: string, allowance: Allowance): string[] {
+  const days: string[] = []
   for (let d = today; daysBetween(d, allowance.nextDate) > 0; d = addDays(d, 1)) {
-    if (counts(d, allowance)) days++
+    if (counts(d, allowance)) days.push(d)
   }
-  return Math.max(1, days)
+  return days
+}
+
+/** How many budget days are left; at least 1 so we never divide by zero. */
+export function budgetDaysLeft(today: string, allowance: Allowance): number {
+  return Math.max(1, budgetDayList(today, allowance).length)
 }
 
 /** Net spending dated `day`: expenses minus refunds (transfers and saves aren't spending). */
