@@ -9,10 +9,11 @@
  *   remembered on this device.
  */
 import { useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, useLocation } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
+import { Snackbar } from './Snackbar.tsx'
 
 const TABS = [
   { to: '/', label: 'Home', icon: 'home' },
@@ -38,6 +39,7 @@ function initialCollapsed(): boolean {
 export function AppShell() {
   const { name } = useSession()
   const [collapsed, setCollapsed] = useState(initialCollapsed)
+  const onAddScreen = useLocation().pathname === '/add'
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {
@@ -122,9 +124,12 @@ export function AppShell() {
         <Outlet />
       </div>
 
-      {/* ── Bottom nav + (+): phone only ──────────────────────────── */}
+      <Snackbar aboveNav={!onAddScreen} />
+
+      {/* ── Bottom nav + (+): phone only, hidden on Quick Add (its keypad needs the space) ── */}
       <nav
         aria-label="Main"
+        hidden={onAddScreen}
         className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden"
       >
         <ul className="flex h-[68px] flex-1 items-center justify-around rounded-full bg-card px-1.5 shadow-[0_10px_30px_-6px_rgba(0,0,0,0.18)]">

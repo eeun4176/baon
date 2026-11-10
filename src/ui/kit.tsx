@@ -164,6 +164,11 @@ const paths = {
   plus: 'M12 5v14M5 12h14',
   sidebar: 'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM9 3v18',
   check: 'M5 12.5l4.5 4.5L19 7.5',
+  bus: 'M6 3h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zM4 11h16M8 18v3M16 18v3',
+  utensils: 'M4 2v7a3 3 0 0 0 3 3v10M10 2v7M7 2v7M17 22V2c-2 1.5-3 4-3 7v4h3',
+  printer: 'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z',
+  backspace: 'M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM18 9l-6 6M12 9l6 6',
+  arrow: 'M5 12h14M13 6l6 6-6 6',
 } as const
 
 /** Outline icon (24px grid, 2px stroke) — decorative unless given a label by its parent. */

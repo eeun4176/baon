@@ -23,7 +23,16 @@ function timeOfDay(now = new Date()): string {
   return hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'
 }
 
-/** One random greeting for `name`. */
-export function randomGreeting(name: string): string {
-  return GREETINGS[Math.floor(Math.random() * GREETINGS.length)](name)
+/**
+ * First name for greetings: the first word of the full name ("John Ian Cabalquinto" → "John").
+ * shortcut: two-word given names (e.g. "John Ian") keep only the first word; add an
+ * editable "What should we call you?" field in Me if students ask for it.
+ */
+export function firstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] || fullName
+}
+
+/** One random greeting, addressing the student by first name. */
+export function randomGreeting(fullName: string): string {
+  return GREETINGS[Math.floor(Math.random() * GREETINGS.length)](firstName(fullName))
 }
