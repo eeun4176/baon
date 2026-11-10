@@ -34,22 +34,17 @@ export default defineConfig({
       manifest: {
         name: 'baon',
         short_name: 'baon',
-        theme_color: '#1E5EFF',
+        description: 'Know what you can spend today — log your baon in seconds, even without load or Wi-Fi.',
+        theme_color: '#F3F4F4', // matches the page so the phone status bar blends in
         background_color: '#F3F4F4',
         display: 'standalone',
-        // TODO(logo): these PNGs don't exist yet — export them from the Design
-        // canvas wallet logo (plus a maskable 512px). Until then the app won't install.
+        orientation: 'portrait',
+        // Icons are generated from the 1024px wallet logo (Design canvas → baon-icon.png)
         icons: [
-          {
-            src: '/pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: '/pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
+          { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          // Full-bleed version Android can crop to its own shape without cutting the wallet
+          { src: '/maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
       },
     }),
