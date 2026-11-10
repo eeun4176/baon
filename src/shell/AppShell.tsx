@@ -12,6 +12,7 @@ import { Link, NavLink, Outlet, useSearchParams } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
 import { QuickAdd } from '../add/QuickAdd.tsx'
 import { Icon, type IconName } from '../ui/kit.tsx'
+import { useKeepTodaySnapshot } from '../streak/useStreak.ts'
 import { ProfileMenu } from './ProfileMenu.tsx'
 import { Snackbar } from './Snackbar.tsx'
 import { useAddDialog } from './useAddDialog.ts'
@@ -78,6 +79,7 @@ export function AppShell() {
   const addDialog = useAddDialog()
   const storage = useStorageUsed()
   const addOpen = params.has('add')
+  useKeepTodaySnapshot()
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {
@@ -113,7 +115,7 @@ export function AppShell() {
               <img src={logoIcon} alt="" className="size-11 shrink-0" />
               <div className="min-w-0 flex-1 animate-fade">
                 <p className="text-2xl leading-none font-black tracking-tight">baon</p>
-                <p className="text-xs leading-tight font-bold text-muted">Your baon, sakto every day</p>
+                <p className="text-xs leading-tight font-bold text-muted">Your daily sakto baon</p>
               </div>
               <button
                 type="button"
@@ -132,7 +134,7 @@ export function AppShell() {
             to="?add=1"
             state={{ modal: true }}
             title={collapsed ? 'Add expense' : undefined}
-            className={`mb-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-linear-to-b from-[#3d74ff] to-blue font-black text-white shadow-[0_12px_24px_-10px_rgba(30,94,255,0.8)] hover:shadow-[0_14px_28px_-8px_rgba(30,94,255,0.85)] ${collapsed ? 'mx-auto size-12' : 'px-5'}`}
+            className={`mb-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-blue font-black text-white shadow-[0_4px_10px_-4px_rgba(30,94,255,0.5)] hover:bg-[#1a52e0] ${collapsed ? 'mx-auto size-12' : 'px-5'}`}
           >
             <Icon name="plus" className="size-5" />
             <span className={collapsed ? 'sr-only' : ''}>Add expense</span>

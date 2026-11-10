@@ -1,0 +1,40 @@
+/*
+ * WeekRow.tsx — This week's Su–Sa row (design p6, p18, p21): streak days are blue
+ * circles with a ✓, today is a blue ring with a dot, other days are gray.
+ * Used on Home (phone + desktop streak card) and on the Streak screen.
+ */
+import { addDays, weekday } from '../budget/days.ts'
+import { Icon } from '../ui/kit.tsx'
+import type { Streak } from './streak.ts'
+
+const SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
+const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
+/** Su–Sa circles for the week containing `today`. `dark` = on a dark card. */
+export function WeekRow({ today, streak, dark = false }: { today: string; streak: Streak; dark?: boolean }) {
+  const sunday = addDays(today, -weekday(today))
+  return (
+    <ol className="grid grid-cols-7 gap-1.5 text-center" aria-label="This week">
+      {SHORT.map((label, i) => {
+        const day = addDays(sunday, i)
+        const isToday = day === today
+        const status = streak.days.get(day)?.status
+        const on = status === 'on' || status === 'over' // every logged class day counts
+        const circle = on
+          ? 'grid place-items-center bg-blue text-white'
+          : isToday
+            ? `block border-[3px] border-blue ${dark ? 'bg-transparent' : 'bg-card'}`
+            : `block ${dark ? 'bg-white/15' : 'bg-pebble-2'}`
+        return (
+          <li key={day} aria-current={isToday ? 'date' : undefined} aria-label={`${LONG[i]}${isToday ? ', today' : ''}${on ? ', counted' : ''}`}>
+            <span className={`text-[0.9375rem] font-extrabold ${dark ? 'text-white/70' : ''}`} aria-hidden="true">{label}</span>
+            <span aria-hidden="true" className={`mx-auto mt-2 aspect-square w-full max-w-11 animate-rise rounded-full ${circle}`} style={{ animationDelay: `${i * 30}ms` }}>
+              {on && <Icon name="check" className="size-[55%]" />}
+            </span>
+            <span aria-hidden="true" className={`mx-auto mt-1.5 block size-1.5 rounded-full ${isToday ? 'bg-blue' : ''}`} />
+          </li>
+        )
+      })}
+    </ol>
+  )
+}

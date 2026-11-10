@@ -5,12 +5,11 @@
  * Desktop (design p18): greeting row with search; hero (with "₱720 of ₱1,500 left" bar)
  *   beside a dark streak card; One-tap add + Set aside for school; Wallets;
  *   Spent per day + Recent.
- * Still to come: ✓ marks and 🔥 count (feat/streak).
  */
 import { useState } from 'react'
 import { Link } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
-import { addDays, weekday } from '../budget/days.ts'
+import { manilaDate, weekday } from '../budget/days.ts'
 import { SpentPerDay } from '../history/Charts.tsx'
 import { spentPerDay } from '../history/history.ts'
 import { TxRow } from '../history/TxRow.tsx'
@@ -19,61 +18,50 @@ import { formatPeso } from '../ledger/money.ts'
 import { sortForList, statusOf } from '../plan/school.ts'
 import { useSession } from '../session.ts'
 import { useAddDialog } from '../shell/useAddDialog.ts'
+import type { Streak } from '../streak/streak.ts'
+import { useStreak } from '../streak/useStreak.ts'
+import { WeekRow } from '../streak/WeekRow.tsx'
 import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
 import { randomGreeting } from './greetings.ts'
 import { OneTapAdd } from './OneTapAdd.tsx'
 import { useToday, type Today } from './useToday.ts'
 
-const SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const dueDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
-const dateLine =new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
-
-/** Su–Sa row for this week: today is a blue ring with a dot; ✓ marks arrive with streaks. */
-function WeekRow({ today, dark = false }: { today: string; dark?: boolean }) {
-  const sunday = addDays(today, -weekday(today))
-  return (
-    <ol className="grid grid-cols-7 gap-1.5 text-center" aria-label="This week">
-      {SHORT.map((label, i) => {
-        const day = addDays(sunday, i)
-        const isToday = day === today
-        return (
-          <li key={day} aria-current={isToday ? 'date' : undefined} aria-label={`${LONG[i]}${isToday ? ', today' : ''}`}>
-            <span className={`text-[0.9375rem] font-extrabold ${dark ? 'text-white/70' : ''}`} aria-hidden="true">{label}</span>
-            <span
-              aria-hidden="true"
-              className={`mx-auto mt-2 block aspect-square w-full max-w-11 animate-rise rounded-full ${
-                isToday ? `border-[3px] border-blue ${dark ? 'bg-transparent' : 'bg-card'}` : dark ? 'bg-white/15' : 'bg-pebble-2'
-              }`}
-              style={{ animationDelay: `${i * 30}ms` }}
-            />
-            <span aria-hidden="true" className={`mx-auto mt-1.5 block size-1.5 rounded-full ${isToday ? 'bg-blue' : ''}`} />
-          </li>
-        )
-      })}
-    </ol>
-  )
-}
+const breakDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
+const dateLine = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
 /** The big "Safe to spend today" card. */
 function Hero({ t }: { t: Today }) {
   const { open } = useAddDialog()
+  const { transactions, snapshots, saveSnapshot, showToast } = useSession()
   const r = t.result
-  const over = r.leftToday < 0
-  const label = over ? 'Today' : r.isClassDay ? 'Safe to spend today' : 'No class today — ₱0 planned'
+  const over = r.isClassDay && r.leftToday < 0
+  const spentOnDayOff = !r.isClassDay && r.spentToday > 0 // not "over": it comes out of the next class days
+  const label = over ? 'Today' : r.isClassDay ? 'Safe to spend today' : spentOnDayOff ? 'No class today' : 'No class today — ₱0 planned'
+  const snap = snapshots.find((s) => s.date === r.today)
+  const nothingLogged = !snap?.noSpend && !transactions.some((tx) => manilaDate(tx.occurredAt) === r.today)
+
+  /** "No spending today": counts as logged for the streak, with Undo. */
+  async function markNoSpend() {
+    const today = snap ?? { date: r.today, dailyBudgetCentavos: r.dailyBudget, isClassDay: r.isClassDay }
+    await saveSnapshot({ ...today, noSpend: true })
+    showToast({ message: 'Logged: no spending today', undo: () => saveSnapshot({ ...today, noSpend: false }) })
+  }
   const allowance = t.allowance.amountCentavos
   const leftShare = allowance > 0 ? Math.min(1, Math.max(0, r.readyToSpend / allowance)) : 0
   return (
     <Card className="h-full animate-rise px-4 py-8 text-center sm:px-6 lg:px-7 lg:py-7 lg:text-left">
       <p className="text-[1.0625rem] font-extrabold text-muted">{label}</p>
       <p className="mt-2" aria-live="polite">
-        <BigMoney centavos={Math.abs(r.leftToday)} className="text-[clamp(3.5rem,22vw,5.25rem)] lg:text-[5.5rem]" />
-        {over && <span className="ml-1 text-3xl font-black">over</span>}
+        <BigMoney centavos={spentOnDayOff ? r.spentToday : Math.abs(r.leftToday)} className="text-[clamp(3.5rem,22vw,5.25rem)] lg:text-[5.5rem]" />
+        {(over || spentOnDayOff) && <span className="ml-1 text-3xl font-black">{over ? 'over' : 'spent'}</span>}
       </p>
       {over && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">That’s okay. Tomorrow’s budget adjusts — you’ve got this.</p>}
+      {spentOnDayOff && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">It comes out of your next class days. Your streak isn’t affected.</p>}
       <p className="mt-3 font-semibold text-muted">
         {formatPeso(Math.max(0, r.readyToSpend))} left until {LONG[weekday(t.allowance.nextDate)]} · {r.budgetDays}{' '}
-        {t.allowance.countClassDays ? 'class ' : ''}
+        {t.allowance.countClassDays && !t.breakUntil ? 'class ' : ''}
         {r.budgetDays === 1 ? 'day' : 'days'}
       </p>
 
@@ -93,6 +81,11 @@ function Hero({ t }: { t: Today }) {
         </div>
       )}
 
+      {t.breakUntil && (
+        <p className="mt-4 rounded-2xl bg-blue-tint p-3 font-extrabold text-blue">
+          {t.breakUntil === r.today ? 'No classes today' : `No classes until ${breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))}`} · budget counts every day, streak paused
+        </p>
+      )}
       {r.allowanceDue && <p className="mt-4 rounded-2xl bg-blue-tint p-3 font-extrabold text-blue">Allowance day — did your baon arrive?</p>}
       {r.setAsidesExceedMoney && <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">Your set-asides are more than your money right now. Want to review them?</p>}
 
@@ -108,23 +101,29 @@ function Hero({ t }: { t: Today }) {
           How it’s counted
         </Link>
       </div>
+      {r.isClassDay && !t.breakUntil && nothingLogged && (
+        <button type="button" onClick={markNoSpend} className="mt-4 min-h-11 font-extrabold text-blue hover:underline">
+          No spending today? Tap to log it
+        </button>
+      )}
     </Card>
   )
 }
 
-/** Desktop dark streak card (design p18). Real streak numbers arrive with feat/streak. */
-function StreakCard({ today }: { today: string }) {
+/** Desktop dark streak card (design p18): streak, this week's ✓ row, link to the map. */
+function StreakCard({ today, streak }: { today: string; streak: Streak }) {
+  const n = streak.current
   return (
     <section className="flex h-full animate-rise flex-col rounded-[28px] bg-hero p-6 text-white" aria-labelledby="streak-title">
       <div className="flex items-center gap-3">
-        <Icon name="flame" className="size-10 text-[#ff8a3d]" />
+        <span className="text-4xl" aria-hidden="true">🔥</span>
         <div>
-          <h2 id="streak-title" className="text-2xl font-black">Your streak</h2>
-          <p className="font-semibold text-white/70">Log today and stay on budget to start it.</p>
+          <h2 id="streak-title" className="text-2xl font-black">{n ? `${n} ${n === 1 ? 'day' : 'days'} in a row` : 'Your streak'}</h2>
+          <p className="font-semibold text-white/70">{n ? 'Keep logging — you’re doing great.' : 'Log today to start it.'}</p>
         </div>
       </div>
       <div className="mt-6">
-        <WeekRow today={today} dark />
+        <WeekRow today={today} streak={streak} dark />
       </div>
       <Link to="/streak" className="mt-auto inline-flex items-center gap-1 pt-6 font-extrabold text-[#8fb0ff] hover:text-white">
         See spending map <Icon name="chevron-right" className="size-4" />
@@ -163,6 +162,7 @@ function Wallets() {
 export function Home() {
   const { name, transactions, wallets, schoolExpenses } = useSession()
   const t = useToday()
+  const streak = useStreak()
   const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid').slice(0, 3)
   const [greeting] = useState(() => randomGreeting(name))
   const today = t.result.today
@@ -174,6 +174,9 @@ export function Home() {
       <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
         <img src={logoIcon} alt="" className="size-10" />
         baon
+        <Link to="/streak" aria-label={`${streak.current}-day streak`} className="ml-auto flex items-center gap-1 rounded-full bg-card px-3.5 py-1.5 text-xl font-black tracking-normal">
+          <span aria-hidden="true">🔥</span> {streak.current}
+        </Link>
       </header>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -188,12 +191,14 @@ export function Home() {
 
       {/* Phone/tablet: week row above the hero (design p6) */}
       <div className="mt-6 lg:hidden">
-        <WeekRow today={today} />
+        <Link to="/streak" aria-label="This week · open your streak" className="block rounded-2xl">
+          <WeekRow today={today} streak={streak} />
+        </Link>
       </div>
 
       <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-12 lg:gap-5">
         <div className="lg:col-span-7"><Hero t={t} /></div>
-        <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} /></div>
+        <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} streak={streak} /></div>
 
         <div className="lg:col-span-6"><OneTapAdd /></div>
         <Card className="hidden animate-rise md:block lg:col-span-6">

@@ -11,6 +11,7 @@ import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
 import { Onboarding } from './onboarding/Onboarding.tsx'
 import { Plan } from './plan/Plan.tsx'
+import { Streak } from './streak/Streak.tsx'
 import { AppShell } from './shell/AppShell.tsx'
 import { ComingSoon } from './shell/ComingSoon.tsx'
 import { SessionProvider } from './shell/SessionProvider.tsx'
@@ -83,7 +84,7 @@ function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; o
             <Route path="breakdown" element={<Breakdown />} />
             <Route path="history" element={<History />} />
             <Route path="plan" element={<Plan />} />
-            <Route path="streak" element={<ComingSoon title="Streak" text="Your on-budget streak, free pass and spending map — coming next." />} />
+            <Route path="streak" element={<Streak />} />
             <Route path="me" element={<ComingSoon title="Me" text="Your profile, wallets and settings — coming next." />} />
             <Route path="backup" element={<ComingSoon title="Backup" text="Export an encrypted copy of your records so a broken phone doesn’t lose them — coming next." />} />
             <Route path="help" element={<ComingSoon title="Help & privacy" text="How baon keeps your records private, and answers to common questions — coming next." />} />

@@ -32,8 +32,8 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: 'baon',
-        short_name: 'baon',
+        name: 'Baon',
+        short_name: 'Baon',
         description: 'Know what you can spend today — log your baon in seconds, even without load or Wi-Fi.',
         theme_color: '#F3F4F4', // matches the page so the phone status bar blends in
         background_color: '#F3F4F4',

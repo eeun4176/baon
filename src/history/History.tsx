@@ -46,7 +46,8 @@ function Search({ value, onChange, className = '' }: { value: string; onChange: 
 
 /** History screen. */
 export function History() {
-  const { transactions, wallets } = useSession()
+  const { transactions, wallets, snapshots } = useSession()
+  const budgets = useMemo(() => new Map(snapshots.filter((s) => s.isClassDay).map((s) => [s.date, s.dailyBudgetCentavos])), [snapshots])
   const t = useToday()
   const { open } = useAddDialog()
   const today = manilaDate()
@@ -78,7 +79,7 @@ export function History() {
           <section key={d.day} className="animate-rise rounded-[28px] bg-card px-3 pt-4 pb-2" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }} aria-label={dayTitle(d.day, today)}>
             <header className="flex items-baseline justify-between gap-3 px-2 pb-1">
               <h2 className="text-lg font-black">{dayTitle(d.day, today)}</h2>
-              <p className="shrink-0 text-sm font-extrabold text-muted">{formatPeso(d.spent)} spent</p>
+              <p className="shrink-0 text-sm font-extrabold text-muted">{formatPeso(d.spent)} {budgets.has(d.day) ? `of ${formatPeso(budgets.get(d.day)!)}` : 'spent'}</p>
             </header>
             <ul className="divide-y divide-page">
               {d.txs.map((tx, j) => <TxRow key={tx.id} tx={tx} wallets={wallets} index={j} />)}

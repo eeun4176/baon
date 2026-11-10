@@ -23,7 +23,7 @@ export function BrandPanel() {
         </div>
 
         <div>
-          <p className="max-w-md text-5xl leading-[1.05] font-black">Your baon, sakto every day.</p>
+          <p className="max-w-md text-5xl leading-[1.05] font-black">Your daily sakto baon.</p>
           <ul className="mt-10 space-y-4">
             {PROMISES.map((p) => (
               <li key={p} className="flex items-center gap-3 text-lg font-bold text-white/80">

@@ -11,7 +11,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
   ArrowRight, Book, Bus, Calendar, ChartPie, Check, ChevronLeft, ChevronRight, CircleHelp, CloudUpload, Coffee, Delete, Download,
   Ellipsis, Flame, HardDrive, History, House, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pencil, PiggyBank, Plus, Printer,
-  Search, Shield, Smartphone, Sun, Trash2, User, Users, Utensils, Wallet, X,
+  Search, Shield, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
 import { formatPeso } from '../ledger/money.ts'
 
@@ -235,6 +235,7 @@ const ICONS = {
   monitor: Monitor,
   logout: LogOut,
   pie: ChartPie,
+  ticket: Ticket,
 } as const
 
 /** Icon name type, for components that take an icon as a prop. */
