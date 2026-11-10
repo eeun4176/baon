@@ -1,26 +1,33 @@
 /*
- * AppShell.tsx — The frame around every signed-in screen.
+ * AppShell.tsx — The frame around every signed-in screen (design p6–p11 phone, p18–p22 desktop).
  *
- * Phone (< 768px): the design's floating white pill nav (Home · History · Plan · Me)
- *   with the separate round blue (+) button, fixed at the bottom for thumbs.
- * Tablet/desktop (≥ 768px): a sidebar in the same style (white rounded panel,
- *   light-blue active pill) that collapses to icons or expands with labels.
- *   It starts collapsed on tablets and expanded on laptops; the student's choice is
- *   remembered on this device.
+ * Phone (< 768px): floating white pill nav (Home · History · Plan · Me) + round blue (+).
+ * Tablet/desktop (≥ 768px): sidebar — logo + tagline, Add expense, Home · History · Plan ·
+ *   Streak · Me, then Backup · Help & privacy, storage used and the profile at the bottom.
+ *   Collapses to icons; starts collapsed on tablets, expanded on laptops; remembered per device.
+ * Also hosts the Add dialog (opened by "?add=1" in the URL) and the Undo toast.
  */
-import { useState } from 'react'
-import { Link, NavLink, Outlet, useLocation } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, NavLink, Outlet, useSearchParams } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
+import { QuickAdd } from '../add/QuickAdd.tsx'
+import { firstName } from '../home/greetings.ts'
 import { useSession } from '../session.ts'
-import { Icon } from '../ui/kit.tsx'
+import { Icon, type IconName } from '../ui/kit.tsx'
 import { Snackbar } from './Snackbar.tsx'
+import { useAddDialog } from './useAddDialog.ts'
 
-const TABS = [
-  { to: '/', label: 'Home', icon: 'home' },
-  { to: '/history', label: 'History', icon: 'history' },
-  { to: '/plan', label: 'Plan', icon: 'calendar' },
-  { to: '/me', label: 'Me', icon: 'user' },
-] as const
+const MAIN: { to: string; label: string; icon: IconName; phone: boolean }[] = [
+  { to: '/', label: 'Home', icon: 'home', phone: true },
+  { to: '/history', label: 'History', icon: 'history', phone: true },
+  { to: '/plan', label: 'Plan', icon: 'calendar', phone: true },
+  { to: '/streak', label: 'Streak', icon: 'flame', phone: false },
+  { to: '/me', label: 'Me', icon: 'user', phone: true },
+]
+const MORE: { to: string; label: string; icon: IconName }[] = [
+  { to: '/backup', label: 'Backup', icon: 'cloud' },
+  { to: '/help', label: 'Help & privacy', icon: 'help' },
+]
 
 const STORAGE_KEY = 'baon.sidebar'
 
@@ -35,11 +42,44 @@ function initialCollapsed(): boolean {
   return !window.matchMedia('(min-width: 1024px)').matches
 }
 
+/** How much this site stores on the device, e.g. "1.2 MB" (null if the browser won't say). */
+function useStorageUsed(): string | null {
+  const [used, setUsed] = useState<string | null>(null)
+  useEffect(() => {
+    navigator.storage?.estimate?.().then(({ usage = 0 }) => {
+      setUsed(usage < 1_000_000 ? `${Math.max(1, Math.round(usage / 1000))} KB` : `${(usage / 1_000_000).toFixed(1)} MB`)
+    }, () => {})
+  }, [])
+  return used
+}
+
+/** One sidebar link (icon + label, or icon only when collapsed). */
+function SideLink({ to, label, icon, collapsed }: { to: string; label: string; icon: IconName; collapsed: boolean }) {
+  return (
+    <NavLink
+      to={to}
+      end
+      title={collapsed ? label : undefined}
+      className={({ isActive }) =>
+        `flex min-h-12 items-center gap-3 rounded-2xl font-extrabold ${collapsed ? 'justify-center' : 'px-4'} ${
+          isActive ? 'bg-blue-tint text-blue' : 'text-ink/80 hover:bg-page hover:text-ink'
+        }`
+      }
+    >
+      <Icon name={icon} className="size-5" />
+      <span className={collapsed ? 'sr-only' : ''}>{label}</span>
+    </NavLink>
+  )
+}
+
 /** Signed-in layout: sidebar (tablet/desktop) or bottom nav (phone) around the current page. */
 export function AppShell() {
   const { name } = useSession()
   const [collapsed, setCollapsed] = useState(initialCollapsed)
-  const onAddScreen = useLocation().pathname === '/add'
+  const [params] = useSearchParams()
+  const addDialog = useAddDialog()
+  const storage = useStorageUsed()
+  const addOpen = params.has('add')
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {
@@ -55,53 +95,15 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-dvh">
-      {/* ── Sidebar: tablet & desktop ─────────────────────────────── */}
-      <aside
-        className={`sticky top-0 hidden h-dvh shrink-0 p-4 transition-[width] duration-200 md:block ${collapsed ? 'w-[6.5rem]' : 'w-72'}`}
-      >
-        <nav aria-label="Main" className="flex h-full flex-col rounded-[28px] bg-card p-3">
-          <div className={`flex items-center gap-2.5 px-2 pt-2 pb-6 ${collapsed ? 'justify-center' : ''}`}>
-            <img src={logoIcon} alt="" className="size-10 shrink-0" />
-            {!collapsed && <span className="text-[28px] font-black tracking-tight">baon</span>}
-          </div>
-
-          <ul className="space-y-1.5">
-            {TABS.map((t) => (
-              <li key={t.to}>
-                <NavLink
-                  to={t.to}
-                  end
-                  title={collapsed ? t.label : undefined}
-                  className={({ isActive }) =>
-                    `flex min-h-12 items-center gap-3 rounded-full font-extrabold transition-colors ${collapsed ? 'justify-center' : 'px-4'} ${
-                      isActive ? 'bg-blue-tint text-blue' : 'text-muted hover:bg-page hover:text-ink'
-                    }`
-                  }
-                >
-                  <Icon name={t.icon} />
-                  <span className={collapsed ? 'sr-only' : ''}>{t.label}</span>
-                </NavLink>
-              </li>
-            ))}
-          </ul>
-
-          <Link
-            to="/add"
-            title={collapsed ? 'Add expense' : undefined}
-            className={`mt-5 flex min-h-12 items-center justify-center gap-2 rounded-full bg-blue font-black text-white shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] ${collapsed ? 'mx-auto size-14' : 'px-5'}`}
-          >
-            <Icon name="plus" />
-            <span className={collapsed ? 'sr-only' : ''}>Add expense</span>
-          </Link>
-
-          <div className="mt-auto space-y-3">
+      {/* ── Sidebar: tablet & desktop (design p18) ───────────────────── */}
+      <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) md:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
+        <nav aria-label="Main" className="flex h-full flex-col overflow-hidden rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+          <div className={`flex gap-2.5 px-1 pt-1 pb-4 ${collapsed ? 'flex-col items-center' : 'items-center'}`}>
+            <img src={logoIcon} alt="" className="size-11 shrink-0" />
             {!collapsed && (
-              <div className="rounded-3xl bg-page p-4">
-                <p className="truncate font-black">{name}</p>
-                <p className="flex items-center gap-1.5 text-sm font-semibold text-muted">
-                  <span className="size-2 shrink-0 rounded-full bg-blue" aria-hidden="true" />
-                  Saved on this device · works offline
-                </p>
+              <div className="min-w-0 flex-1 animate-fade">
+                <p className="text-2xl leading-none font-black tracking-tight">baon</p>
+                <p className="truncate text-xs font-bold text-muted">Your baon, sakto every day</p>
               </div>
             )}
             <button
@@ -110,30 +112,61 @@ export function AppShell() {
               aria-expanded={!collapsed}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className={`flex min-h-12 w-full items-center gap-3 rounded-full font-extrabold text-muted hover:bg-page hover:text-ink ${collapsed ? 'justify-center' : 'px-4'}`}
+              className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-page hover:text-ink"
             >
-              <Icon name="sidebar" />
-              {!collapsed && <span>Collapse</span>}
+              <Icon name="sidebar" className="size-5" />
             </button>
+          </div>
+
+          <Link
+            to="?add=1"
+            state={{ modal: true }}
+            title={collapsed ? 'Add expense' : undefined}
+            className={`mb-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-linear-to-b from-[#3d74ff] to-blue font-black text-white shadow-[0_12px_24px_-10px_rgba(30,94,255,0.8)] hover:shadow-[0_14px_28px_-8px_rgba(30,94,255,0.85)] ${collapsed ? 'mx-auto size-12' : 'px-5'}`}
+          >
+            <Icon name="plus" className="size-5" />
+            <span className={collapsed ? 'sr-only' : ''}>Add expense</span>
+          </Link>
+
+          <ul className="space-y-1">
+            {MAIN.map((t) => <li key={t.to}><SideLink {...t} collapsed={collapsed} /></li>)}
+          </ul>
+          <hr className="mx-2 my-4 border-pebble" />
+          <ul className="space-y-1">
+            {MORE.map((t) => <li key={t.to}><SideLink {...t} collapsed={collapsed} /></li>)}
+          </ul>
+
+          <div className="mt-auto space-y-3 pt-4">
+            {storage && !collapsed && (
+              <p className="flex animate-fade items-center gap-2 rounded-2xl border border-pebble px-3 py-2.5 text-sm font-bold text-muted">
+                <Icon name="drive" className="size-4 shrink-0" />
+                {storage} · saved on this device
+              </p>
+            )}
+            <Link to="/me" title={collapsed ? name : undefined} className={`flex items-center gap-3 rounded-2xl p-1.5 hover:bg-page ${collapsed ? 'justify-center' : ''}`}>
+              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-blue-tint font-black text-blue" aria-hidden="true">
+                {firstName(name).charAt(0).toUpperCase()}
+              </span>
+              <span className={collapsed ? 'sr-only' : 'min-w-0'}>
+                <span className="block truncate font-black">{name}</span>
+                <span className="block text-sm font-semibold text-muted">My phone · works offline</span>
+              </span>
+            </Link>
           </div>
         </nav>
       </aside>
 
-      {/* ── Current page ──────────────────────────────────────────── */}
+      {/* ── Current page (each page fades up as it opens) ──────────── */}
       <div className="min-w-0 flex-1">
         <Outlet />
       </div>
 
-      <Snackbar aboveNav={!onAddScreen} />
+      <Snackbar />
 
-      {/* ── Bottom nav + (+): phone only, hidden on Quick Add (its keypad needs the space) ── */}
-      <nav
-        aria-label="Main"
-        hidden={onAddScreen}
-        className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden"
-      >
+      {/* ── Bottom nav + (+): phone only (design p6) ─────────────────── */}
+      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden">
         <ul className="flex h-[68px] flex-1 items-center justify-around rounded-full bg-card px-1.5 shadow-[0_10px_30px_-6px_rgba(0,0,0,0.18)]">
-          {TABS.map((t) => (
+          {MAIN.filter((t) => t.phone).map((t) => (
             <li key={t.to} className="flex-1">
               <NavLink
                 to={t.to}
@@ -149,13 +182,16 @@ export function AppShell() {
           ))}
         </ul>
         <Link
-          to="/add"
+          to="?add=1"
+          state={{ modal: true }}
           aria-label="Add expense"
           className="grid size-16 shrink-0 place-items-center rounded-full bg-blue text-white shadow-[0_10px_24px_-6px_rgba(30,94,255,0.6)]"
         >
           <Icon name="plus" className="size-8" />
         </Link>
       </nav>
+
+      {addOpen && <QuickAdd key={params.get('edit') ?? 'new'} editId={params.get('edit')} onClose={addDialog.close} />}
     </div>
   )
 }

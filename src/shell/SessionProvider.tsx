@@ -52,14 +52,15 @@ export function SessionProvider({ vault, name, children }: { vault: Vault; name:
     [vault],
   )
 
-  // Each toast disappears after 5 s (plan §4.2: Undo for 5 s); a newer toast restarts the timer.
+  // Each toast stays 5 s (plan §4.2: Undo for 5 s), then is marked "leaving" so it can
+  // slide away, and is removed 200 ms later. A newer toast restarts the timer.
   useEffect(() => {
     if (!toast) return
-    const id = window.setTimeout(() => setToast(null), 5000)
+    const id = window.setTimeout(() => setToast((t) => t && (t.leaving ? null : { ...t, leaving: true })), toast.leaving ? 200 : 5000)
     return () => window.clearTimeout(id)
   }, [toast])
 
-  const dismissToast = useCallback(() => setToast(null), [])
+  const dismissToast = useCallback(() => setToast((t) => t && { ...t, leaving: true }), [])
 
   const session = useMemo<Session | null>(
     () => records ? { vault, name, ...records, addTransaction, removeTransaction, toast, showToast: setToast, dismissToast } : null,

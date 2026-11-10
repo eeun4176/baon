@@ -27,9 +27,49 @@ export function Screen({ children, footer }: { children: ReactNode; footer?: Rea
  */
 export function Page({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-md px-5 pt-[max(env(safe-area-inset-top),1.5rem)] pb-36 md:max-w-2xl md:px-8 md:pt-8 md:pb-10 lg:max-w-5xl">
+    <main className="mx-auto w-full max-w-md animate-rise px-5 pt-[max(env(safe-area-inset-top),1.5rem)] pb-36 md:max-w-2xl md:px-8 md:pt-8 md:pb-10 lg:max-w-6xl">
       {children}
     </main>
+  )
+}
+
+/** Page heading (design pages 19–22): title + gray subtitle, actions on the right. */
+export function PageHeader({ title, sub, actions }: { title: string; sub?: string; actions?: ReactNode }) {
+  return (
+    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+      <div>
+        <h1 className="text-[clamp(1.75rem,8vw,2.125rem)] leading-tight font-black">{title}</h1>
+        {/* Subtitles are a desktop thing in the design; phones keep the title row compact. */}
+        {sub && <p className="mt-1 hidden font-semibold text-muted md:block">{sub}</p>}
+      </div>
+      {actions}
+    </div>
+  )
+}
+
+/** Pill segmented control (design: List · Charts, Expense · Allowance · Move · Save). */
+export function Segmented<T extends string>({ options, value, onChange, label, className = '' }: {
+  options: readonly (readonly [T, string])[]
+  value: T
+  onChange: (v: T) => void
+  label: string
+  className?: string
+}) {
+  return (
+    <div role="tablist" aria-label={label} className={`grid auto-cols-fr grid-flow-col gap-1 rounded-full bg-pebble-2 p-1 ${className}`}>
+      {options.map(([id, text]) => (
+        <button
+          key={id}
+          type="button"
+          role="tab"
+          aria-selected={value === id}
+          onClick={() => onChange(id)}
+          className={`min-h-10 rounded-full px-2 text-[15px] font-extrabold sm:px-4 sm:text-base ${value === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+        >
+          {text}
+        </button>
+      ))}
+    </div>
   )
 }
 
@@ -54,7 +94,7 @@ export function Button({
     <button
       type="button"
       {...props}
-      className={`flex min-h-14 w-full items-center justify-center gap-2.5 rounded-full px-6 text-lg font-black transition-opacity active:opacity-80 disabled:opacity-40 ${variants[variant]} ${className}`}
+      className={`flex min-h-14 w-full items-center justify-center gap-2.5 rounded-full px-6 text-lg font-black disabled:opacity-40 ${variants[variant]} ${className}`}
     />
   )
 }
@@ -122,7 +162,8 @@ export function Chip({ selected, onClick, children }: { selected: boolean; onCli
 /** Big display amount (design "Money · 900"): gray ₱ + digits. Pass a non-negative amount. */
 export function BigMoney({ centavos, className = '' }: { centavos: number; className?: string }) {
   return (
-    <span className={`leading-none font-black ${className}`}>
+    // key = amount: React re-mounts the span when the number changes, replaying the pop.
+    <span key={centavos} className={`inline-block animate-pop leading-none font-black ${className}`}>
       <span className="text-[0.5em] opacity-50">₱</span>
       {formatPeso(centavos).slice(1)}
     </span>
@@ -169,7 +210,24 @@ const paths = {
   printer: 'M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z',
   backspace: 'M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zM18 9l-6 6M12 9l6 6',
   arrow: 'M5 12h14M13 6l6 6-6 6',
+  flame: 'M12 22a7 7 0 0 0 7-7c0-4-3.5-6.5-4.5-10C12 7 11 9 10 9.5 9 8 8.5 7 8.5 6 6 8 5 11 5 15a7 7 0 0 0 7 7z',
+  cloud: 'M7 18a5 5 0 1 1 .9-9.9A6 6 0 0 1 19 10a4 4 0 0 1 0 8M12 12v8M9 15l3-3 3 3',
+  help: 'M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20zM9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.5-3 4M12 17h.01',
+  search: 'M11 19a8 8 0 1 0 0-16 8 8 0 0 0 0 16zM21 21l-4.3-4.3',
+  x: 'M18 6 6 18M6 6l12 12',
+  trash: 'M3 6h18M8 6V4h8v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6',
+  pencil: 'M17 3a2.8 2.8 0 0 1 4 4L7.5 20.5 2 22l1.5-5.5z',
+  book: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5zM4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5',
+  cup: 'M17 8h1a4 4 0 0 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4zM6 2v2M10 2v2M14 2v2',
+  dots: 'M5 12h.01M12 12h.01M19 12h.01',
+  wallet: 'M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-3M21 12h-5a2 2 0 0 0 0 4h5z',
+  piggy: 'M19 10c1 0 2 .5 2 2v2h-2l-1 3h-3v-2h-4v2H8l-1-3a5 5 0 0 1 3-9h3a5 5 0 0 1 4 2zM2 9a3 3 0 0 0 3 3',
+  download: 'M12 3v12M7 10l5 5 5-5M5 21h14',
+  drive: 'M22 12H2M5.5 5h13l3.5 7v6a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-6zM6 16h.01M10 16h.01',
 } as const
+
+/** Icon name type, for components that take an icon as a prop. */
+export type IconName = keyof typeof paths
 
 /** Outline icon (24px grid, 2px stroke) — decorative unless given a label by its parent. */
 export function Icon({ name, className = 'size-6' }: { name: keyof typeof paths; className?: string }) {
