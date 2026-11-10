@@ -8,6 +8,7 @@ import { createContext, useContext } from 'react'
 import type { Allowance } from './budget/allowance.ts'
 import type { Transaction, Wallet } from './ledger/ledger.ts'
 import type { SchoolExpense } from './plan/school.ts'
+import type { DaySnapshot } from './streak/streak.ts'
 import type { Vault } from './vault/vault.ts'
 
 /** A short message at the bottom of the screen, optionally with Undo (plan §4.2: 5 s). */
@@ -24,6 +25,7 @@ export interface Session {
   transactions: Transaction[] // oldest first
   allowance: Allowance
   schoolExpenses: SchoolExpense[]
+  snapshots: DaySnapshot[] // each day's budget, for the streak
   /** Validates, encrypts and saves a transaction; throws a friendly message if a rule is broken. */
   addTransaction(tx: Transaction): Promise<void>
   /** Deletes a transaction (Undo, delete in History). */
@@ -34,6 +36,8 @@ export interface Session {
   removeSchoolExpense(id: string): Promise<void>
   /** Saves a changed allowance setup (e.g. class days on Plan). */
   updateAllowance(allowance: Allowance): Promise<void>
+  /** Saves (or replaces) one day's snapshot. */
+  saveSnapshot(snap: DaySnapshot): Promise<void>
   toast: Toast | null
   showToast(toast: Toast): void
   dismissToast(): void

@@ -14,7 +14,7 @@
  */
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
 import { spendingTotal } from '../ledger/ledger.ts'
-import type { Allowance } from './allowance.ts'
+import { breakOn, type Allowance } from './allowance.ts'
 import { addDays, daysBetween, manilaDate, weekday } from './days.ts'
 
 export interface SafeToSpend {
@@ -31,9 +31,9 @@ export interface SafeToSpend {
   setAsidesExceedMoney: boolean // "Your set-asides are more than your money right now"
 }
 
-/** True if `day` counts toward the budget (always, unless class-days mode is on). */
-function counts(day: string, allowance: Allowance): boolean {
-  return !allowance.countClassDays || allowance.classWeekdays.includes(weekday(day))
+/** True if `day` counts toward the budget: always, unless class-days mode is on (break days always count). */
+export function counts(day: string, allowance: Allowance): boolean {
+  return !allowance.countClassDays || allowance.classWeekdays.includes(weekday(day)) || !!breakOn(day, allowance)
 }
 
 /** The days the money must cover: `today` … the day before the next allowance (class days only if on). */

@@ -7,6 +7,7 @@ import { loadAllowance, saveAllowance, type Allowance } from '../budget/allowanc
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
 import { deleteTransaction, loadTransactions, loadWallets, saveTransaction } from '../ledger/repo.ts'
 import { loadSchoolExpenses, saveSchoolExpense as storeSchoolExpense, type SchoolExpense } from '../plan/school.ts'
+import { loadSnapshots, saveSnapshot as storeSnapshot, type DaySnapshot } from '../streak/streak.ts'
 import { SessionContext, type Session, type Toast } from '../session.ts'
 import { Screen } from '../ui/kit.tsx'
 import type { Vault } from '../vault/vault.ts'
@@ -16,15 +17,16 @@ interface Records {
   transactions: Transaction[]
   allowance: Allowance
   schoolExpenses: SchoolExpense[]
+  snapshots: DaySnapshot[]
 }
 
 /** Decrypts everything the screens need (a student has a few thousand records a year at most). */
 async function loadRecords(vault: Vault): Promise<Records> {
-  const [wallets, transactions, allowance, schoolExpenses] = await Promise.all([
-    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault),
+  const [wallets, transactions, allowance, schoolExpenses, snapshots] = await Promise.all([
+    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault),
   ])
   if (!allowance) throw new Error('Allowance not set up')
-  return { wallets, transactions, allowance, schoolExpenses }
+  return { wallets, transactions, allowance, schoolExpenses, snapshots }
 }
 
 /** Keeps transactions in time order after adding one. */
@@ -80,6 +82,14 @@ export function SessionProvider({ vault, name, onSignOut, children }: { vault: V
     [vault],
   )
 
+  const saveSnapshot = useCallback(
+    async (snap: DaySnapshot) => {
+      await storeSnapshot(vault, snap)
+      setRecords((r) => r && { ...r, snapshots: [...r.snapshots.filter((s) => s.date !== snap.date), snap] })
+    },
+    [vault],
+  )
+
   // Each toast stays 5 s (plan §4.2: Undo for 5 s), then is marked "leaving" so it can
   // slide away, and is removed 200 ms later. A newer toast restarts the timer.
   useEffect(() => {
@@ -98,8 +108,8 @@ export function SessionProvider({ vault, name, onSignOut, children }: { vault: V
   }, [vault, onSignOut])
 
   const session = useMemo<Session | null>(
-    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, toast, showToast: setToast, dismissToast, signOut } : null,
-    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, toast, dismissToast, signOut],
+    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, toast, showToast: setToast, dismissToast, signOut } : null,
+    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, toast, dismissToast, signOut],
   )
 
   if (records === undefined) return null // decrypting takes a moment; avoid flashing empty screens

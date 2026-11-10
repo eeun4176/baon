@@ -184,4 +184,11 @@ describe('safe-to-spend: edge cases (plan §5)', () => {
     expect(run({ now: at('2026-11-11'), txs: [late] }).spentToday).toBe(0)
     expect(run({ now: at('2026-11-10', '23:45'), txs: [late] }).spentToday).toBe(10000)
   })
+
+  it('26. a no-classes break counts every day, so a break Saturday gets a budget', () => {
+    const allowance = { classWeekdays: [1, 2, 3, 4, 5], breaks: [{ from: '2026-11-13', to: '2026-11-14' }] }
+    const wed = run({ now: at('2026-11-11'), allowance }) // We Th Fr + break Sa
+    expect([wed.budgetDays, wed.dailyBudget]).toEqual([4, 18000])
+    expect(run({ now: at('2026-11-14'), allowance }).isClassDay).toBe(true)
+  })
 })

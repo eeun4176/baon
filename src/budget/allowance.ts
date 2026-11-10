@@ -16,6 +16,9 @@ export const AllowanceSchema = z.object({
   nextDate: z.string().check(z.regex(DAY)),
   countClassDays: z.boolean(),
   classWeekdays: z.array(z.int().check(z.minimum(0), z.maximum(6))), // 0 = Sunday … 6 = Saturday
+  // "No classes" breaks (typhoon day … sembreak), inclusive Manila days. During a break the
+  // budget counts every day (students still eat) and the streak is frozen.
+  breaks: z.optional(z.array(z.object({ from: z.string().check(z.regex(DAY)), to: z.string().check(z.regex(DAY)) }))),
 })
 export type Allowance = z.infer<typeof AllowanceSchema>
 
@@ -31,6 +34,11 @@ export function nextAllowanceDate(current: string, frequency: Allowance['frequen
     case 'monthly': return addMonth(current)
     case 'irregular': return null
   }
+}
+
+/** The break that covers `day`, if any. */
+export function breakOn(day: string, allowance: Allowance): { from: string; to: string } | undefined {
+  return allowance.breaks?.find((b) => b.from <= day && day <= b.to)
 }
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
