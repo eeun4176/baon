@@ -1,0 +1,96 @@
+/*
+ * crypto.ts — Baon's only encryption code (plan §7.2–7.3). Thin wrapper over the
+ * browser's built-in Web Crypto API; no custom crypto, no extra libraries.
+ *
+ * Key ideas:
+ * - Each account has one random DEK (data encryption key, AES-256-GCM).
+ *   Every record is encrypted with it.
+ * - The DEK is never stored as-is. It is "wrapped" (encrypted) by another key:
+ *   the device key in My phone mode (later also a passphrase key / recovery key).
+ * - Each record is bound to its owner and identity through AAD (extra data the
+ *   cipher authenticates). A record copied to another account or renamed fails to open.
+ */
+
+const AES = { name: 'AES-GCM', length: 256 } as const
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
+
+/** An encrypted value: the random IV used plus the ciphertext bytes. */
+export interface Sealed {
+  iv: Uint8Array<ArrayBuffer>
+  ciphertext: ArrayBuffer
+}
+
+/** Fresh random 96-bit IV. AES-GCM must never reuse an IV with the same key. */
+function randomIv(): Uint8Array<ArrayBuffer> {
+  return crypto.getRandomValues(new Uint8Array(12))
+}
+
+/**
+ * Creates a new account DEK. It must be extractable so it can be wrapped
+ * for storage; after unwrapping for daily use it is non-extractable (see unwrapDek).
+ */
+export function generateDek(): Promise<CryptoKey> {
+  return crypto.subtle.generateKey(AES, true, ['encrypt', 'decrypt'])
+}
+
+/**
+ * Creates the My-phone-mode device key. Non-extractable: JavaScript (including
+ * injected scripts) can use it but can never read its raw bytes.
+ */
+export function generateDeviceKey(): Promise<CryptoKey> {
+  return crypto.subtle.generateKey(AES, false, ['wrapKey', 'unwrapKey'])
+}
+
+/** Encrypts (wraps) the DEK with a wrapping key so it can be stored safely. */
+export async function wrapDek(dek: CryptoKey, wrappingKey: CryptoKey): Promise<Sealed> {
+  const iv = randomIv()
+  const ciphertext = await crypto.subtle.wrapKey('raw', dek, wrappingKey, { name: 'AES-GCM', iv })
+  return { iv, ciphertext }
+}
+
+/**
+ * Decrypts (unwraps) a stored DEK. Default is non-extractable for daily use;
+ * pass extractable=true only when re-wrapping it (e.g. switching device mode).
+ * Throws if the wrapping key is wrong or the stored bytes were changed.
+ */
+export function unwrapDek(wrapped: Sealed, wrappingKey: CryptoKey, extractable = false): Promise<CryptoKey> {
+  return crypto.subtle.unwrapKey(
+    'raw',
+    wrapped.ciphertext,
+    wrappingKey,
+    { name: 'AES-GCM', iv: wrapped.iv },
+    AES,
+    extractable,
+    ['encrypt', 'decrypt'],
+  )
+}
+
+/** Builds the AAD string that ties a record to its account, id, type and schema version. */
+export function recordAad(userId: string, recordId: string, type: string, version: number): string {
+  return `${userId}|${recordId}|${type}|${version}`
+}
+
+/** Encrypts any JSON-safe value (amounts, notes, dates…) with the DEK. */
+export async function encryptJson(dek: CryptoKey, aad: string, data: unknown): Promise<Sealed> {
+  const iv = randomIv()
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv, additionalData: encoder.encode(aad) },
+    dek,
+    encoder.encode(JSON.stringify(data)),
+  )
+  return { iv, ciphertext }
+}
+
+/**
+ * Decrypts a value made by encryptJson. Throws if the key or AAD is wrong
+ * or if a single byte was tampered with. Callers validate the result's shape (Zod).
+ */
+export async function decryptJson(dek: CryptoKey, aad: string, sealed: Sealed): Promise<unknown> {
+  const plaintext = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: sealed.iv, additionalData: encoder.encode(aad) },
+    dek,
+    sealed.ciphertext,
+  )
+  return JSON.parse(decoder.decode(plaintext))
+}
