@@ -57,6 +57,19 @@ export async function verifyEmailCode(email: string, code: string): Promise<void
   if (error) throw new Error(error.message ?? 'That code didn’t work')
 }
 
+/**
+ * Tries to delete the online sign-in account (email, name). Works only if Neon Auth allows
+ * self-deletion and the sign-in is recent (Better Auth rules); returns false otherwise or offline.
+ */
+export async function deleteSignInAccount(): Promise<boolean> {
+  try {
+    const { error } = await client.deleteUser({})
+    return !error
+  } catch {
+    return false
+  }
+}
+
 /** Signs out of the online session (local vault is unaffected). */
 export async function signOut(): Promise<void> {
   await client.signOut()

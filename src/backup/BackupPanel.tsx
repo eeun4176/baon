@@ -205,7 +205,7 @@ export function RestoreForm({ userId, fallbackName, onRestored }: { userId: stri
       <p className={label}>Backup file</p>
       <label className="mt-1.5 flex min-h-12 cursor-pointer items-center gap-3 rounded-2xl bg-page px-4 font-bold focus-within:ring-2 focus-within:ring-blue/40">
         <Icon name="download" className="size-5 shrink-0 text-blue" />
-        <span className="min-w-0 flex-1 truncate">{file ? file.name : 'Choose baon-backup….json'}</span>
+        <span className="min-w-0 flex-1 truncate">{file ? file.name : 'Choose your backup file'}</span>
         <input type="file" accept="application/json,.json" className="sr-only" onChange={(e) => { setFile(e.target.files?.[0] ?? null); setError('') }} />
       </label>
       <label className={`${label} mt-4`}>

@@ -12,6 +12,7 @@
  * is added later and only changes how the DEK is wrapped, not the records.
  */
 import { decryptJson, encryptJson, generateDek, generateDeviceKey, recordAad, unwrapDek, wrapDek } from '../crypto/crypto.ts'
+import Dexie from 'dexie'
 import { deviceDb, openAccountDb, type AccountDb, type StoredRecord } from '../db/db.ts'
 
 /** Current record schema version; bump it with a migration when record shapes change. */
@@ -74,6 +75,12 @@ export function listDeviceAccounts() {
 /** Changes the display name shown for this account on this device (Me → Profile). */
 export async function renameAccount(userId: string, label: string): Promise<void> {
   await deviceDb.accounts.update(userId, { label })
+}
+
+/** Deletes this account's encrypted records and its entry on this device (Help → Delete). Lock the vault first. */
+export async function deleteAccountFromDevice(userId: string): Promise<void> {
+  await Dexie.delete(`sbt_${userId}`)
+  await deviceDb.accounts.delete(userId)
 }
 
 /** Builds the Vault object around an unlocked DEK. */

@@ -8,7 +8,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import Dexie from 'dexie'
 import { openAccountDb } from '../db/db.ts'
-import { createVault, listDeviceAccounts, openVault } from './vault.ts'
+import { createVault, deleteAccountFromDevice, listDeviceAccounts, openVault } from './vault.ts'
 
 /** Wipes every IndexedDB database so each test starts from a fresh phone. */
 async function freshDevice() {
@@ -89,5 +89,18 @@ describe('vault', () => {
     await expect(vault.get('t1')).rejects.toThrow('locked')
     await expect(vault.put('transaction', 't2', {})).rejects.toThrow('locked')
     await expect(vault.list('transaction')).rejects.toThrow('locked')
+  })
+
+  it('deletes one account from the device and leaves the others', async () => {
+    const a = await createVault('user-a', 'Jasmine')
+    await a.put('transaction', 't1', { amountCentavos: 1500 })
+    a.lock()
+    ;(await createVault('user-b', 'Ben')).lock()
+
+    await deleteAccountFromDevice('user-a')
+    expect((await listDeviceAccounts()).map((x) => x.userId)).toEqual(['user-b'])
+    expect((await Dexie.getDatabaseNames()).includes('sbt_user-a')).toBe(false)
+    await expect(openVault('user-a')).rejects.toThrow('No vault')
+    ;(await openVault('user-b')).lock()
   })
 })

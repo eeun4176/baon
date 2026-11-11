@@ -1,0 +1,87 @@
+/*
+ * DeleteAccount.tsx — "Delete account" on Me → Security (RA 10173 right to erasure).
+ * Type DELETE, then:
+ *   1. try to delete the online sign-in account (only works if Neon Auth allows it and the
+ *      sign-in is recent — so it may fail, and we say so),
+ *   2. sign out and delete everything baon saved on this phone (always),
+ *   3. tell the student exactly what was deleted, then go back to Welcome.
+ */
+import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
+import { useSession } from '../session.ts'
+import { Modal } from '../ui/Modal.tsx'
+import { deleteAccountFromDevice } from '../vault/vault.ts'
+
+const pill = 'min-h-13 flex-1 rounded-full px-5 text-lg font-black disabled:opacity-60'
+
+/** The confirm → result dialog. */
+export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
+  const { vault } = useSession()
+  const [typed, setTyped] = useState('')
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [done, setDone] = useState<'all' | 'phone' | null>(null)
+
+  /** Deletes online (best effort) and on this phone (always). */
+  async function remove(e: FormEvent) {
+    e.preventDefault()
+    if (typed.trim().toUpperCase() !== 'DELETE') return setError('Type DELETE to confirm.')
+    setBusy(true)
+    try {
+      const auth = await import('../auth/auth.ts').catch(() => null) // offline and never loaded: skip online steps
+      const online = (await auth?.deleteSignInAccount()) ?? false
+      if (!online) await auth?.signOut().catch(() => {})
+      vault.lock()
+      await deleteAccountFromDevice(vault.userId)
+      try {
+        for (const key of Object.keys(localStorage)) if (key.startsWith('baon.')) localStorage.removeItem(key)
+      } catch {
+        // storage blocked: nothing saved there anyway
+      }
+      setDone(online ? 'all' : 'phone')
+    } catch {
+      setBusy(false)
+      setError('Couldn’t delete. Close baon, open it again and try once more.')
+    }
+  }
+
+  if (done) {
+    return (
+      <Modal title={done === 'all' ? 'Your account is deleted' : 'Deleted from this phone'} onClose={() => location.replace('/')}>
+        <p className="font-semibold text-muted">
+          {done === 'all'
+            ? 'Your sign-in account and everything baon saved on this phone are gone.'
+            : 'Everything baon saved on this phone is gone. Your sign-in account (email and name) couldn’t be removed from here — message the baon team and we’ll remove it.'}
+        </p>
+        <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>OK</button>
+      </Modal>
+    )
+  }
+
+  return (
+    <Modal title="Delete your account?" onClose={onClose}>
+      <form onSubmit={remove} noValidate>
+        <p className="font-semibold text-muted">
+          This deletes your sign-in account and removes your records, wallets, plans, streak and recovery code from this phone. It can’t be undone. Backups you saved elsewhere aren’t touched.
+        </p>
+        <Link to="/backup" className="mt-3 inline-block font-extrabold text-blue hover:underline">Make a backup first</Link>
+        <label className="mt-4 block font-extrabold text-muted">
+          Type DELETE to confirm
+          <input
+            autoComplete="off"
+            autoCapitalize="characters"
+            spellCheck={false}
+            value={typed}
+            onChange={(e) => { setTyped(e.target.value); setError('') }}
+            className="mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold tracking-widest text-ink uppercase outline-none focus:ring-2 focus:ring-blue/40"
+          />
+        </label>
+        {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
+        <div className="mt-5 flex gap-2.5">
+          <button type="button" onClick={onClose} className={`${pill} bg-pebble hover:bg-pebble-2`}>Cancel</button>
+          <button type="submit" disabled={busy} className={`${pill} bg-red text-white`}>{busy ? 'Deleting…' : 'Delete'}</button>
+        </div>
+      </form>
+    </Modal>
+  )
+}

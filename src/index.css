@@ -28,6 +28,7 @@
   --color-coin: #ffc94d;      /* logo only */
   --color-hero: #1d1f1e;      /* dark hero cards + toast: stay dark in both themes */
   --color-bar: #cfd0d0;       /* gray chart bars, switch "off" track */
+  --color-red: #dc2626;       /* destructive actions only (Delete account); white text passes 4.5:1 */
 
   /* Spending map scale (plan §5.1): none → light → mid → full, plus over */
   --color-map-0: #e3e4e4;
