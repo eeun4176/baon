@@ -55,6 +55,8 @@ export interface Session {
   dismissToast(): void
   /** Ends the online session (if reachable), locks the vault and leaves the app. Records stay on the device. */
   signOut(): void
+  /** Re-reads every record (after sync brought changes from another device). */
+  reload(): void
 }
 
 export const SessionContext = createContext<Session | null>(null)

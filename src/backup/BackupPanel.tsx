@@ -95,8 +95,8 @@ export function BackupPanel() {
   )
 }
 
-/** Shows a new Recovery Kit code (first export, or replacing a lost one) and checks the student saved it. */
-function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: boolean; onClose: () => void; onSaved: () => void }) {
+/** Shows a new Recovery Kit code (first export or sync, or replacing a lost one) and checks the student saved it. */
+export function RecoveryKitDialog({ replacing, doneLabel = 'Export backup', onClose, onSaved }: { replacing: boolean; doneLabel?: string; onClose: () => void; onSaved: () => void }) {
   const { vault, name } = useSession()
   const [code] = useState(newRecoveryCode)
   const [step, setStep] = useState<'show' | 'confirm'>('show')
@@ -170,7 +170,7 @@ function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: boolean
           {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
           <div className="mt-5 flex gap-2.5">
             <button type="button" onClick={() => setStep('show')} className={`${secondary} flex-1`}>Show code</button>
-            <button type="submit" disabled={busy} className={`${primary} flex-1`}>Export backup</button>
+            <button type="submit" disabled={busy} className={`${primary} flex-1`}>{doneLabel}</button>
           </div>
         </form>
       )}

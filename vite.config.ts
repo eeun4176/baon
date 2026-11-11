@@ -20,7 +20,9 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
-        enabled: true, // Lets you test the Service Worker during dev
+        // Off in dev: browsers refuse a service worker from the dev server's self-made certificate,
+        // so it only logged errors. Test offline on the deployed site (real certificate).
+        enabled: false,
       },
       workbox: {
         // Precache the app shell plus only the Nunito subsets Baon uses

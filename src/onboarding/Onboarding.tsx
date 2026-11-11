@@ -1,7 +1,8 @@
 /*
  * Onboarding.tsx — Runs the 5 first-time screens in order (plan §4.1):
  *   Welcome → Sign in → Whose phone? → Your baon → Your money now → Home
- * or, from "Whose phone?", Restore a backup → Home (records come from the file).
+ * or, from "Whose phone?", Restore a backup → Home (records come from the file),
+ * or, if the account already syncs from another device, Welcome back → recovery code → Home.
  * Google sign-in leaves the page and comes back; on return we detect the session
  * and continue at "Whose phone?" so nothing has to be re-typed.
  */
@@ -9,6 +10,7 @@ import { useEffect, useState, type ReactNode } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
 import { manilaDate } from '../budget/days.ts'
 import { RestoreForm } from '../backup/BackupPanel.tsx'
+import { JoinSync } from '../sync/JoinSync.tsx'
 import { Screen, StepHeader, Title } from '../ui/kit.tsx'
 import { openVault, type Vault } from '../vault/vault.ts'
 import { initialBaon, initialMoney, toAllowance, toBalances, type BaonAnswers, type MoneyAnswers } from './answers.ts'
@@ -20,7 +22,7 @@ import { WhosePhone } from './WhosePhone.tsx'
 import { YourBaon } from './YourBaon.tsx'
 import { YourMoney } from './YourMoney.tsx'
 
-type Step = 'welcome' | 'signin' | 'phone' | 'baon' | 'money' | 'restore'
+type Step = 'welcome' | 'signin' | 'phone' | 'baon' | 'money' | 'restore' | 'join'
 
 /** First-time setup. Calls onDone with the new, unlocked vault. */
 export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) => void }) {
@@ -43,6 +45,15 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
       })
       .catch(() => {}) // offline: stay on Welcome; Sign in explains what to do
   }, [])
+
+  // Signed in and this account already syncs from another device: offer to bring those records here.
+  useEffect(() => {
+    if (!user) return
+    Promise.all([import('../sync/sync.ts'), import('../sync/neonRemote.ts')])
+      .then(([sync, { neonRemote }]) => sync.cloudHasAccount(neonRemote(user.id)))
+      .then((has) => has && setStep((s) => (s === 'phone' ? 'join' : s)))
+      .catch(() => {}) // offline or sync not set up: normal setup
+  }, [user])
 
   /** Moves to a step and clears the previous step's error. */
   const go = (next: Step) => {
@@ -80,6 +91,7 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
     welcome: <Welcome onStart={() => go(user ? 'phone' : 'signin')} />,
     signin: <SignIn onBack={() => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />,
     phone: <WhosePhone onContinue={() => go('baon')} onRestore={() => go('restore')} />,
+    join: user && <JoinSync user={user} onDone={onDone} onSkip={() => go('phone')} />,
     restore: user && (
       <Screen>
         <StepHeader step={2} onBack={() => go('phone')} />

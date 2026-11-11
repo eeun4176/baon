@@ -13,8 +13,9 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
     intro: 'What baon collects, what stays on your phone, and your rights under the Data Privacy Act of 2012.',
     sections: [
       ['What we collect', 'Only what signing in needs: your email, your name, and your Google photo if you sign in with Google.'],
-      ['What stays on your phone', 'Your allowance, expenses, wallets, plans and streak are saved only on your phone, scrambled so only baon can read them. We never receive them.'],
-      ['How we use it', 'Only to let you sign in. No ads, no tracking, and we never sell or share your information.'],
+      ['What stays on your phone', 'Your allowance, expenses, wallets, plans and streak are saved on your phone, scrambled so only baon can read them.'],
+      ['If you turn on sync', 'Scrambled copies are kept online so your other devices can get them. We can’t read them — only your recovery code unlocks them. Turn sync off anytime to delete them.'],
+      ['How we use it', 'Only to let you sign in and, if you turn it on, to sync between your devices. No ads, no tracking, and we never sell or share your information.'],
       ['Backups', 'Backups are files you save yourself. They open only with your recovery code — we can’t open them.'],
       ['Your rights', 'You can see, correct, copy or delete your data anytime: edit your name on Me → Profile, save a copy on Backup, or use Delete account on Me → Security.'],
       ['Under 18?', 'Use baon with a parent’s or guardian’s permission.'],
@@ -27,7 +28,7 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
     sections: [
       ['What baon is', 'A tool to plan your allowance. Its numbers are estimates based on what you enter, not financial advice. baon never holds or moves money.'],
       ['Your account', 'Use your own account and keep your phone locked. Under 18? Use baon with a parent’s or guardian’s permission.'],
-      ['Your records', 'Your records live on your phone. Keeping backups and your recovery code safe is up to you.'],
+      ['Your records', 'Your records live on your phone (and, with sync on, as scrambled copies online). Keeping backups and your recovery code safe is up to you.'],
       ['Fair use', 'Don’t misuse baon or use it to harm others.'],
       ['No guarantees', 'baon is provided as it is and may change or stop. We aren’t responsible for lost records or for money decisions made using it.'],
       ['Leaving', 'You can delete your account anytime on Me → Security.'],
@@ -36,11 +37,11 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
   },
   storage: {
     title: 'Local Storage Policy',
-    intro: 'baon saves your data on your phone, not on our servers. No ads or tracking cookies.',
+    intro: 'baon saves your data on your phone. Only if you turn on sync are scrambled copies also kept online. No ads or tracking cookies.',
     sections: [
       ['What it saves', 'Your records (scrambled so only baon can read them), the names of accounts on this phone, your display choices, reminder settings, a note that you’re signed in, and baon’s own app files so it works without internet.'],
       ['Why', 'So baon opens fast, works without internet, and your records stay with you.'],
-      ['Clearing it', 'Delete account on Me → Security removes everything baon saved on this phone. Clearing baon’s data in your browser settings does the same. Without a backup, your records are gone for good.'],
+      ['Clearing it', 'Delete account on Me → Security removes everything baon saved on this phone and online. Clearing baon’s data in your browser settings does the same. Without a backup, your records are gone for good.'],
     ],
   },
 }

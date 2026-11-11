@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { BackupPanel } from './backup/BackupPanel.tsx'
+import { SyncSection } from './sync/SyncSection.tsx'
 import { Help } from './help/Help.tsx'
 import { History } from './history/History.tsx'
 import { Breakdown } from './home/Breakdown.tsx'
@@ -80,10 +81,15 @@ function SignedOut({ name, onContinue }: { name: string; onContinue: () => void 
 function BackupPage() {
   return (
     <Page>
-      <PageHeader title="Backup" sub="An encrypted copy of your records, for a new or reset phone." />
-      <Card className="max-w-2xl animate-rise">
-        <BackupPanel />
-      </Card>
+      <PageHeader title="Backup" sub="Keep a copy of your records, and use baon on all your devices." />
+      <div className="max-w-2xl space-y-4">
+        <Card className="animate-rise">
+          <BackupPanel />
+        </Card>
+        <Card className="animate-rise">
+          <SyncSection />
+        </Card>
+      </div>
     </Page>
   )
 }

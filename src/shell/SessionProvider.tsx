@@ -12,7 +12,7 @@ import { loadSchoolExpenses, saveSchoolExpense as storeSchoolExpense, type Schoo
 import { loadSnapshots, saveSnapshot as storeSnapshot, type DaySnapshot } from '../streak/streak.ts'
 import { SessionContext, type Session, type Toast } from '../session.ts'
 import { Screen } from '../ui/kit.tsx'
-import { renameAccount, type Vault } from '../vault/vault.ts'
+import { listDeviceAccounts, renameAccount, type Vault } from '../vault/vault.ts'
 
 interface Records {
   wallets: Wallet[]
@@ -106,10 +106,19 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
   const rename = useCallback(
     async (next: string) => {
       await renameAccount(vault.userId, next)
+      await vault.put('settings', 'account-name', { name: next }) // so the name syncs to other devices
       setName(next)
     },
     [vault],
   )
+
+  const reload = useCallback(() => {
+    loadRecords(vault).then(setRecords, () => {}) // keep what's shown if a re-read fails
+    listDeviceAccounts().then((accounts) => {
+      const label = accounts.find((a) => a.userId === vault.userId)?.label
+      if (label) setName(label)
+    }, () => {})
+  }, [vault])
 
   const saveProfile = useCallback(
     async (profile: Profile) => {
@@ -145,8 +154,8 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
   }, [vault, onSignOut, name])
 
   const session = useMemo<Session | null>(
-    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, rename, saveProfile, saveWallet, toast, showToast: setToast, dismissToast, signOut } : null,
-    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, rename, saveProfile, saveWallet, toast, dismissToast, signOut],
+    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, rename, saveProfile, saveWallet, toast, showToast: setToast, dismissToast, signOut, reload } : null,
+    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, rename, saveProfile, saveWallet, toast, dismissToast, signOut, reload],
   )
 
   if (records === undefined) return null // decrypting takes a moment; avoid flashing empty screens

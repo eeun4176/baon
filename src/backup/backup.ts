@@ -30,7 +30,7 @@ export function normalizeCode(typed: string): string | null {
 }
 
 /** Wrapping key from the code. HKDF is enough: the code is already random, not a password. */
-async function recoveryKey(code: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
+export async function recoveryKey(code: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const clean = normalizeCode(code)
   if (!clean) throw new Error('That isn’t a recovery code. It has 8 groups of 4 letters and numbers.')
   const base = await crypto.subtle.importKey('raw', encoder.encode(clean), 'HKDF', false, ['deriveKey'])
@@ -44,14 +44,14 @@ async function recoveryKey(code: string, salt: Uint8Array<ArrayBuffer>): Promise
 }
 
 /** Bytes → base64 text for the JSON file. */
-function toB64(bytes: ArrayBuffer | Uint8Array): string {
+export function toB64(bytes: ArrayBuffer | Uint8Array): string {
   let text = ''
   for (const b of new Uint8Array(bytes)) text += String.fromCharCode(b)
   return btoa(text)
 }
 
 /** Base64 text → bytes. */
-function fromB64(text: string): Uint8Array<ArrayBuffer> {
+export function fromB64(text: string): Uint8Array<ArrayBuffer> {
   return Uint8Array.from(atob(text), (c) => c.charCodeAt(0))
 }
 
