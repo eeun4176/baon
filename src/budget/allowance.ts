@@ -5,7 +5,8 @@
  */
 import * as z from 'zod/mini'
 import type { Vault } from '../vault/vault.ts'
-import { addDays, addMonth } from './days.ts'
+import { addDays, addMonth, daysBetween } from './days.ts'
+import { tr } from '../i18n/i18n.ts'
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
@@ -27,16 +28,16 @@ export type Allowance = z.infer<typeof AllowanceSchema>
 
 /** Frequency choices (onboarding + Me → Edit allowance). */
 export const FREQUENCIES = [
-  ['daily', 'Daily'],
-  ['weekly', 'Weekly'],
-  ['biweekly', 'Every 2 weeks'],
-  ['monthly', 'Monthly'],
-  ['irregular', 'Irregular'],
+  ['daily', tr('Daily')],
+  ['weekly', tr('Weekly')],
+  ['biweekly', tr('Every 2 weeks')],
+  ['monthly', tr('Monthly')],
+  ['irregular', tr('Irregular')],
 ] as const
 
 /** "Every week", "Every 2 weeks"… for sentences. */
 export const FREQUENCY_TEXT: Record<Allowance['frequency'], string> = {
-  daily: 'Every day', weekly: 'Every week', biweekly: 'Every 2 weeks', monthly: 'Every month', irregular: 'Irregular',
+  daily: tr('Every day'), weekly: tr('Every week'), biweekly: tr('Every 2 weeks'), monthly: tr('Every month'), irregular: tr('Irregular'),
 }
 
 /**
@@ -64,18 +65,29 @@ export function advanceNextDate(allowance: Allowance, today: string): string | n
   return next
 }
 
+/**
+ * An allowance logged from Add on `today`: if Baon is asking "Did your baon arrive?" (date reached)
+ * or waiting after "Not yet", it's the answer — returns the allowance with the next date moved.
+ * Null when it's extra money mid-cycle, or the schedule is irregular (Home asks for the date).
+ */
+export function afterAllowanceLogged(allowance: Allowance, today: string): Allowance | null {
+  if (daysBetween(today, allowance.nextDate) > 0 && !allowance.lateFrom) return null
+  const nextDate = advanceNextDate(allowance, today)
+  return nextDate ? { ...allowance, nextDate, lateFrom: undefined } : null
+}
+
 /** The break that covers `day`, if any. */
 export function breakOn(day: string, allowance: Allowance): { from: string; to: string } | undefined {
   return allowance.breaks?.find((b) => b.from <= day && day <= b.to)
 }
 
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const DAY_NAMES = [tr('Sun'), tr('Mon'), tr('Tue'), tr('Wed'), tr('Thu'), tr('Fri'), tr('Sat')]
 
 /** Which days the budget counts, in words: "Mon–Sat", "Mon, Wed, Fri", "Every day" or "None". */
 export function classDaysText(allowance: Allowance): string {
   const days = [...new Set(allowance.classWeekdays)].sort()
-  if (!allowance.countClassDays || days.length === 7) return 'Every day'
-  if (days.length === 0) return 'None'
+  if (!allowance.countClassDays || days.length === 7) return tr('Every day')
+  if (days.length === 0) return tr('None')
   const inARow = days.length >= 3 && days.at(-1)! - days[0] === days.length - 1
   return inARow ? `${DAY_NAMES[days[0]]}–${DAY_NAMES[days.at(-1)!]}` : days.map((d) => DAY_NAMES[d]).join(', ')
 }

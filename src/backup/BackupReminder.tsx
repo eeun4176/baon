@@ -8,6 +8,7 @@ import { Link } from 'react-router'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
 import { backupDue, backupStatus } from './backup.ts'
+import { tr } from '../i18n/i18n.ts'
 
 const LATER_DAYS = 3
 
@@ -42,9 +43,9 @@ export function BackupReminder({ className = '' }: { className?: string }) {
     <section className={`flex animate-rise flex-wrap items-center gap-4 rounded-3xl bg-card p-4 sm:rounded-[28px] sm:p-5 ${className}`} aria-labelledby="backup-reminder">
       <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue"><Icon name="cloud" /></span>
       <div className="min-w-48 flex-1">
-        <h2 id="backup-reminder" className="text-lg font-black">{due === 'never' ? 'Not backed up yet' : `Last backup was ${days} days ago`}</h2>
+        <h2 id="backup-reminder" className="text-lg font-black">{due === 'never' ? tr('Not backed up yet') : tr('Last backup was {0} days ago', days)}</h2>
         <p className="font-semibold text-muted">
-          {due === 'never' ? 'Save a copy so you don’t lose your records if your phone breaks.' : 'You’ve added entries since then. Save a fresh copy.'}
+          {due === 'never' ? tr('Save a copy so you don’t lose your records if your phone breaks.') : tr('You’ve added entries since then. Save a fresh copy.')}
         </p>
       </div>
       <div className="flex w-full gap-2 sm:w-auto">
@@ -57,11 +58,9 @@ export function BackupReminder({ className = '' }: { className?: string }) {
           }}
           className="min-h-12 flex-1 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2 sm:flex-none"
         >
-          Later
-        </button>
+          {tr('Later')}</button>
         <Link to="/backup" className="flex min-h-12 flex-1 items-center justify-center rounded-full bg-blue px-5 font-black whitespace-nowrap text-white sm:flex-none">
-          Back up now
-        </Link>
+          {tr('Back up now')}</Link>
       </div>
     </section>
   )

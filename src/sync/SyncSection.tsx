@@ -8,10 +8,11 @@ import { useLocation, useNavigate } from 'react-router'
 import { SignIn } from '../onboarding/SignIn.tsx'
 import { useSession } from '../session.ts'
 import { runSync, useSyncStatus } from './useSync.ts'
+import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const pill = 'min-h-12 rounded-full px-5 font-black disabled:opacity-60'
-const time = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })
-const day = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' })
+const time = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })
+const day = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' })
 
 /** "9:47 AM" today, else "Nov 10". */
 function when(iso: string): string {
@@ -43,27 +44,29 @@ export function SyncSection() {
   })
 
   const line = status.syncing
-    ? 'Syncing…'
+    ? tr('Syncing…')
     : status.problem === 'offline'
-      ? 'Waiting for internet. Changes are saved here and will sync later.'
+      ? tr('Waiting for internet. Changes are saved here and will sync later.')
       : status.problem === 'signin'
-        ? 'You’re signed out, so this device isn’t syncing.'
+        ? tr('You’re signed out, so this device isn’t syncing.')
+        : status.problem === 'deleted'
+          ? tr('This account was deleted on another device, so nothing syncs. Your records are still on this device.')
         : status.problem === 'server'
-          ? 'Couldn’t sync just now. Baon will try again.'
+          ? tr('Couldn’t sync just now. Baon will try again.')
           : status.lastSyncedAt
-            ? `Synced · ${when(status.lastSyncedAt)}`
-            : 'Not synced yet'
+            ? tr('Synced · {0}', when(status.lastSyncedAt))
+            : tr('Not synced yet')
 
   return (
     <section aria-labelledby="sync-title">
-      <h2 id="sync-title" className="text-xl font-black">Sync across devices</h2>
-      <p className="mt-1 font-semibold text-muted">Your records follow you to every phone, tablet or computer where you sign in to baon.</p>
+      <h2 id="sync-title" className="text-xl font-black">{tr('Sync across devices')}</h2>
+      <p className="mt-1 font-semibold text-muted">{tr('Your records follow you to every phone, tablet or computer where you sign in to Baon.')}</p>
       <p role="status" className="mt-3 rounded-2xl bg-page p-3 font-bold">{line}</p>
       <div className="mt-3">
-        {status.problem === 'signin' ? (
-          <button type="button" onClick={() => setSigningIn(true)} className={`${pill} bg-blue text-white`}>Sign in again</button>
+        {status.problem === 'deleted' ? null : status.problem === 'signin' ? (
+          <button type="button" onClick={() => setSigningIn(true)} className={`${pill} bg-blue text-white`}>{tr('Sign in again')}</button>
         ) : (
-          <button type="button" disabled={status.syncing} onClick={() => runSync(vault, reload)} className={`${pill} bg-pebble hover:bg-pebble-2`}>Sync now</button>
+          <button type="button" disabled={status.syncing} onClick={() => runSync(vault, reload)} className={`${pill} bg-pebble hover:bg-pebble-2`}>{tr('Sync now')}</button>
         )}
       </div>
       {signingIn && <SignInAgain onClose={() => setSigningIn(false)} onSignedIn={() => runSync(vault, reload)} />}
@@ -85,7 +88,7 @@ function SignInAgain({ onClose, onSignedIn }: { onClose: () => void; onSignedIn:
         onSignedIn={async (user) => {
           if (user.id !== vault.userId) {
             await import('../auth/auth.ts').then((auth) => auth.signOut()).catch(() => {})
-            showToast({ message: 'That’s a different account. Sign in with the one you use here.' })
+            showToast({ message: tr('That’s a different account. Sign in with the one you use here.') })
             return
           }
           onClose()

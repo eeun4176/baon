@@ -4,16 +4,17 @@
  * Short on purpose: with a first name it fits one line on a phone (Home also cuts it off as a last resort).
  * Moves into i18n files when Filipino/Taglish arrives (Phase 2).
  */
+import { tr } from '../i18n/i18n.ts'
 
 const GREETINGS = [
-  (name: string) => `Hi, ${name}!`,
-  (name: string) => `Kumusta, ${name}?`,
-  (name: string) => `Sakto lang, ${name}?`,
-  (name: string) => `Tipid mode, ${name}!`,
-  (name: string) => `Let’s go, ${name}!`,
-  (name: string) => `Kaya mo ’yan, ${name}!`,
-  (name: string) => `Budget check, ${name}!`,
-  (name: string) => `Ready, ${name}?`,
+  (name: string) => tr('Hi, {0}!', name),
+  (name: string) => tr('Kumusta, {0}?', name),
+  (name: string) => tr('Sakto lang, {0}?', name),
+  (name: string) => tr('Tipid mode, {0}!', name),
+  (name: string) => tr('Let’s go, {0}!', name),
+  (name: string) => tr('Kaya mo ’yan, {0}!', name),
+  (name: string) => tr('Budget check, {0}!', name),
+  (name: string) => tr('Ready, {0}?', name),
 ]
 
 /**

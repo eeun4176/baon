@@ -16,6 +16,7 @@
 // zod/mini: same checks as full Zod at ~6 KB instead of ~30+ KB (plan C4: small bundle).
 // Rules are written as .check(...) instead of chained methods.
 import * as z from 'zod/mini'
+import { tr } from '../i18n/i18n.ts'
 
 /** A non-empty id string. */
 const id = () => z.string().check(z.minLength(1))
@@ -58,24 +59,24 @@ const MOVES = new Set<Transaction['kind']>(['transfer', 'save', 'withdraw'])
  */
 export function checkTransaction(tx: Transaction, wallets: Wallet[]): string | null {
   const from = wallets.find((w) => w.id === tx.walletId)
-  if (!from) return 'That wallet no longer exists.'
+  if (!from) return tr('That wallet no longer exists.')
 
   if (!MOVES.has(tx.kind)) {
-    if (tx.toWalletId) return 'Only moves between wallets have a second wallet.'
-    if (tx.kind === 'refund' && !tx.linkedId) return 'A refund must point to the expense it corrects.'
-    if (from.type === 'savings' && tx.kind === 'expense') return 'Move money out of savings before spending it.'
+    if (tx.toWalletId) return tr('Only moves between wallets have a second wallet.')
+    if (tx.kind === 'refund' && !tx.linkedId) return tr('A refund must point to the expense it corrects.')
+    if (from.type === 'savings' && tx.kind === 'expense') return tr('Move money out of savings before spending it.')
     return null
   }
 
   const to = wallets.find((w) => w.id === tx.toWalletId)
-  if (!to) return 'Pick where the money goes.'
-  if (to.id === from.id) return 'Pick two different wallets.'
+  if (!to) return tr('Pick where the money goes.')
+  if (to.id === from.id) return tr('Pick two different wallets.')
   if (tx.kind === 'transfer' && (from.type !== 'spending' || to.type !== 'spending'))
-    return 'Moves are between spending wallets. Use Save or Withdraw for savings.'
+    return tr('Moves are between spending wallets. Use Save or Withdraw for savings.')
   if (tx.kind === 'save' && (from.type !== 'spending' || to.type !== 'savings'))
-    return 'Saving moves money from a spending wallet into savings.'
+    return tr('Saving moves money from a spending wallet into savings.')
   if (tx.kind === 'withdraw' && (from.type !== 'savings' || to.type !== 'spending'))
-    return 'Withdrawing moves money from savings into a spending wallet.'
+    return tr('Withdrawing moves money from savings into a spending wallet.')
   return null
 }
 

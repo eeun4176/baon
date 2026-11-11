@@ -15,23 +15,25 @@ import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Switch } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
+import { LimitsDialog } from './LimitsDialog.tsx'
 import { ItemDialog, PayDialog } from './PlanDialogs.tsx'
 import { paidWith, setAsideTotal, sortForList, statusOf, TEMPLATES, templateLabel, type SchoolExpense, type Status } from './school.ts'
+import { LOCALE, tr } from '../i18n/i18n.ts'
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const dueDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
-const paidDay = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' })
+const DAYS = [tr('Su'), tr('Mo'), tr('Tu'), tr('We'), tr('Th'), tr('Fr'), tr('Sa')]
+const DAY_NAMES = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
+const dueDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
+const paidDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' })
 
 // Templates shown as quick-add chips above the desktop list (design p20).
 const QUICK = TEMPLATES.filter((t) => t.id !== 'thesis' && t.id !== 'other')
 
-type Open = { kind: 'item'; item?: SchoolExpense; template?: SchoolExpense['template'] } | { kind: 'pay'; item: SchoolExpense } | { kind: 'days' } | null
+type Open = { kind: 'item'; item?: SchoolExpense; template?: SchoolExpense['template'] } | { kind: 'pay'; item: SchoolExpense } | { kind: 'days' } | { kind: 'limits' } | null
 
 const BADGE: Record<Status, [string, string]> = {
-  setAside: ['Set aside', 'bg-ink text-card'],
-  planned: ['Planned', 'bg-pebble text-ink/70'],
-  paid: ['Paid', 'bg-blue-tint text-blue'],
+  setAside: [tr('Set aside'), 'bg-ink text-card'],
+  planned: [tr('Planned'), 'bg-pebble text-ink/70'],
+  paid: [tr('Paid'), 'bg-blue-tint text-blue'],
 }
 
 /** Status pill: dark "Set aside", gray "Planned", blue "Paid". */
@@ -45,10 +47,10 @@ function Badge({ status, className = '' }: { status: Status; className?: string 
  * or ["", "Overdue · Mon, Nov 9"]. Phones skip the prefix (the badge already says it).
  */
 function whenText(item: SchoolExpense, paidAt: string | undefined, today: string): [string, string] {
-  if (paidAt) return ['Paid ', paidDay.format(new Date(paidAt))]
-  if (item.dueDate === today) return ['', 'Due today']
+  if (paidAt) return [tr('Paid '), paidDay.format(new Date(paidAt))]
+  if (item.dueDate === today) return ['', tr('Due today')]
   const date = dueDay.format(new Date(`${item.dueDate}T00:00:00Z`))
-  return item.dueDate < today ? ['', `Overdue · ${date}`] : ['Due ', date]
+  return item.dueDate < today ? ['', tr('Overdue · {0}', date)] : [tr('Due '), date]
 }
 
 /** One school expense row: tap to edit; the pill on the right moves it along. */
@@ -62,7 +64,7 @@ function Row({ item, index, onOpen }: { item: SchoolExpense; index: number; onOp
   /** Planned → Set aside, with Undo. */
   async function setAside() {
     await saveSchoolExpense({ ...item, status: 'setAside' })
-    showToast({ message: `Set aside ${formatPeso(item.estimatedCentavos)} for ${item.title}`, undo: () => saveSchoolExpense(item) })
+    showToast({ message: tr('Set aside {0} for {1}', formatPeso(item.estimatedCentavos), item.title), undo: () => saveSchoolExpense(item) })
   }
 
   return (
@@ -85,10 +87,9 @@ function Row({ item, index, onOpen }: { item: SchoolExpense; index: number; onOp
         <span className="text-lg font-black md:w-20 md:text-right">{formatPeso(paid?.amountCentavos ?? item.estimatedCentavos)}</span>
         {status === 'setAside' && (
           <button type="button" onClick={() => onOpen({ kind: 'pay', item })} className={`${action} bg-pebble hover:bg-pebble-2 md:bg-blue md:text-white md:hover:bg-blue md:hover:shadow-[0_8px_20px_-8px_rgba(30,94,255,0.7)]`}>
-            Mark paid
-          </button>
+            {tr('Mark paid')}</button>
         )}
-        {status === 'planned' && <button type="button" onClick={setAside} className={`${action} bg-pebble hover:bg-pebble-2`}>Set aside</button>}
+        {status === 'planned' && <button type="button" onClick={setAside} className={`${action} bg-pebble hover:bg-pebble-2`}>{tr('Set it aside')}</button>}
         {status === 'paid' && <span className="hidden md:block md:w-32" />}
       </div>
     </li>
@@ -101,7 +102,7 @@ function ClassDaysEditor() {
 
   /** Saves a change to the allowance; Home's daily budget follows instantly. */
   const save = (patch: Partial<typeof allowance>) =>
-    updateAllowance({ ...allowance, ...patch }).catch(() => showToast({ message: 'Couldn’t save. Try again.' }))
+    updateAllowance({ ...allowance, ...patch }).catch(() => showToast({ message: tr('Couldn’t save. Try again.') }))
 
   /** Turns one class day on/off. */
   const toggle = (d: number) =>
@@ -109,7 +110,7 @@ function ClassDaysEditor() {
 
   return (
     <>
-      <div className="grid grid-cols-7 gap-1.5" role="group" aria-label="Class days">
+      <div className="grid grid-cols-7 gap-1.5" role="group" aria-label={tr('Class days')}>
         {DAYS.map((label, d) => {
           const on = allowance.countClassDays && allowance.classWeekdays.includes(d)
           return (
@@ -128,8 +129,8 @@ function ClassDaysEditor() {
         })}
       </div>
       <div className="mt-4 flex items-center justify-between gap-3">
-        <p className="text-sm font-bold text-muted">Count only class days</p>
-        <Switch label="Count only class days" checked={allowance.countClassDays} onChange={(countClassDays) => save({ countClassDays })} />
+        <p className="text-sm font-bold text-muted">{tr('Count only class days')}</p>
+        <Switch label={tr('Count only class days')} checked={allowance.countClassDays} onChange={(countClassDays) => save({ countClassDays })} />
       </div>
       <BreakControl />
     </>
@@ -155,51 +156,49 @@ function BreakControl() {
       setAsking(false)
       showToast({ message, undo: () => updateAllowance(before) })
     } catch {
-      showToast({ message: 'Couldn’t save. Try again.' })
+      showToast({ message: tr('Couldn’t save. Try again.') })
     }
   }
 
   /** "No classes today" or "No classes until Mon, Dec 1". */
-  const untilText = (to: string) => (to === today ? 'No classes today' : `No classes until ${dueDay.format(new Date(`${to}T00:00:00Z`))}`)
+  const untilText = (to: string) => (to === today ? tr('No classes today') : tr('No classes until {0}', dueDay.format(new Date(`${to}T00:00:00Z`))))
 
   /** Starts a break today, ending on `to` (inclusive). */
-  const start = (to: string) => saveBreaks([...(allowance.breaks ?? []), { from: today, to }], `${untilText(to)} · streak paused`)
+  const start = (to: string) => saveBreaks([...(allowance.breaks ?? []), { from: today, to }], tr('{0} · streak paused', untilText(to)))
 
   /** Ends the current break: it stops yesterday (or disappears if it started today). */
   const end = () =>
     current &&
     saveBreaks(
       (allowance.breaks ?? []).flatMap((b) => (b !== current ? [b] : b.from < today ? [{ ...b, to: addDays(today, -1) }] : [])),
-      'Welcome back! Class days count again',
+      tr('Welcome back! Class days count again'),
     )
 
   if (current) {
     return (
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-tint p-4">
-        <p className="font-bold text-blue">{untilText(current.to)} · budget counts every day, streak paused</p>
-        <button type="button" onClick={end} className="min-h-11 rounded-full bg-card px-5 font-black">Classes are back</button>
+        <p className="font-bold text-blue">{tr('{0} · budget counts every day, streak paused', untilText(current.to))}</p>
+        <button type="button" onClick={end} className="min-h-11 rounded-full bg-card px-5 font-black">{tr('Classes are back')}</button>
       </div>
     )
   }
   if (!asking) {
     return (
       <button type="button" onClick={() => setAsking(true)} className="mt-3 min-h-11 font-extrabold text-blue hover:underline">
-        No classes for a while? Set a break
-      </button>
+        {tr('No classes for a while? Set a break')}</button>
     )
   }
   return (
     <div className="mt-4 rounded-2xl bg-page p-4">
-      <p className="font-black">No classes</p>
-      <p className="text-sm font-semibold text-muted">For suspensions, holidays or sembreak. Your budget counts every day and your streak is paused.</p>
+      <p className="font-black">{tr('No classes')}</p>
+      <p className="text-sm font-semibold text-muted">{tr('For suspensions, holidays or sembreak. Your budget counts every day and your streak is paused.')}</p>
       <div className="mt-3 flex flex-wrap items-end gap-2">
-        <button type="button" onClick={() => start(today)} className="min-h-11 rounded-full bg-card px-4 font-black hover:bg-pebble">Just today</button>
+        <button type="button" onClick={() => start(today)} className="min-h-11 rounded-full bg-card px-4 font-black hover:bg-pebble">{tr('Just today')}</button>
         <label className="text-sm font-extrabold text-muted">
-          Until
-          <input type="date" min={today} value={until} onChange={(e) => setUntil(e.target.value)} className="mt-1 block min-h-11 rounded-full bg-card px-4 font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40" />
+          {tr('Until')}<input type="date" min={today} value={until} onChange={(e) => setUntil(e.target.value)} className="mt-1 block min-h-11 rounded-full bg-card px-4 font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40" />
         </label>
-        <button type="button" disabled={!until || until < today} onClick={() => start(until)} className="min-h-11 rounded-full bg-blue px-5 font-black text-white disabled:opacity-60">Save break</button>
-        <button type="button" onClick={() => setAsking(false)} className="min-h-11 px-2 font-extrabold text-muted">Cancel</button>
+        <button type="button" disabled={!until || until < today} onClick={() => start(until)} className="min-h-11 rounded-full bg-blue px-5 font-black text-white disabled:opacity-60">{tr('Save break')}</button>
+        <button type="button" onClick={() => setAsking(false)} className="min-h-11 px-2 font-extrabold text-muted">{tr('Cancel')}</button>
       </div>
     </div>
   )
@@ -207,7 +206,7 @@ function BreakControl() {
 
 /** Plan screen. */
 export function Plan() {
-  const { schoolExpenses, transactions, allowance, showToast } = useSession()
+  const { schoolExpenses, transactions, allowance, limits } = useSession()
   const [open, setOpen] = useState<Open>(null)
   const items = useMemo(() => sortForList(schoolExpenses, transactions), [schoolExpenses, transactions])
   const total = setAsideTotal(schoolExpenses, transactions)
@@ -217,15 +216,15 @@ export function Plan() {
   const tile = 'flex min-h-40 animate-rise flex-col items-start rounded-3xl bg-card p-4 text-left sm:rounded-[28px] sm:p-5 lg:hidden'
   const tileIcon = 'grid size-10 shrink-0 place-items-center rounded-xl bg-blue-tint text-blue'
 
-  /** Category budgets aren't built yet; say so instead of a dead button. */
-  const limitsSoon = () => showToast({ message: 'Category limits are coming soon' })
+  const limitCount = Object.keys(limits).length
+  const openLimits = () => setOpen({ kind: 'limits' })
   const close = () => setOpen(null)
 
   return (
     <Page>
       <PageHeader
-        title="Plan"
-        sub="Set money aside so your daily budget stays honest."
+        title={tr('Plan')}
+        sub={tr('Set money aside so your daily budget stays honest.')}
         actions={
           <button
             type="button"
@@ -233,8 +232,8 @@ export function Plan() {
             className="flex min-h-12 items-center gap-2 rounded-full bg-blue px-5 text-lg font-black text-white md:bg-ink md:text-card"
           >
             <Icon name="plus" className="size-5" />
-            <span className="md:hidden">Add</span>
-            <span className="hidden md:inline">School expense</span>
+            <span className="md:hidden">{tr('Add')}</span>
+            <span className="hidden md:inline">{tr('School expense')}</span>
           </button>
         }
       />
@@ -243,29 +242,28 @@ export function Plan() {
         {/* Left (desktop): hero with Category limits right under it, so neither column is half empty */}
         <div className="flex flex-col gap-5 lg:col-span-7">{/* gap, not space-y: the hidden desktop card must not leave a margin */}
         <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8" aria-labelledby="set-aside-title">
-          <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">Set aside for school</h2>
+          <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">{tr('Set aside for school')}</h2>
           <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(2.75rem,15vw,4.25rem)]" /></p>
           <p className="mt-3 max-w-md font-semibold text-white/75">
-            This stays in your wallets, but it isn’t counted in your daily budget until you mark it paid.
-          </p>
+            {tr('This stays in your wallets, but it isn’t counted in your daily budget until you mark it paid.')}</p>
           {schoolExpenses.length > 0 && (
             <ul className="mt-5 hidden flex-wrap gap-2 text-sm font-black md:flex">
-              <li className="rounded-full bg-white/12 px-3.5 py-1.5">{counts.setAside} set aside</li>
-              <li className="rounded-full bg-white/12 px-3.5 py-1.5">{counts.planned} planned</li>
-              <li className="rounded-full bg-blue px-3.5 py-1.5">{counts.paid} paid</li>
+              <li className="rounded-full bg-white/12 px-3.5 py-1.5">{tr('{0} set aside', counts.setAside)}</li>
+              <li className="rounded-full bg-white/12 px-3.5 py-1.5">{tr('{0} planned', counts.planned)}</li>
+              <li className="rounded-full bg-blue px-3.5 py-1.5">{tr('{0} paid', counts.paid)}</li>
             </ul>
           )}
         </section>
           {/* Desktop: Category limits, styled like the Class days card */}
           <Card className="hidden animate-rise lg:block">
             <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h2 className="text-xl font-black">Category limits</h2>
-              <p className="text-sm font-bold text-muted">Optional</p>
+              <h2 className="text-xl font-black">{tr('Category limits')}</h2>
+              <p className="text-sm font-bold text-muted">{tr('Optional')}</p>
             </div>
             <div className="flex items-center gap-4">
               <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
-              <p className="min-w-0 flex-1 font-semibold text-muted">Cap a category each week, like snacks under ₱200.</p>
-              <button type="button" onClick={limitsSoon} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">Set up</button>
+              <p className="min-w-0 flex-1 font-semibold text-muted">{limitCount ? tr('{0} {1} a cap this allowance cycle.', limitCount, limitCount === 1 ? tr('category has') : tr('categories have')) : tr('Cap a category until your next baon, like snacks under ₱200.')}</p>
+              <button type="button" onClick={openLimits} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">{limitCount ? tr('Edit') : tr('Set up')}</button>
             </div>
           </Card>
         </div>
@@ -275,34 +273,34 @@ export function Plan() {
           {/* Phone/tablet tiles share one shape (icon · title · note · value at the bottom) so they line up */}
           <button type="button" onClick={() => setOpen({ kind: 'days' })} className={tile}>
             <span className={tileIcon}><Icon name="calendar" className="size-5" /></span>
-            <span className="mt-3 block leading-tight font-black">Class days</span>
-            <span className="block text-sm font-semibold text-muted">Budget counts these</span>
-            <span className="mt-auto block pt-3 text-xl leading-tight font-black">{breakOn(manilaDate(), allowance) ? 'On break' : classDaysText(allowance)}</span>
+            <span className="mt-3 block leading-tight font-black">{tr('Class days')}</span>
+            <span className="block text-sm font-semibold text-muted">{tr('Budget counts these')}</span>
+            <span className="mt-auto block pt-3 text-xl leading-tight font-black">{breakOn(manilaDate(), allowance) ? tr('On break') : classDaysText(allowance)}</span>
           </button>
           <Card className="hidden animate-rise lg:block">
             <div className="mb-4 flex items-baseline justify-between gap-3">
-              <h2 className="text-xl font-black">Class days</h2>
-              <p className="text-sm font-bold text-muted">Budget counts these</p>
+              <h2 className="text-xl font-black">{tr('Class days')}</h2>
+              <p className="text-sm font-bold text-muted">{tr('Budget counts these')}</p>
             </div>
             <ClassDaysEditor />
           </Card>
 
-          <button type="button" onClick={limitsSoon} className={tile}>
+          <button type="button" onClick={openLimits} className={tile}>
             <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
-            <span className="mt-3 block leading-tight font-black">Category limits</span>
-            <span className="block text-sm font-semibold text-muted">Optional</span>
-            <span className="mt-auto block pt-3 text-xl leading-tight font-black text-blue">Set up</span>
+            <span className="mt-3 block leading-tight font-black">{tr('Category limits')}</span>
+            <span className="block text-sm font-semibold text-muted">{limitCount ? tr('This allowance cycle') : tr('Optional')}</span>
+            <span className="mt-auto block pt-3 text-xl leading-tight font-black text-blue">{limitCount ? `${limitCount} set` : tr('Set up')}</span>
           </button>
         </div>
 
         {/* School expenses */}
         <Card className="animate-rise lg:col-span-12">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-page pb-3">
-            <h2 className="text-xl font-black">School expenses</h2>
+            <h2 className="text-xl font-black">{tr('School expenses')}</h2>
             <div className="hidden flex-wrap gap-2 md:flex">
               {QUICK.map((t) => (
                 <button key={t.id} type="button" onClick={() => setOpen({ kind: 'item', template: t.id })} className="min-h-9 rounded-full bg-page px-3.5 text-sm font-extrabold hover:bg-pebble">
-                  {t.label === 'Org / class fee' ? 'Org fee' : t.label}
+                  {t.label === 'Org / class fee' ? tr('Org fee') : t.label}
                 </button>
               ))}
             </div>
@@ -314,8 +312,7 @@ export function Plan() {
           ) : (
             <div className="py-6">
               <p className="font-semibold text-muted">
-                Nothing planned yet. Add printing, projects or org fees before they’re due, so your daily budget doesn’t count money that’s already spoken for.
-              </p>
+                {tr('Nothing planned yet. Add printing, projects or org fees before they’re due, so your daily budget doesn’t count money that’s already spoken for.')}</p>
               <div className="mt-4 flex flex-wrap gap-2 md:hidden">
                 {QUICK.map((t) => (
                   <button key={t.id} type="button" onClick={() => setOpen({ kind: 'item', template: t.id })} className="min-h-11 rounded-full bg-page px-4 font-extrabold">
@@ -330,9 +327,10 @@ export function Plan() {
 
       {open?.kind === 'item' && <ItemDialog item={open.item} template={open.template} onClose={close} />}
       {open?.kind === 'pay' && <PayDialog item={open.item} onClose={close} />}
+      {open?.kind === 'limits' && <LimitsDialog onClose={close} />}
       {open?.kind === 'days' && (
-        <Modal title="Class days" onClose={close}>
-          <p className="mb-4 font-semibold text-muted">Your daily budget spreads over these days.</p>
+        <Modal title={tr('Class days')} onClose={close}>
+          <p className="mb-4 font-semibold text-muted">{tr('Your daily budget spreads over these days.')}</p>
           <ClassDaysEditor />
         </Modal>
       )}

@@ -11,6 +11,7 @@ import * as z from 'zod/mini'
 import type { Transaction } from '../ledger/ledger.ts'
 import type { Vault } from '../vault/vault.ts'
 import { CATEGORIES, categoryLabel } from './categories.ts'
+import { tr } from '../i18n/i18n.ts'
 
 export const MAX_PRESETS = 8
 
@@ -33,10 +34,10 @@ export type Presets = z.infer<typeof PresetsSchema>
 /** The design's four starters (Jeep ₱15, Lunch ₱80, Print ₱5, Load ₱50). */
 export const DEFAULT_PRESETS: Presets = {
   items: [
-    { id: 'jeep', label: 'Jeep', amountCentavos: 1500, categoryId: 'fare' },
-    { id: 'lunch', label: 'Lunch', amountCentavos: 8000, categoryId: 'food' },
-    { id: 'print', label: 'Print', amountCentavos: 500, categoryId: 'school', icon: 'printer' },
-    { id: 'load', label: 'Load', amountCentavos: 5000, categoryId: 'load' },
+    { id: 'jeep', label: tr('Jeep'), amountCentavos: 1500, categoryId: 'fare' },
+    { id: 'lunch', label: tr('Lunch'), amountCentavos: 8000, categoryId: 'food' },
+    { id: 'print', label: tr('Print'), amountCentavos: 500, categoryId: 'school', icon: 'printer' },
+    { id: 'load', label: tr('Load'), amountCentavos: 5000, categoryId: 'load' },
   ],
   dismissed: [],
 }

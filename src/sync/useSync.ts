@@ -3,7 +3,7 @@
  * screens (Me → Backup shows it).
  * When: on open, when the internet comes back, when the app comes back to the front,
  * every minute while it's in front, and 2 seconds after any change made here.
- * Signed out: it stops trying until the student signs in again (or reopens baon).
+ * Signed out, or the account was deleted elsewhere: it stops trying until the student acts (or reopens Baon).
  * The sync code and the cloud connection are loaded only when sync actually runs.
  */
 import { useEffect, useSyncExternalStore } from 'react'
@@ -80,7 +80,7 @@ export function useAutoSync() {
   useEffect(() => {
     let timer = 0
     const run = (evenIfSignedOut = false) => {
-      if ((evenIfSignedOut || status.problem !== 'signin') && navigator.onLine && document.visibilityState === 'visible') runSync(vault, reload).catch(() => {})
+      if ((evenIfSignedOut || (status.problem !== 'signin' && status.problem !== 'deleted')) && navigator.onLine && document.visibilityState === 'visible') runSync(vault, reload).catch(() => {})
     }
     const soon = () => {
       window.clearTimeout(timer)

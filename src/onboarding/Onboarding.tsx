@@ -21,6 +21,7 @@ import { Welcome } from './Welcome.tsx'
 import { WhosePhone } from './WhosePhone.tsx'
 import { YourBaon } from './YourBaon.tsx'
 import { YourMoney } from './YourMoney.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 type Step = 'welcome' | 'signin' | 'phone' | 'baon' | 'money' | 'restore' | 'join'
 
@@ -82,7 +83,7 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
       const vault = await setupAccount({ userId: user.id, name: user.name, allowance, ...balances })
       onDone(vault, user.name)
     } catch {
-      setError('Couldn’t save on this phone. Check that storage isn’t full, then try again.')
+      setError(tr('Couldn’t save on this phone. Check that storage isn’t full, then try again.'))
       setBusy(false)
     }
   }
@@ -95,8 +96,8 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
     restore: user && (
       <Screen>
         <StepHeader step={2} onBack={() => go('phone')} />
-        <Title sub="Pick your baon-backup file and type the recovery code you saved.">Restore your backup</Title>
-        <RestoreForm userId={user.id} fallbackName={user.name} onRestored={(name) => openVault(user.id).then((vault) => onDone(vault, name), () => setError('Restored, but couldn’t open it. Close Baon and open it again.'))} />
+        <Title sub={tr('Pick your baon-backup file and type the recovery code you saved.')}>{tr('Restore your backup')}</Title>
+        <RestoreForm userId={user.id} fallbackName={user.name} onRestored={(name) => openVault(user.id).then((vault) => onDone(vault, name), () => setError(tr('Restored, but couldn’t open it. Close Baon and open it again.')))} />
         {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
       </Screen>
     ),

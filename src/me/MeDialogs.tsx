@@ -15,6 +15,7 @@ import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
@@ -58,26 +59,26 @@ export function AllowanceDialog({ onClose }: { onClose: () => void }) {
   async function save(e: FormEvent) {
     e.preventDefault()
     const centavos = amount.trim() === '' ? 0 : parsePeso(amount)
-    if (centavos === null || (centavos === 0 && frequency !== 'irregular')) return setError('Enter how much you usually get.')
-    if (!nextDate || nextDate <= today) return setError(frequency === 'irregular' ? 'Pick a day after today to make it last until.' : 'Pick when your next baon comes (after today).')
+    if (centavos === null || (centavos === 0 && frequency !== 'irregular')) return setError(tr('Enter how much you usually get.'))
+    if (!nextDate || nextDate <= today) return setError(frequency === 'irregular' ? tr('Pick a day after today to make it last until.') : tr('Pick when your next baon comes (after today).'))
     const before = allowance
     setBusy(true)
     try {
       await updateAllowance({ ...allowance, amountCentavos: centavos, frequency, nextDate, lateFrom: undefined })
     } catch {
       setBusy(false)
-      return setError('Couldn’t save. Try again.')
+      return setError(tr('Couldn’t save. Try again.'))
     }
     onClose()
-    showToast({ message: 'Allowance updated · daily budget recalculated', undo: () => updateAllowance(before) })
+    showToast({ message: tr('Allowance updated · daily budget recalculated'), undo: () => updateAllowance(before) })
   }
 
   return (
-    <Modal title="Edit allowance" onClose={onClose}>
+    <Modal title={tr('Edit allowance')} onClose={onClose}>
       <form onSubmit={save} noValidate>
-        <PesoInput text="Usual amount" value={amount} onChange={(v) => { setAmount(v); setError('') }} placeholder={frequency === 'irregular' ? 'It varies' : '0'} />
-        <p className={`${label} mt-4`}>How often</p>
-        <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label="How often">
+        <PesoInput text={tr('Usual amount')} value={amount} onChange={(v) => { setAmount(v); setError('') }} placeholder={frequency === 'irregular' ? tr('It varies') : '0'} />
+        <p className={`${label} mt-4`}>{tr('How often')}</p>
+        <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('How often')}>
           {FREQUENCIES.map(([id, text]) => (
             <button key={id} type="button" role="radio" aria-checked={frequency === id} onClick={() => { setFrequency(id); setError('') }} className={pill(frequency === id)}>
               {text}
@@ -85,13 +86,13 @@ export function AllowanceDialog({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         <label className={`${label} mt-4`}>
-          {frequency === 'irregular' ? 'Make it last until' : 'Next allowance'}
+          {frequency === 'irregular' ? tr('Make it last until') : tr('Next allowance')}
           <input type="date" min={today} value={nextDate} onChange={(e) => { setNextDate(e.target.value); setError('') }} className={field} />
         </label>
-        <p className="mt-3 text-sm font-semibold text-muted">Class days and breaks are on the Plan tab.</p>
+        <p className="mt-3 text-sm font-semibold text-muted">{tr('Class days and breaks are on the Plan tab.')}</p>
         <ErrorLine text={error} />
         <div className="mt-5 flex">
-          <button type="submit" disabled={busy} className={mainButton}>Save</button>
+          <button type="submit" disabled={busy} className={mainButton}>{tr('Save')}</button>
         </div>
       </form>
     </Modal>
@@ -115,7 +116,7 @@ export function WalletDialog({ wallet, onClose }: { wallet?: Wallet; onClose: ()
       await saveWallet(next)
     } catch {
       setBusy(false)
-      return setError('Couldn’t save. Try again.')
+      return setError(tr('Couldn’t save. Try again.'))
     }
     onClose()
     showToast({ message, undo: wallet ? () => saveWallet(wallet) : () => saveWallet({ ...next, archived: true }) })
@@ -125,29 +126,28 @@ export function WalletDialog({ wallet, onClose }: { wallet?: Wallet; onClose: ()
   function save(e: FormEvent) {
     e.preventDefault()
     const clean = name.trim().replace(/\s+/g, ' ')
-    if (!clean) return setError('Name it after your bank or e-wallet, e.g. BPI.')
-    if (clean.length > 40) return setError('Keep the name under 40 letters.')
-    if (wallets.some((w) => !w.archived && w.id !== wallet?.id && w.name.toLowerCase() === clean.toLowerCase())) return setError('You already have a wallet with that name.')
+    if (!clean) return setError(tr('Name it after your bank or e-wallet, e.g. BPI.'))
+    if (clean.length > 40) return setError(tr('Keep the name under 40 letters.'))
+    if (wallets.some((w) => !w.archived && w.id !== wallet?.id && w.name.toLowerCase() === clean.toLowerCase())) return setError(tr('You already have a wallet with that name.'))
     const centavos = opening.trim() === '' ? 0 : parsePeso(opening)
-    if (centavos === null) return setError('Enter how much is in it now (or leave it empty for ₱0).')
-    if (wallet) return store({ ...wallet, name: clean }, `Renamed to ${clean}`)
-    return store({ id: crypto.randomUUID(), name: clean, type: 'spending', openingCentavos: centavos, archived: false }, `Added ${clean} · ${formatPeso(centavos)}`)
+    if (centavos === null) return setError(tr('Enter how much is in it now (or leave it empty for ₱0).'))
+    if (wallet) return store({ ...wallet, name: clean }, tr('Renamed to {0}', clean))
+    return store({ id: crypto.randomUUID(), name: clean, type: 'spending', openingCentavos: centavos, archived: false }, tr('Added {0} · {1}', clean, formatPeso(centavos)))
   }
 
   return (
-    <Modal title={wallet ? `Edit ${wallet.name}` : 'Add a wallet'} onClose={onClose}>
+    <Modal title={wallet ? tr('Edit {0}', wallet.name) : tr('Add a wallet')} onClose={onClose}>
       <form onSubmit={save} noValidate>
         <div className="space-y-4">
           <label className={label}>
-            Name
-            <input value={name} maxLength={40} autoFocus onChange={(e) => { setName(e.target.value); setError('') }} placeholder="e.g. BPI, SeaBank, GoTyme" className={`${field} placeholder:text-muted/60`} />
+            {tr('Name')}<input value={name} maxLength={40} autoFocus onChange={(e) => { setName(e.target.value); setError('') }} placeholder={tr('e.g. BPI, SeaBank, GoTyme')} className={`${field} placeholder:text-muted/60`} />
           </label>
-          {!wallet && <PesoInput text="How much is in it now?" value={opening} onChange={(v) => { setOpening(v); setError('') }} />}
+          {!wallet && <PesoInput text={tr('How much is in it now?')} value={opening} onChange={(v) => { setOpening(v); setError('') }} />}
         </div>
         {wallet && (
           <p className="mt-4 rounded-2xl bg-page p-4 font-semibold text-muted">
-            Balance now: <strong className="font-black text-ink">{formatPeso(balance)}</strong>
-            {wallet.type === 'savings' ? ' · not counted as spendable' : ''}
+            {tr('Balance now:')} <strong className="font-black text-ink">{formatPeso(balance)}</strong>
+            {wallet.type === 'savings' ? tr(' · not counted as spendable') : ''}
           </p>
         )}
         <ErrorLine text={error} />
@@ -156,17 +156,17 @@ export function WalletDialog({ wallet, onClose }: { wallet?: Wallet; onClose: ()
             <button
               type="button"
               disabled={busy || balance !== 0}
-              onClick={() => store({ ...wallet, archived: true }, `Removed ${wallet.name}`)}
-              aria-label={`Remove ${wallet.name}`}
-              title={balance !== 0 ? 'Move its money out first' : undefined}
+              onClick={() => store({ ...wallet, archived: true }, tr('Removed {0}', wallet.name))}
+              aria-label={tr('Remove {0}', wallet.name)}
+              title={balance !== 0 ? tr('Move its money out first') : undefined}
               className="grid min-h-13 place-items-center rounded-full bg-pebble px-4 hover:bg-pebble-2 disabled:opacity-40"
             >
               <Icon name="trash" className="size-5" />
             </button>
           )}
-          <button type="submit" disabled={busy} className={mainButton}>{wallet ? 'Save' : 'Add wallet'}</button>
+          <button type="submit" disabled={busy} className={mainButton}>{wallet ? tr('Save') : tr('Add wallet')}</button>
         </div>
-        {removable && balance !== 0 && <p className="mt-3 text-sm font-semibold text-muted">To remove it, move its money to another wallet first.</p>}
+        {removable && balance !== 0 && <p className="mt-3 text-sm font-semibold text-muted">{tr('To remove it, move its money to another wallet first.')}</p>}
       </form>
     </Modal>
   )

@@ -7,6 +7,7 @@
  */
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 /** Shows the current toast, if any. */
 export function Snackbar() {
@@ -34,10 +35,9 @@ export function Snackbar() {
               onClick={() => { toast.undo?.(); dismissToast() }}
               className="min-h-11 shrink-0 rounded-full bg-blue px-5 font-black text-white hover:bg-[#3d74ff]"
             >
-              Undo
-            </button>
+              {tr('Undo')}</button>
           ) : (
-            <button type="button" onClick={dismissToast} aria-label="Dismiss" className="grid size-11 shrink-0 place-items-center rounded-full text-white/70 hover:bg-white/10">
+            <button type="button" onClick={dismissToast} aria-label={tr('Dismiss')} className="grid size-11 shrink-0 place-items-center rounded-full text-white/70 hover:bg-white/10">
               <Icon name="x" className="size-5" />
             </button>
           )}

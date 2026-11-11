@@ -8,11 +8,13 @@ import { loadAllowance, saveAllowance, type Allowance } from '../budget/allowanc
 import { sortWallets, type Transaction, type Wallet } from '../ledger/ledger.ts'
 import { deleteTransaction, loadTransactions, loadWallets, saveTransaction, saveWallet as storeWallet } from '../ledger/repo.ts'
 import { loadProfile, saveProfile as storeProfile, type Profile } from '../me/profile.ts'
+import { loadLimits, saveLimits as storeLimits, type Limits } from '../plan/limits.ts'
 import { loadSchoolExpenses, saveSchoolExpense as storeSchoolExpense, type SchoolExpense } from '../plan/school.ts'
 import { loadSnapshots, saveSnapshot as storeSnapshot, type DaySnapshot } from '../streak/streak.ts'
 import { SessionContext, type Session, type Toast } from '../session.ts'
 import { Screen } from '../ui/kit.tsx'
 import { listDeviceAccounts, renameAccount, type Vault } from '../vault/vault.ts'
+import { tr } from '../i18n/i18n.ts'
 
 interface Records {
   wallets: Wallet[]
@@ -22,15 +24,16 @@ interface Records {
   snapshots: DaySnapshot[]
   presets: Presets
   profile: Profile
+  limits: Limits
 }
 
 /** Decrypts everything the screens need (a student has a few thousand records a year at most). */
 async function loadRecords(vault: Vault): Promise<Records> {
-  const [wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile] = await Promise.all([
-    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault), loadPresets(vault), loadProfile(vault),
+  const [wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile, limits] = await Promise.all([
+    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault), loadPresets(vault), loadProfile(vault), loadLimits(vault),
   ])
-  if (!allowance) throw new Error('Allowance not set up')
-  return { wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile }
+  if (!allowance) throw new Error(tr('Allowance not set up'))
+  return { wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile, limits }
 }
 
 /** Keeps transactions in time order after adding one. */
@@ -103,6 +106,14 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
     [vault],
   )
 
+  const saveLimits = useCallback(
+    async (limits: Limits) => {
+      await storeLimits(vault, limits)
+      setRecords((r) => r && { ...r, limits })
+    },
+    [vault],
+  )
+
   const rename = useCallback(
     async (next: string) => {
       await renameAccount(vault.userId, next)
@@ -154,15 +165,15 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
   }, [vault, onSignOut, name])
 
   const session = useMemo<Session | null>(
-    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, rename, saveProfile, saveWallet, toast, showToast: setToast, dismissToast, signOut, reload } : null,
-    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, rename, saveProfile, saveWallet, toast, dismissToast, signOut, reload],
+    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, saveLimits, rename, saveProfile, saveWallet, toast, showToast: setToast, dismissToast, signOut, reload } : null,
+    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, saveLimits, rename, saveProfile, saveWallet, toast, dismissToast, signOut, reload],
   )
 
   if (records === undefined) return null // decrypting takes a moment; avoid flashing empty screens
   if (!session) {
     return (
       <Screen>
-        <p role="alert" className="mt-10 text-lg font-bold">Couldn’t open your records on this device. Close Baon and open it again.</p>
+        <p role="alert" className="mt-10 text-lg font-bold">{tr('Couldn’t open your records on this device. Close Baon and open it again.')}</p>
       </Screen>
     )
   }

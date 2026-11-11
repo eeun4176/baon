@@ -18,15 +18,16 @@ import { useSession } from '../session.ts'
 import { BigMoney, Card } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
 import type { Today } from './useToday.ts'
+import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
 // "Left from last week ₱95" (design p13), worded for each allowance frequency.
-const LEFT_FROM = { daily: 'yesterday', weekly: 'last week', biweekly: 'the last 2 weeks', monthly: 'last month', irregular: 'your last baon' } as const
+const LEFT_FROM = { daily: tr('yesterday'), weekly: tr('last week'), biweekly: tr('the last 2 weeks'), monthly: tr('last month'), irregular: tr('your last baon') } as const
 
-const WAIT = [['Tomorrow', 1], ['In 3 days', 3], ['In a week', 7]] as const
-const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-const shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' })
+const WAIT = [[tr('Tomorrow'), 1], [tr('In 3 days'), 3], [tr('In a week'), 7]] as const
+const DAY_NAMES = [tr('Sun'), tr('Mon'), tr('Tue'), tr('Wed'), tr('Thu'), tr('Fri'), tr('Sat')]
+const shortDate = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'short', day: 'numeric' })
 
 /** "Sat, Nov 14" for a Manila day. */
 function dayText(day: string): string {
@@ -55,7 +56,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
   async function receive(amountCentavos: number, walletId: string, nextDate: string) {
     const before = allowance
     const id = crypto.randomUUID()
-    await addTransaction({ id, kind: 'income', amountCentavos, walletId, occurredAt: new Date().toISOString(), note: 'Allowance' })
+    await addTransaction({ id, kind: 'income', amountCentavos, walletId, occurredAt: new Date().toISOString(), note: tr('Allowance') })
     try {
       await updateAllowance({ ...allowance, nextDate, lateFrom: undefined })
     } catch (e) {
@@ -63,7 +64,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
       throw e
     }
     showToast({
-      message: `Added ${formatPeso(amountCentavos)} to ${wallets.find((w) => w.id === walletId)?.name ?? 'your wallet'}`,
+      message: tr('Added {0} to {1}', formatPeso(amountCentavos), wallets.find((w) => w.id === walletId)?.name ?? tr('your wallet')),
       undo: async () => {
         await removeTransaction(id)
         await updateAllowance(before)
@@ -78,7 +79,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
     try {
       await receive(usual, defaultWallet, next)
     } catch {
-      showToast({ message: 'Couldn’t save. Try again.' })
+      showToast({ message: tr('Couldn’t save. Try again.') })
     } finally {
       setBusy(false)
     }
@@ -92,9 +93,9 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
     try {
       await updateAllowance({ ...allowance, nextDate, lateFrom: allowance.lateFrom ?? allowance.nextDate })
       setWaiting(false)
-      showToast({ message: days === 1 ? 'We’ll ask tomorrow' : `We’ll ask on ${DAY_NAMES[weekday(nextDate)]}`, undo: () => updateAllowance(before) })
+      showToast({ message: days === 1 ? tr('We’ll ask tomorrow') : tr('We’ll ask on {0}', DAY_NAMES[weekday(nextDate)]), undo: () => updateAllowance(before) })
     } catch {
-      showToast({ message: 'Couldn’t save. Try again.' })
+      showToast({ message: tr('Couldn’t save. Try again.') })
     } finally {
       setBusy(false)
     }
@@ -103,34 +104,32 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
   return (
     <div className="space-y-4">
       <Card className="animate-rise px-5 py-7 text-center lg:px-7 lg:text-left">
-        <p className="text-sm font-extrabold tracking-[0.12em] text-blue uppercase">Allowance day</p>
-        <h2 className="mt-2 text-[clamp(1.6rem,7vw,2.1rem)] leading-tight font-black">Did your baon arrive?</h2>
+        <p className="text-sm font-extrabold tracking-[0.12em] text-blue uppercase">{tr('Allowance day')}</p>
+        <h2 className="mt-2 text-[clamp(1.6rem,7vw,2.1rem)] leading-tight font-black">{tr('Did your baon arrive?')}</h2>
         <p className="mt-1 font-semibold text-muted">
           {frequency}
-          {usual ? ` · usually ${formatPeso(usual)}` : ''}
+          {usual ? tr(' · usually {0}', formatPeso(usual)) : ''}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2.5 lg:max-w-md">
           <button type="button" disabled={busy} onClick={yes} className="min-h-14 rounded-full bg-blue px-3 text-lg font-black whitespace-nowrap text-white disabled:opacity-60">
-            {usual ? `Yes, ${formatPeso(usual)}` : 'Yes'}
+            {usual ? tr('Yes, {0}', formatPeso(usual)) : tr('Yes')}
           </button>
           <button type="button" disabled={busy} onClick={onCancel ?? (() => setWaiting(true))} className="min-h-14 rounded-full bg-pebble px-3 text-lg font-black hover:bg-pebble-2 disabled:opacity-60">
-            Not yet
-          </button>
+            {tr('Not yet')}</button>
         </div>
         <button type="button" onClick={() => setAsking(true)} className="mt-3 min-h-11 font-extrabold text-blue hover:underline">
-          It was a different amount
-        </button>
+          {tr('It was a different amount')}</button>
       </Card>
 
       <Card className="animate-rise px-5 py-7 text-center lg:px-7 lg:text-left">
-        <p className="text-[1.0625rem] font-extrabold text-muted">Left from {LEFT_FROM[allowance.frequency]}</p>
+        <p className="text-[1.0625rem] font-extrabold text-muted">{tr('Left from {0}', LEFT_FROM[allowance.frequency])}</p>
         <p className="mt-1"><BigMoney centavos={Math.max(0, t.result.readyToSpend)} className="text-[clamp(3rem,18vw,4.5rem)]" /></p>
-        <p className="mx-auto mt-2 max-w-xs font-semibold text-muted lg:mx-0">Your new daily budget starts once your baon is in.</p>
+        <p className="mx-auto mt-2 max-w-xs font-semibold text-muted lg:mx-0">{tr('Your new daily budget starts once your baon is in.')}</p>
       </Card>
 
       {waiting && (
-        <Modal title="When do you think it’ll come?" onClose={() => setWaiting(false)}>
-          <p className="font-semibold text-muted">We’ll split what’s left over those days, so it lasts while you wait.</p>
+        <Modal title={tr('When do you think it’ll come?')} onClose={() => setWaiting(false)}>
+          <p className="font-semibold text-muted">{tr('We’ll split what’s left over those days, so it lasts while you wait.')}</p>
           <div className="mt-5 grid gap-2.5">
             {WAIT.map(([text, days]) => (
               <button key={days} type="button" disabled={busy} onClick={() => wait(days)} className="flex min-h-13 items-center justify-between rounded-full bg-pebble px-5 text-lg font-black hover:bg-pebble-2 disabled:opacity-60">
@@ -166,24 +165,23 @@ function ReceivedDialog({ today, defaultWallet, suggestedNext, onReceive, onClos
   async function save(e: FormEvent) {
     e.preventDefault()
     const centavos = parsePeso(amount)
-    if (!centavos) return setError('Enter how much you got.')
-    if (!nextDate || nextDate <= today) return setError(irregular ? 'Pick the day this baon should last until (after today).' : 'Pick when your next baon comes (after today).')
+    if (!centavos) return setError(tr('Enter how much you got.'))
+    if (!nextDate || nextDate <= today) return setError(irregular ? tr('Pick the day this baon should last until (after today).') : tr('Pick when your next baon comes (after today).'))
     setBusy(true)
     try {
       await onReceive(centavos, walletId, nextDate)
       onClose()
     } catch (err) {
       setBusy(false)
-      setError(err instanceof Error ? err.message : 'Couldn’t save. Try again.')
+      setError(err instanceof Error ? err.message : tr('Couldn’t save. Try again.'))
     }
   }
 
   return (
-    <Modal title="How much did you get?" onClose={onClose}>
+    <Modal title={tr('How much did you get?')} onClose={onClose}>
       <form onSubmit={save} noValidate>
         <label className={label}>
-          Amount
-          <span className={`${field} flex items-center gap-1`}>
+          {tr('Amount')}<span className={`${field} flex items-center gap-1`}>
             <span className="text-muted" aria-hidden="true">₱</span>
             <input
               inputMode="decimal"
@@ -198,8 +196,8 @@ function ReceivedDialog({ today, defaultWallet, suggestedNext, onReceive, onClos
         </label>
         {spending.length > 1 && (
           <>
-            <p className={`${label} mt-4`}>Added to</p>
-            <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label="Added to">
+            <p className={`${label} mt-4`}>{tr('Added to')}</p>
+            <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('Added to')}>
               {spending.map((w) => (
                 <button
                   key={w.id}
@@ -216,14 +214,13 @@ function ReceivedDialog({ today, defaultWallet, suggestedNext, onReceive, onClos
           </>
         )}
         <label className={`${label} mt-4`}>
-          {irregular ? 'Make it last until' : 'Next baon'}
+          {irregular ? tr('Make it last until') : tr('Next baon')}
           <input type="date" min={addDays(today, 1)} value={nextDate} onChange={(e) => { setNextDate(e.target.value); setError('') }} className={field} />
         </label>
         {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
         <div className="mt-5 flex">
           <button type="submit" disabled={busy} className="min-h-13 flex-1 rounded-full bg-blue px-6 text-lg font-black text-white disabled:opacity-60">
-            Add to my money
-          </button>
+            {tr('Add to my money')}</button>
         </div>
       </form>
     </Modal>

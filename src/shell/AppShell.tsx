@@ -22,17 +22,18 @@ import { pageTitle } from '../pageTitle.ts'
 import { formatBytes, keepStorage, useStorage } from '../storage.ts'
 import { useAutoSync } from '../sync/useSync.ts'
 import { useAddDialog } from './useAddDialog.ts'
+import { tr } from '../i18n/i18n.ts'
 
 const MAIN: { to: string; label: string; icon: IconName; phone: boolean }[] = [
-  { to: '/', label: 'Home', icon: 'home', phone: true },
-  { to: '/history', label: 'History', icon: 'history', phone: true },
-  { to: '/plan', label: 'Plan', icon: 'calendar', phone: true },
-  { to: '/streak', label: 'Streak', icon: 'flame', phone: false },
-  { to: '/me', label: 'Me', icon: 'user', phone: true },
+  { to: '/', label: tr('Home'), icon: 'home', phone: true },
+  { to: '/history', label: tr('History'), icon: 'history', phone: true },
+  { to: '/plan', label: tr('Plan'), icon: 'calendar', phone: true },
+  { to: '/streak', label: tr('Streak'), icon: 'flame', phone: false },
+  { to: '/me', label: tr('Me'), icon: 'user', phone: true },
 ]
 const MORE: { to: string; label: string; icon: IconName }[] = [
-  { to: '/backup', label: 'Backup', icon: 'cloud' },
-  { to: '/help', label: 'Help & privacy', icon: 'help' },
+  { to: '/backup', label: tr('Backup'), icon: 'cloud' },
+  { to: '/help', label: tr('Help & privacy'), icon: 'help' },
 ]
 
 const STORAGE_KEY = 'baon.sidebar'
@@ -105,7 +106,7 @@ export function AppShell() {
     <div className="flex min-h-dvh">
       {/* ── Sidebar: tablet & desktop (design p18) ───────────────────── */}
       <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) md:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
-        <nav aria-label="Main" className="flex h-full flex-col rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
+        <nav aria-label={tr('Main')} className="flex h-full flex-col rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
           <div className="mb-4 flex items-center gap-2.5 overflow-hidden pt-1">
             {collapsed ? (
               // Collapsed: the logo itself expands the sidebar (no separate toggle button).
@@ -113,8 +114,8 @@ export function AppShell() {
                 type="button"
                 onClick={toggle}
                 aria-expanded={false}
-                aria-label="Expand sidebar"
-                title="Expand sidebar"
+                aria-label={tr('Expand sidebar')}
+                title={tr('Expand sidebar')}
                 className="ml-[0.125rem] shrink-0 rounded-xl ring-blue/40 hover:ring-2"
               >
                 <img src={logoIcon} alt="" className="size-11" />
@@ -123,16 +124,16 @@ export function AppShell() {
               <img src={logoIcon} alt="" className="ml-[0.125rem] size-11 shrink-0" />
             )}
             <div className={`shrink-0 whitespace-nowrap ${fade(collapsed)}`} aria-hidden={collapsed}>
-              <p className="text-2xl leading-none font-black tracking-tight">Baon</p>
-              <p className="text-xs leading-tight font-bold text-muted">Your daily sakto baon</p>
+              <p className="text-2xl leading-none font-black tracking-tight">{tr('Baon')}</p>
+              <p className="text-xs leading-tight font-bold text-muted">{tr('Your daily sakto baon')}</p>
             </div>
             {!collapsed && (
               <button
                 type="button"
                 onClick={toggle}
                 aria-expanded={true}
-                aria-label="Collapse sidebar"
-                title="Collapse sidebar"
+                aria-label={tr('Collapse sidebar')}
+                title={tr('Collapse sidebar')}
                 className="ml-auto grid size-10 shrink-0 animate-fade place-items-center rounded-xl text-muted hover:bg-page hover:text-ink"
               >
                 <Icon name="sidebar" className="size-5" />
@@ -143,14 +144,13 @@ export function AppShell() {
           <Link
             to="?add=1"
             state={{ modal: true }}
-            title={collapsed ? 'Add expense' : undefined}
+            title={collapsed ? tr('Add expense') : undefined}
             className="mb-4 flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-blue font-black whitespace-nowrap text-white shadow-[0_4px_10px_-4px_rgba(30,94,255,0.5)] hover:bg-[#1a52e0]"
           >
             <Icon name="plus" className="size-5 shrink-0" />
             {/* the label's width animates too, so the + glides to the center instead of jumping */}
             <span className={`overflow-hidden transition-[max-width,margin,opacity] duration-300 ease-(--ease-soft) ${collapsed ? 'max-w-0 opacity-0' : 'ml-2 max-w-40 opacity-100'}`}>
-              Add expense
-            </span>
+              {tr('Add expense')}</span>
           </Link>
 
           <ul className="space-y-1">
@@ -165,8 +165,7 @@ export function AppShell() {
             {storage && !collapsed && (
               <p className="flex animate-fade items-center gap-2 overflow-hidden rounded-2xl border border-pebble px-3 py-2.5 text-sm font-bold whitespace-nowrap text-muted">
                 <Icon name="drive" className="size-4 shrink-0" />
-                {storage} · saved on this device
-              </p>
+                {storage} {tr('· saved on this device')}</p>
             )}
             <ProfileMenu collapsed={collapsed} />
           </div>
@@ -181,7 +180,7 @@ export function AppShell() {
       <Snackbar />
 
       {/* ── Bottom nav + (+): phone only (design p6) ─────────────────── */}
-      <nav aria-label="Main" className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden">
+      <nav aria-label={tr('Main')} className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden">
         <ul className="flex h-[68px] flex-1 items-center justify-around rounded-full bg-card px-1.5 shadow-[0_10px_30px_-6px_rgba(0,0,0,0.18)]">
           {MAIN.filter((t) => t.phone).map((t) => (
             <li key={t.to} className="flex-1">
@@ -201,7 +200,7 @@ export function AppShell() {
         <Link
           to="?add=1"
           state={{ modal: true }}
-          aria-label="Add expense"
+          aria-label={tr('Add expense')}
           className="grid size-16 shrink-0 place-items-center rounded-full bg-blue text-white shadow-[0_10px_24px_-6px_rgba(30,94,255,0.6)]"
         >
           <Icon name="plus" className="size-8" />

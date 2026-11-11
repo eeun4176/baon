@@ -76,3 +76,12 @@ describe('streak', () => {
     expect(['2026-11-02', '2026-11-03', '2026-11-04', '2026-11-05'].map((d) => mapLevel(r.days.get(d)))).toEqual([1, 2, 3, 'over'])
   })
 })
+
+describe('share caption', () => {
+  it('names the streak, never an amount', async () => {
+    const { shareCaption } = await import('./share.ts')
+    expect(shareCaption(12)).toBe('12-day streak on Baon — logging my baon every class day.')
+    expect(shareCaption(0)).toContain('Starting my Baon streak')
+    expect(shareCaption(5)).not.toMatch(/₱|\d+\.\d\d/)
+  })
+})

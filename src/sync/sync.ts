@@ -46,8 +46,8 @@ export interface CloudKey {
   dek: string
 }
 
-/** Why a sync couldn't run: no internet, not signed in, or the server refused. */
-export type SyncProblem = 'offline' | 'signin' | 'server'
+/** Why a sync couldn't run: no internet, not signed in, the server refused, or the account was deleted elsewhere. */
+export type SyncProblem = 'offline' | 'signin' | 'server' | 'deleted'
 
 /** Error with a problem kind the screens can explain. */
 export class SyncError extends Error {
@@ -202,8 +202,11 @@ export async function syncNow(vault: Vault, remote: Remote): Promise<{ changed: 
     const mine = toB64(await exportDek(myDek))
     let cloud = await remote.getKey()
     if (!cloud) {
+      // Synced before and now nothing online: the account was deleted on another device. Never
+      // upload it again (that would undo the deletion); the records stay on this device.
+      if (sync.lastSyncedAt) throw new SyncError('deleted')
       cloud = await remote.claimKey({ dek: mine })
-      // First device (or the online copy was deleted): upload everything and read it all back.
+      // First device: upload everything and read it all back.
       if (cloud.dek === mine) {
         await queueAll(db)
         sync = { ...sync, cursor: undefined }

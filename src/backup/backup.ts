@@ -11,6 +11,7 @@ import * as z from 'zod/mini'
 import { decryptJson, generateDeviceKey, recordAad, unwrapDek, wrapDek } from '../crypto/crypto.ts'
 import { deviceDb, openAccountDb, type StoredRecord } from '../db/db.ts'
 import { SCHEMA_VERSION, type Vault } from '../vault/vault.ts'
+import { tr } from '../i18n/i18n.ts'
 
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ' // Crockford base32: no I, L, O or U to misread
 const NAME_ID = 'account-name' // the display name travels inside the backup as an encrypted record
@@ -35,7 +36,7 @@ export function normalizeCode(typed: string): string | null {
 /** Wrapping key from the code. HKDF is enough: the code is already random, not a password. */
 export async function recoveryKey(code: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const clean = normalizeCode(code)
-  if (!clean) throw new Error('That isn’t a recovery code. It’s groups of 4 letters and numbers, like ABCD-1234-…')
+  if (!clean) throw new Error(tr('That isn’t a recovery code. It’s groups of 4 letters and numbers, like ABCD-1234-…'))
   const base = await crypto.subtle.importKey('raw', encoder.encode(clean), 'HKDF', false, ['deriveKey'])
   return crypto.subtle.deriveKey(
     { name: 'HKDF', hash: 'SHA-256', salt, info: encoder.encode('baon recovery v1') },
@@ -98,7 +99,7 @@ export async function saveRecoveryCode(userId: string, code: string): Promise<vo
   const db = openAccountDb(userId)
   try {
     const meta = await db.meta.get('vault')
-    if (!meta) throw new Error('No vault for this account on this device')
+    if (!meta) throw new Error(tr('No vault for this account on this device'))
     const dek = await unwrapDek(meta.wrappedDek, meta.deviceKey, true) // extractable only for this re-wrap
     const salt = crypto.getRandomValues(new Uint8Array(16))
     const wrapped = await wrapDek(dek, await recoveryKey(code, salt))
@@ -114,7 +115,7 @@ export async function makeBackup(vault: Vault, name: string): Promise<Blob> {
   const db = openAccountDb(vault.userId)
   try {
     const meta = await db.meta.get('vault')
-    if (!meta?.recovery) throw new Error('Make your Recovery Kit first.')
+    if (!meta?.recovery) throw new Error(tr('Make your Recovery Kit first.'))
     const createdAt = new Date().toISOString()
     const rows = await db.records.toArray()
     const file: BackupFile = {
@@ -139,7 +140,7 @@ export async function readBackupFile(file: Blob): Promise<BackupFile> {
   try {
     return BackupFileSchema.parse(JSON.parse(await file.text()))
   } catch {
-    throw new Error('That file isn’t a Baon backup. Pick the backup file Baon saved — its name starts with “baon-backup”.')
+    throw new Error(tr('That file isn’t a Baon backup. Pick the backup file Baon saved — its name starts with “baon-backup”.'))
   }
 }
 
@@ -149,8 +150,8 @@ export async function readBackupFile(file: Blob): Promise<BackupFile> {
  * Returns the display name saved in the backup (or `fallbackName`).
  */
 export async function restoreBackup(file: BackupFile, code: string, userId: string, fallbackName: string): Promise<string> {
-  if (file.userId !== userId) throw new Error('This backup belongs to a different account. Sign in with the account that made it.')
-  if (file.records.some((r) => r.v > SCHEMA_VERSION)) throw new Error('This backup is from a newer version of baon. Update the app, then try again.')
+  if (file.userId !== userId) throw new Error(tr('This backup belongs to a different account. Sign in with the account that made it.'))
+  if (file.records.some((r) => r.v > SCHEMA_VERSION)) throw new Error(tr('This backup is from a newer version of Baon. Update the app, then try again.'))
 
   const recovery = { salt: fromB64(file.recovery.salt), iv: fromB64(file.recovery.iv), ciphertext: fromB64(file.recovery.ciphertext).buffer }
   const key = await recoveryKey(code, recovery.salt) // throws its own message for a mistyped code
@@ -158,7 +159,7 @@ export async function restoreBackup(file: BackupFile, code: string, userId: stri
   try {
     dek = await unwrapDek(recovery, key, true)
   } catch {
-    throw new Error('That code doesn’t open this backup. Check it and try again.')
+    throw new Error(tr('That code doesn’t open this backup. Check it and try again.'))
   }
 
   const rows: StoredRecord[] = file.records.map((r) => ({ id: r.id, type: r.type, v: r.v, iv: fromB64(r.iv), ciphertext: fromB64(r.ciphertext).buffer }))
@@ -169,7 +170,7 @@ export async function restoreBackup(file: BackupFile, code: string, userId: stri
       if (row.id === NAME_ID) name = z.object({ name: z.string().check(z.minLength(1)) }).parse(data).name
     }
   } catch {
-    throw new Error('This backup file is damaged and can’t be restored.')
+    throw new Error(tr('This backup file is damaged and can’t be restored.'))
   }
 
   const deviceKey = await generateDeviceKey()
@@ -185,7 +186,7 @@ export async function restoreBackup(file: BackupFile, code: string, userId: stri
     const existing = await deviceDb.accounts.get(userId)
     await deviceDb.accounts.put({ userId, label: name, deviceMode: 'my-phone', enrolledAt: existing?.enrolledAt ?? new Date().toISOString() })
   } catch {
-    throw new Error('Couldn’t save on this phone. Check that storage isn’t full, then try again.')
+    throw new Error(tr('Couldn’t save on this phone. Check that storage isn’t full, then try again.'))
   } finally {
     db.close()
   }

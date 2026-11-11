@@ -10,15 +10,16 @@
 import * as z from 'zod/mini'
 import type { Transaction } from '../ledger/ledger.ts'
 import type { Vault } from '../vault/vault.ts'
+import { tr } from '../i18n/i18n.ts'
 
 export const TEMPLATES = [
-  { id: 'printing', label: 'Printing' },
-  { id: 'project', label: 'Project materials' },
-  { id: 'org', label: 'Org / class fee' },
-  { id: 'uniform', label: 'Uniform / PE' },
-  { id: 'trip', label: 'Field trip' },
-  { id: 'thesis', label: 'Thesis / research' },
-  { id: 'other', label: 'Other' },
+  { id: 'printing', label: tr('Printing') },
+  { id: 'project', label: tr('Project materials') },
+  { id: 'org', label: tr('Org / class fee') },
+  { id: 'uniform', label: tr('Uniform / PE') },
+  { id: 'trip', label: tr('Field trip') },
+  { id: 'thesis', label: tr('Thesis / research') },
+  { id: 'other', label: tr('Other') },
 ] as const
 
 export const SchoolExpenseSchema = z.object({

@@ -26,14 +26,16 @@ import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
 import { randomGreeting } from './greetings.ts'
 import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
 import { BackupReminder } from '../backup/BackupReminder.tsx'
+import { LimitsCard } from './LimitsCard.tsx'
 import { OneTapAdd } from './OneTapAdd.tsx'
 import { StorageWarning } from './StorageWarning.tsx'
 import { useToday, type Today } from './useToday.ts'
+import { LOCALE, tr } from '../i18n/i18n.ts'
 
-const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-const dueDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
-const breakDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
-const dateLine = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
+const LONG = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
+const dueDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
+const breakDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
+const dateLine = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
 /** The big "Safe to spend today" card. `onCheckIn`: "It came" while waiting after "Not yet". */
 function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
@@ -42,7 +44,7 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   const r = t.result
   const over = r.isClassDay && r.leftToday < 0
   const spentOnDayOff = !r.isClassDay && r.spentToday > 0 // not "over": it comes out of the next class days
-  const label = over ? 'Today' : r.isClassDay ? 'Safe to spend today' : spentOnDayOff ? 'No class today' : 'No class today — ₱0 planned'
+  const label = over ? tr('Today') : r.isClassDay ? tr('Safe to spend today') : spentOnDayOff ? tr('No class today') : tr('No class today — ₱0 planned')
   const snap = snapshots.find((s) => s.date === r.today)
   const nothingLogged = !snap?.noSpend && !transactions.some((tx) => manilaDate(tx.occurredAt) === r.today)
 
@@ -50,7 +52,7 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   async function markNoSpend() {
     const today = snap ?? { date: r.today, dailyBudgetCentavos: r.dailyBudget, isClassDay: r.isClassDay }
     await saveSnapshot({ ...today, noSpend: true })
-    showToast({ message: 'Logged: no spending today', undo: () => saveSnapshot({ ...today, noSpend: false }) })
+    showToast({ message: tr('Logged: no spending today'), undo: () => saveSnapshot({ ...today, noSpend: false }) })
   }
   const allowance = t.allowance.amountCentavos
   const leftShare = allowance > 0 ? Math.min(1, Math.max(0, r.readyToSpend / allowance)) : 0
@@ -59,19 +61,18 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
       <p className="text-[1.0625rem] font-extrabold text-muted">{label}</p>
       <p className="mt-2" aria-live="polite">
         <BigMoney centavos={spentOnDayOff ? r.spentToday : Math.abs(r.leftToday)} className="text-[clamp(3rem,18vw,4.5rem)] lg:text-[5.5rem]" />
-        {(over || spentOnDayOff) && <span className="ml-1 text-3xl font-black">{over ? 'over' : 'spent'}</span>}
+        {(over || spentOnDayOff) && <span className="ml-1 text-3xl font-black">{over ? tr('over') : tr('spent')}</span>}
       </p>
-      {over && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">That’s okay. Tomorrow’s budget adjusts — you’ve got this.</p>}
-      {spentOnDayOff && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">It comes out of your next class days. Your streak isn’t affected.</p>}
+      {over && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">{tr('That’s okay. Tomorrow’s budget adjusts — you’ve got this.')}</p>}
+      {spentOnDayOff && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">{tr('It comes out of your next class days. Your streak isn’t affected.')}</p>}
       <p className="mt-3 font-semibold text-muted">
-        {formatPeso(Math.max(0, r.readyToSpend))} left until {LONG[weekday(t.allowance.nextDate)]} · {r.budgetDays}{' '}
-        {t.allowance.countClassDays && !t.breakUntil ? 'class ' : ''}
-        {r.budgetDays === 1 ? 'day' : 'days'}
+        {tr('{0} left until {1}', formatPeso(Math.max(0, r.readyToSpend)), LONG[weekday(t.allowance.nextDate)])} · {t.allowance.countClassDays && !t.breakUntil
+          ? r.budgetDays === 1 ? tr('{0} class day', r.budgetDays) : tr('{0} class days', r.budgetDays)
+          : r.budgetDays === 1 ? tr('{0} day', r.budgetDays) : tr('{0} days', r.budgetDays)}
       </p>
       {t.allowance.lateFrom && onCheckIn && (
         <button type="button" onClick={onCheckIn} className="mt-2 min-h-11 font-extrabold text-blue hover:underline">
-          Waiting for your baon · It came
-        </button>
+          {tr('Waiting for your baon · It came')}</button>
       )}
 
       {/* Desktop: how much of this allowance is left (design p18) */}
@@ -82,37 +83,31 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
           </span>
           <p className="mt-2 flex justify-between text-sm font-extrabold text-muted">
             <span>
-              {formatPeso(Math.max(0, r.readyToSpend))}
-              {r.readyToSpend <= allowance ? ` of ${formatPeso(allowance)}` : ''} left
-            </span>
-            <span>{formatPeso(r.setAside)} set aside</span>
+              {r.readyToSpend <= allowance ? tr('{0} of {1} left', formatPeso(Math.max(0, r.readyToSpend)), formatPeso(allowance)) : tr('{0} left', formatPeso(Math.max(0, r.readyToSpend)))}</span>
+            <span>{tr('{0} set aside', formatPeso(r.setAside))}</span>
           </p>
         </div>
       )}
 
       {t.breakUntil && (
         <p className="mt-4 rounded-2xl bg-blue-tint p-3 font-extrabold text-blue">
-          {t.breakUntil === r.today ? 'No classes today' : `No classes until ${breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))}`} · budget counts every day, streak paused
-        </p>
+          {tr('{0} · budget counts every day, streak paused', t.breakUntil === r.today ? tr('No classes today') : tr('No classes until {0}', breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))))}</p>
       )}
-      {r.setAsidesExceedMoney && <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">Your set-asides are more than your money right now. Want to review them?</p>}
+      {r.setAsidesExceedMoney && <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">{tr('Your set-asides are more than your money right now. Want to review them?')}</p>}
 
       <div className="mt-6 grid grid-cols-2 gap-2.5 lg:flex">
         <button
           type="button"
           onClick={() => open()}
-          className="flex min-h-14 items-center justify-center gap-1.5 rounded-full bg-blue px-3 text-base font-black whitespace-nowrap text-white hover:shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] sm:text-lg lg:min-h-12 lg:px-6"
+          className="flex min-h-14 items-center justify-center gap-1.5 rounded-full bg-blue px-3 text-center text-base leading-tight font-black text-white hover:shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] sm:text-lg lg:min-h-12 lg:px-6"
         >
-          <Icon name="plus" className="size-5" /> Add expense
-        </button>
-        <Link to="/breakdown" className="flex min-h-14 items-center justify-center rounded-full bg-pebble px-3 text-base font-black whitespace-nowrap hover:bg-pebble-2 sm:text-lg lg:min-h-12 lg:px-6">
-          How it’s counted
-        </Link>
+          <Icon name="plus" className="size-5" /> {tr('Add expense')}</button>
+        <Link to="/breakdown" className="flex min-h-14 items-center justify-center rounded-full bg-pebble px-3 text-center text-base leading-tight font-black hover:bg-pebble-2 sm:text-lg lg:min-h-12 lg:px-6">
+          {tr('How it’s counted')}</Link>
       </div>
       {r.isClassDay && !t.breakUntil && nothingLogged && (
         <button type="button" onClick={markNoSpend} className="mt-4 min-h-11 font-extrabold text-blue hover:underline">
-          No spending today? Tap to log it
-        </button>
+          {tr('No spending today? Tap to log it')}</button>
       )}
     </Card>
   )
@@ -126,15 +121,15 @@ function StreakCard({ today, streak }: { today: string; streak: Streak }) {
       <div className="flex items-center gap-3">
         <img src={flame} alt="" className="size-11 shrink-0" />
         <div>
-          <h2 id="streak-title" className="text-2xl font-black">{n ? `${n} ${n === 1 ? 'day' : 'days'} in a row` : 'Your streak'}</h2>
-          <p className="font-semibold text-white/70">{n ? 'Keep logging — you’re doing great.' : 'Log today to start it.'}</p>
+          <h2 id="streak-title" className="text-2xl font-black">{n ? tr('{0} {1} in a row', n, n === 1 ? tr('day') : tr('days')) : tr('Your streak')}</h2>
+          <p className="font-semibold text-white/70">{n ? tr('Keep logging — you’re doing great.') : tr('Log today to start it.')}</p>
         </div>
       </div>
       <div className="mt-6">
         <WeekRow today={today} streak={streak} dark />
       </div>
       <Link to="/streak" className="mt-auto inline-flex items-center gap-1 pt-6 font-extrabold text-[#8fb0ff] hover:text-white">
-        See spending map <Icon name="chevron-right" className="size-4" />
+        {tr('See spending map')}{' '}<Icon name="chevron-right" className="size-4" />
       </Link>
     </section>
   )
@@ -148,7 +143,7 @@ function Wallets() {
   const total = spending.reduce((s, w) => s + all.get(w.id)!, 0)
   return (
     <Card className="animate-rise">
-      <h2 className="text-xl font-black">Wallets</h2>
+      <h2 className="text-xl font-black">{tr('Wallets')}</h2>
       <p key={total} className="mt-1 animate-pop text-4xl font-black">{formatPeso(total)}</p>
       <ul className="mt-3 divide-y divide-page">
         {wallets.filter((w) => !w.archived).map((w) => (
@@ -156,7 +151,7 @@ function Wallets() {
             <Icon name={w.type === 'savings' ? 'piggy' : w.id === 'cash' ? 'wallet' : 'phone'} className="size-5 text-blue" />
             <span className="flex-1">
               <span className="block font-black">{w.name}</span>
-              {w.type === 'savings' && <span className="block text-sm font-semibold text-muted">Not counted as spendable</span>}
+              {w.type === 'savings' && <span className="block text-sm font-semibold text-muted">{tr('Not counted as spendable')}</span>}
             </span>
             <span className="font-black">{formatPeso(all.get(w.id)!)}</span>
           </li>
@@ -183,8 +178,7 @@ export function Home() {
       {/* Phone: logo header (the sidebar shows it on larger screens). */}
       <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
         <img src={logoIcon} alt="" className="size-10" />
-        Baon
-        <Link to="/streak" aria-label={`${streak.current}-day streak`} className="ml-auto flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black tracking-normal">
+        {tr('Baon')}<Link to="/streak" aria-label={tr('{0}-day streak', streak.current)} className="ml-auto flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black tracking-normal">
           <img src={flame} alt="" className="size-6" /> {streak.current}
         </Link>
       </header>
@@ -195,13 +189,12 @@ export function Home() {
           <h1 className="mt-1 truncate text-[clamp(1.375rem,6.4vw,2rem)] leading-tight font-black lg:text-[2rem]" title={greeting}>{greeting}</h1>
         </div>
         <Link to="/history" className="hidden min-h-11 w-64 items-center gap-2.5 rounded-full bg-card px-4 font-bold text-muted hover:text-ink lg:flex">
-          <Icon name="search" className="size-5" /> Search entries
-        </Link>
+          <Icon name="search" className="size-5" /> {tr('Search entries')}</Link>
       </div>
 
       {/* Phone/tablet: week row above the hero (design p6) */}
       <div className="mt-6 lg:hidden">
-        <Link to="/streak" aria-label="This week · open your streak" className="block rounded-2xl">
+        <Link to="/streak" aria-label={tr('This week · open your streak')} className="block rounded-2xl">
           <WeekRow today={today} streak={streak} />
         </Link>
       </div>
@@ -218,11 +211,12 @@ export function Home() {
         <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} streak={streak} /></div>
 
         <StorageWarning className="lg:col-span-12" />
+        <LimitsCard className="lg:col-span-12" />
         <div className="lg:col-span-6"><OneTapAdd /></div>
         <Card className="hidden animate-rise md:block lg:col-span-6">
           <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-black">Set aside for school</h2>
-            <Link to="/plan" className="font-extrabold text-blue">See all</Link>
+            <h2 className="text-xl font-black">{tr('Set aside for school')}</h2>
+            <Link to="/plan" className="font-extrabold text-blue">{tr('See all')}</Link>
           </div>
           <p key={t.result.setAside} className="mt-1 animate-pop text-4xl font-black">{formatPeso(t.result.setAside)}</p>
           {upcoming.length ? (
@@ -232,7 +226,7 @@ export function Home() {
                   <span className="min-w-0">
                     <span className="block truncate font-black">{i.title}</span>
                     <span className="block text-sm font-semibold text-muted">
-                      {i.status === 'setAside' ? 'Set aside' : 'Planned'} · due {dueDay.format(new Date(`${i.dueDate}T00:00:00Z`))}
+                      {tr('{0} · due {1}', i.status === 'setAside' ? tr('Set aside') : tr('Planned'), dueDay.format(new Date(`${i.dueDate}T00:00:00Z`)))}
                     </span>
                   </span>
                   <span className="font-black">{formatPeso(i.estimatedCentavos)}</span>
@@ -240,7 +234,7 @@ export function Home() {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 font-semibold text-muted">Nothing set aside yet. Plan printing, projects and org fees so your daily budget stays honest.</p>
+            <p className="mt-3 font-semibold text-muted">{tr('Nothing set aside yet. Plan printing, projects and org fees so your daily budget stays honest.')}</p>
           )}
         </Card>
 
@@ -249,19 +243,19 @@ export function Home() {
 
         <Card className="hidden animate-rise md:block lg:col-span-7">
           <div className="mb-1 flex items-baseline justify-between">
-            <h2 className="text-xl font-black">Spent per day</h2>
-            <Link to="/history" className="font-extrabold text-blue">Open history</Link>
+            <h2 className="text-xl font-black">{tr('Spent per day')}</h2>
+            <Link to="/history" className="font-extrabold text-blue">{tr('Open history')}</Link>
           </div>
           <SpentPerDay days={spentPerDay(transactions, today)} today={today} budget={t.result.dailyBudget} />
         </Card>
         <Card className="hidden animate-rise md:block lg:col-span-5">
-          <h2 className="mb-2 text-xl font-black">Recent</h2>
+          <h2 className="mb-2 text-xl font-black">{tr('Recent')}</h2>
           {recent.length ? (
             <ul className="-mx-2 divide-y divide-page">
               {recent.map((tx, i) => <TxRow key={tx.id} tx={tx} wallets={wallets} withDay index={i} />)}
             </ul>
           ) : (
-            <p className="font-semibold text-muted">Nothing logged yet — your latest entries show up here.</p>
+            <p className="font-semibold text-muted">{tr('Nothing logged yet — your latest entries show up here.')}</p>
           )}
         </Card>
       </div>

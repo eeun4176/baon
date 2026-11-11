@@ -12,6 +12,7 @@ import { Link } from 'react-router'
 import { useSession } from '../session.ts'
 import { Modal } from '../ui/Modal.tsx'
 import { deleteAccountFromDevice } from '../vault/vault.ts'
+import { tr } from '../i18n/i18n.ts'
 
 const pill = 'min-h-13 flex-1 rounded-full px-5 text-lg font-black disabled:opacity-60'
 
@@ -26,7 +27,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
   /** Deletes online (best effort) and on this phone (always). */
   async function remove(e: FormEvent) {
     e.preventDefault()
-    if (typed.trim().toUpperCase() !== 'DELETE') return setError('Type DELETE to confirm.')
+    if (typed.trim().toUpperCase() !== 'DELETE') return setError(tr('Type DELETE to confirm.'))
     setBusy(true)
     try {
       const auth = await import('../auth/auth.ts').catch(() => null) // offline and never loaded: skip online steps
@@ -47,33 +48,31 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       setDone(online ? 'all' : 'phone')
     } catch {
       setBusy(false)
-      setError('Couldn’t delete. Close Baon, open it again and try once more.')
+      setError(tr('Couldn’t delete. Close Baon, open it again and try once more.'))
     }
   }
 
   if (done) {
     return (
-      <Modal title={done === 'all' ? 'Your account is deleted' : 'Deleted from this phone'} onClose={() => location.replace('/')}>
+      <Modal title={done === 'all' ? tr('Your account is deleted') : tr('Deleted from this phone')} onClose={() => location.replace('/')}>
         <p className="font-semibold text-muted">
           {done === 'all'
-            ? 'Your sign-in account, your synced copies online and everything Baon saved on this phone are gone.'
-            : 'Everything Baon saved on this phone is gone. Your sign-in account (and any synced copies online) couldn’t be removed from here — message the Baon team and we’ll remove them.'}
+            ? tr('Your sign-in account, your synced copies online and everything Baon saved on this phone are gone.')
+            : tr('Everything Baon saved on this phone is gone. Your sign-in account (and any synced copies online) couldn’t be removed from here — message the Baon team and we’ll remove them.')}
         </p>
-        <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>OK</button>
+        <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>{tr('OK')}</button>
       </Modal>
     )
   }
 
   return (
-    <Modal title="Delete your account?" onClose={onClose}>
+    <Modal title={tr('Delete your account?')} onClose={onClose}>
       <form onSubmit={remove} noValidate>
         <p className="font-semibold text-muted">
-          This deletes your sign-in account and synced copies online, and removes your records, wallets, plans, streak and recovery code from this phone. Your other devices keep their own records. It can’t be undone. Backups you saved elsewhere aren’t touched.
-        </p>
-        <Link to="/backup" className="mt-3 inline-block font-extrabold text-blue hover:underline">Make a backup first</Link>
+          {tr('This deletes your sign-in account and synced copies online, and removes your records, wallets, plans, streak and recovery code from this phone. Your other devices keep their own records. It can’t be undone. Backups you saved elsewhere aren’t touched.')}</p>
+        <Link to="/backup" className="mt-3 inline-block font-extrabold text-blue hover:underline">{tr('Make a backup first')}</Link>
         <label className="mt-4 block font-extrabold text-muted">
-          Type DELETE to confirm
-          <input
+          {tr('Type DELETE to confirm')}<input
             autoComplete="off"
             autoCapitalize="characters"
             spellCheck={false}
@@ -84,8 +83,8 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
         </label>
         {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
         <div className="mt-5 flex gap-2.5">
-          <button type="button" onClick={onClose} className={`${pill} bg-pebble hover:bg-pebble-2`}>Cancel</button>
-          <button type="submit" disabled={busy} className={`${pill} bg-red text-white`}>{busy ? 'Deleting…' : 'Delete'}</button>
+          <button type="button" onClick={onClose} className={`${pill} bg-pebble hover:bg-pebble-2`}>{tr('Cancel')}</button>
+          <button type="submit" disabled={busy} className={`${pill} bg-red text-white`}>{busy ? tr('Deleting…') : tr('Delete')}</button>
         </div>
       </form>
     </Modal>

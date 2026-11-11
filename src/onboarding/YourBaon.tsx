@@ -6,9 +6,10 @@ import { FREQUENCIES } from '../budget/allowance.ts'
 import { addDays } from '../budget/days.ts'
 import { Button, Card, Chip, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
 import { defaultNextDate, type BaonAnswers } from './answers.ts'
+import { tr } from '../i18n/i18n.ts'
 
-const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const DAYS = [tr('Su'), tr('Mo'), tr('Tu'), tr('We'), tr('Th'), tr('Fr'), tr('Sa')]
+const DAY_NAMES = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
 
 /** Allowance setup form. `error` is the message from toAllowance, shown after Continue is tapped. */
 export function YourBaon({ value, onChange, today, error, onBack, onContinue }: {
@@ -31,19 +32,19 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
       footer={
         <>
           {error && <p role="alert" className="mb-3 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
-          <Button onClick={onContinue}>Continue</Button>
+          <Button onClick={onContinue}>{tr('Continue')}</Button>
         </>
       }
     >
       <StepHeader step={3} onBack={onBack} />
-      <Title>Your baon</Title>
+      <Title>{tr('Your baon')}</Title>
 
       <Card className="py-6">
-        <MoneyField label="How much do you get?" value={value.amountText} onChange={(amountText) => set({ amountText })} />
+        <MoneyField label={tr('How much do you get?')} value={value.amountText} onChange={(amountText) => set({ amountText })} />
       </Card>
 
       <fieldset className="mt-6">
-        <legend className="mb-3 text-lg font-extrabold">How often?</legend>
+        <legend className="mb-3 text-lg font-extrabold">{tr('How often?')}</legend>
         <div className="flex flex-wrap gap-2.5">
           {FREQUENCIES.map(([id, label]) => (
             <Chip
@@ -59,7 +60,7 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
 
       <Card className="mt-6">
         <label className="flex min-h-11 items-center justify-between gap-3">
-          <span className="text-lg font-black">{value.frequency === 'irregular' ? 'Make it last until' : 'Next allowance'}</span>
+          <span className="text-lg font-black">{value.frequency === 'irregular' ? tr('Make it last until') : tr('Next allowance')}</span>
           <input
             type="date"
             required
@@ -74,13 +75,13 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
       <Card className="mt-4">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-lg font-black">Count only class days</p>
-            <p className="font-semibold text-muted">Your daily budget spreads over school days.</p>
+            <p className="text-lg font-black">{tr('Count only class days')}</p>
+            <p className="font-semibold text-muted">{tr('Your daily budget spreads over school days.')}</p>
           </div>
-          <Switch label="Count only class days" checked={value.countClassDays} onChange={(countClassDays) => set({ countClassDays })} />
+          <Switch label={tr('Count only class days')} checked={value.countClassDays} onChange={(countClassDays) => set({ countClassDays })} />
         </div>
         {value.countClassDays && (
-          <div className="mt-4 grid grid-cols-7 gap-1.5" role="group" aria-label="Class days">
+          <div className="mt-4 grid grid-cols-7 gap-1.5" role="group" aria-label={tr('Class days')}>
             {DAYS.map((label, d) => {
               const on = value.classWeekdays.includes(d)
               return (

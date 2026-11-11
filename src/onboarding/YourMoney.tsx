@@ -6,6 +6,7 @@
 import { formatPeso } from '../ledger/money.ts'
 import { Button, Card, Icon, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
 import { moneyTotal, type MoneyAnswers } from './answers.ts'
+import { tr } from '../i18n/i18n.ts'
 
 /** Starting-balances form; the last step before the vault is created. */
 export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
@@ -32,19 +33,19 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
       footer={
         <>
           <p className="mb-3 flex items-baseline justify-between px-1" aria-live="polite">
-            <span className="text-lg font-extrabold text-muted">Total</span>
+            <span className="text-lg font-extrabold text-muted">{tr('Total')}</span>
             <span className="text-[clamp(1.75rem,8vw,2.25rem)] font-black">{formatPeso(moneyTotal(value))}</span>
           </p>
           {error && <p role="alert" className="mb-3 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
-          <Button disabled={busy} onClick={onFinish}>{busy ? 'Setting up…' : 'See my budget'}</Button>
+          <Button disabled={busy} onClick={onFinish}>{busy ? tr('Setting up…') : tr('See my budget')}</Button>
         </>
       }
     >
       <StepHeader step={4} onBack={onBack} />
-      <Title sub="A rough number is fine. Fix it anytime.">How much do you have now?</Title>
+      <Title sub={tr('A rough number is fine. Fix it anytime.')}>{tr('How much do you have now?')}</Title>
 
       <Card className="py-6">
-        <MoneyField label="Cash in your wallet" value={value.cashText} onChange={(cashText) => onChange({ ...value, cashText })} />
+        <MoneyField label={tr('Cash in your wallet')} value={value.cashText} onChange={(cashText) => onChange({ ...value, cashText })} />
       </Card>
 
       <Card className="mt-4 divide-y divide-pebble py-1">
@@ -55,8 +56,8 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
                 value={w.name}
                 maxLength={40}
                 autoFocus={!w.name}
-                aria-label="Bank or e-wallet name"
-                placeholder="e.g. BPI, SeaBank"
+                aria-label={tr('Bank or e-wallet name')}
+                placeholder={tr('e.g. BPI, SeaBank')}
                 onChange={(e) => setWallet(w.id, { name: e.target.value })}
                 className="min-w-0 flex-1 rounded-full bg-page px-4 py-2.5 text-lg font-black outline-none placeholder:font-bold placeholder:text-muted/70 focus:ring-2 focus:ring-blue/40"
               />
@@ -70,7 +71,7 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
                   inputMode="decimal"
                   autoComplete="off"
                   placeholder="0"
-                  aria-label={`${w.name || 'New wallet'} balance`}
+                  aria-label={`${w.name || tr('New wallet')} balance`}
                   value={w.text}
                   onChange={(e) => setWallet(w.id, { text: e.target.value })}
                   className="w-full bg-transparent text-right text-lg font-black outline-none"
@@ -78,17 +79,16 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
               </label>
             )}
             {w.custom ? (
-              <button type="button" onClick={() => removeWallet(w.id)} aria-label={`Remove ${w.name || 'this wallet'}`} className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-pebble hover:text-ink">
+              <button type="button" onClick={() => removeWallet(w.id)} aria-label={tr('Remove {0}', w.name || tr('this wallet'))} className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-pebble hover:text-ink">
                 <Icon name="x" className="size-5" />
               </button>
             ) : (
-              <Switch label={`Use ${w.name}`} checked={w.on} onChange={(on) => setWallet(w.id, { on })} />
+              <Switch label={tr('Use {0}', w.name)} checked={w.on} onChange={(on) => setWallet(w.id, { on })} />
             )}
           </div>
         ))}
         <button type="button" onClick={addWallet} className="flex min-h-14 w-full items-center gap-2 font-black text-blue">
-          <Icon name="plus" className="size-5" /> Add a bank or e-wallet
-        </button>
+          <Icon name="plus" className="size-5" /> {tr('Add a bank or e-wallet')}</button>
       </Card>
     </Screen>
   )

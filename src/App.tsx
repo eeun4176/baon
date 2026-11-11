@@ -23,6 +23,7 @@ import { firstName } from './home/greetings.ts'
 import { HOME_TITLE } from './pageTitle.ts'
 import { Button, Card, Page, PageHeader, Screen } from './ui/kit.tsx'
 import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
+import { tr } from './i18n/i18n.ts'
 
 type State =
   | { kind: 'loading' }
@@ -58,14 +59,13 @@ async function boot(): Promise<State> {
 /** "You're signed out" screen: records stay on the device; continue reopens the vault. */
 function SignedOut({ name, onContinue }: { name: string; onContinue: () => void }) {
   return (
-    <Screen footer={<Button onClick={onContinue}>Continue as {firstName(name)}</Button>}>
+    <Screen footer={<Button onClick={onContinue}>{tr('Continue as {0}', firstName(name))}</Button>}>
       <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight">
         <img src={logoIcon} alt="" className="size-10" />
-        Baon
-      </header>
+        {tr('Baon')}</header>
       <div className="mt-16 animate-rise">
-        <h1 className="text-[2rem] leading-tight font-black">You’re signed out</h1>
-        <p className="mt-2 text-lg font-semibold text-muted">Your records are still here, encrypted on this device.</p>
+        <h1 className="text-[2rem] leading-tight font-black">{tr('You’re signed out')}</h1>
+        <p className="mt-2 text-lg font-semibold text-muted">{tr('Your records are still here, encrypted on this device.')}</p>
         <div className="mt-6 flex items-center gap-3 rounded-[28px] bg-card p-4">
           <span className="grid size-12 place-items-center rounded-full bg-blue-tint text-lg font-black text-blue" aria-hidden="true">
             {firstName(name).charAt(0).toUpperCase()}
@@ -81,7 +81,7 @@ function SignedOut({ name, onContinue }: { name: string; onContinue: () => void 
 function BackupPage() {
   return (
     <Page>
-      <PageHeader title="Backup" sub="Keep a copy of your records, and use Baon on all your devices." />
+      <PageHeader title={tr('Backup')} sub={tr('Keep a copy of your records, and use Baon on all your devices.')} />
       <div className="max-w-2xl space-y-4">
         <Card className="animate-rise">
           <BackupPanel />
@@ -167,8 +167,7 @@ export default function App() {
       return (
         <Screen>
           <p role="alert" className="mt-10 text-lg font-bold">
-            Baon couldn’t open its storage on this phone. Close the app and open it again.
-          </p>
+            {tr('Baon couldn’t open its storage on this phone. Close the app and open it again.')}</p>
         </Screen>
       )
   }

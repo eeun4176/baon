@@ -9,6 +9,7 @@ import { Avatar } from '../me/Avatar.tsx'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
 import { ThemePicker } from './ThemePicker.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 /** Profile row + its pop-up menu. `collapsed` shows just the avatar. */
 export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
@@ -43,15 +44,13 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
 
           {canInstall && (
             <button type="button" className={`${item} mt-1`} onClick={() => { setOpen(false); promptInstall() }}>
-              <Icon name="download" className="size-5" /> Install Baon
-            </button>
+              <Icon name="download" className="size-5" /> {tr('Install Baon')}</button>
           )}
 
           <hr className="my-1.5 border-pebble" />
           <button type="button" className={item} onClick={signOut}>
-            <Icon name="logout" className="size-5" /> Sign out
-          </button>
-          <p className="px-3 pt-1 pb-1.5 text-sm font-semibold text-muted">Signing out keeps your records encrypted on this device.</p>
+            <Icon name="logout" className="size-5" /> {tr('Sign out')}</button>
+          <p className="px-3 pt-1 pb-1.5 text-sm font-semibold text-muted">{tr('Signing out keeps your records encrypted on this device.')}</p>
         </div>
       )}
 
@@ -61,14 +60,14 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
         aria-expanded={open}
         aria-controls="profile-menu"
         aria-haspopup="true"
-        title={collapsed ? `${name} — theme & sign out` : undefined}
+        title={collapsed ? tr('{0} — theme & sign out', name) : undefined}
         className={`flex w-full items-center gap-3 overflow-hidden rounded-2xl p-1 text-left hover:bg-page ${open ? 'bg-page' : ''}`}
       >
         <Avatar className="size-10" />
         {/* stays in place and fades (no re-wrapping while the sidebar animates) */}
         <span className={`min-w-0 transition-opacity duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 delay-75'}`}>
           <span className="block truncate font-black">{name}</span>
-          <span className="block truncate text-sm font-semibold text-muted">My phone · works offline</span>
+          <span className="block truncate text-sm font-semibold text-muted">{tr('My phone · works offline')}</span>
         </span>
       </button>
     </div>

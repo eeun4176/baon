@@ -6,9 +6,10 @@
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
 import { useAddDialog } from '../shell/useAddDialog.ts'
 import { describe } from './history.ts'
+import { LOCALE, tr } from '../i18n/i18n.ts'
 
-const timeFormat = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })
-const shortDay = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'short' })
+const timeFormat = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', hour: 'numeric', minute: '2-digit' })
+const shortDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', weekday: 'short' })
 
 /** A tappable entry row. `withDay` adds the weekday (Home's "Recent" list mixes days). */
 export function TxRow({ tx, wallets, withDay = false, index = 0 }: { tx: Transaction; wallets: Wallet[]; withDay?: boolean; index?: number }) {
@@ -21,7 +22,7 @@ export function TxRow({ tx, wallets, withDay = false, index = 0 }: { tx: Transac
         type="button"
         onClick={() => open(tx.id)}
         className="flex w-full items-center gap-3 rounded-2xl px-2 py-2.5 text-left hover:bg-page active:scale-[0.99]"
-        aria-label={`${d.title}, ${d.amount}, ${d.detail}, ${when}. Tap to edit.`}
+        aria-label={tr('{0}, {1}, {2}, {3}. Tap to edit.', d.title, d.amount, d.detail, when)}
       >
         <span
           aria-hidden="true"

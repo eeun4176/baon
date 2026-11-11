@@ -6,15 +6,16 @@
 import { addDays, weekday } from '../budget/days.ts'
 import { Icon } from '../ui/kit.tsx'
 import type { Streak } from './streak.ts'
+import { tr } from '../i18n/i18n.ts'
 
-const SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const SHORT = [tr('Su'), tr('Mo'), tr('Tu'), tr('We'), tr('Th'), tr('Fr'), tr('Sa')]
+const LONG = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
 
 /** Su–Sa circles for the week containing `today`. `dark` = on a dark card. */
 export function WeekRow({ today, streak, dark = false }: { today: string; streak: Streak; dark?: boolean }) {
   const sunday = addDays(today, -weekday(today))
   return (
-    <ol className="grid grid-cols-7 gap-1.5 text-center" aria-label="This week">
+    <ol className="grid grid-cols-7 gap-1.5 text-center" aria-label={tr('This week')}>
       {SHORT.map((label, i) => {
         const day = addDays(sunday, i)
         const isToday = day === today
@@ -26,7 +27,7 @@ export function WeekRow({ today, streak, dark = false }: { today: string; streak
             ? `block border-[3px] border-blue ${dark ? 'bg-transparent' : 'bg-card'}`
             : `block ${dark ? 'bg-white/15' : 'bg-pebble-2'}`
         return (
-          <li key={day} aria-current={isToday ? 'date' : undefined} aria-label={`${LONG[i]}${isToday ? ', today' : ''}${on ? ', counted' : ''}`}>
+          <li key={day} aria-current={isToday ? 'date' : undefined} aria-label={`${LONG[i]}${isToday ? tr(', today') : ''}${on ? tr(', counted') : ''}`}>
             <span className={`text-[0.9375rem] font-extrabold ${dark ? 'text-white/70' : ''}`} aria-hidden="true">{label}</span>
             <span aria-hidden="true" className={`mx-auto mt-2 aspect-square w-full max-w-11 animate-rise rounded-full ${circle}`} style={{ animationDelay: `${i * 30}ms` }}>
               {on && <Icon name="check" className="size-[55%]" />}

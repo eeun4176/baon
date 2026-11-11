@@ -3,7 +3,7 @@
  * Run: npm test
  */
 import { describe, expect, it } from 'vitest'
-import { advanceNextDate, classDaysText, type Allowance } from './allowance.ts'
+import { advanceNextDate, afterAllowanceLogged, classDaysText, type Allowance } from './allowance.ts'
 
 /** Allowance with the given class days. */
 const with_ = (classWeekdays: number[], countClassDays = true): Allowance =>
@@ -34,5 +34,20 @@ describe('advanceNextDate', () => {
   })
   it('asks for a date when the allowance is irregular', () => {
     expect(advanceNextDate({ ...weekly, frequency: 'irregular' }, '2026-11-15')).toBeNull()
+  })
+})
+
+describe('afterAllowanceLogged (Add → Allowance)', () => {
+  const weekly = { ...with_([1, 2, 3, 4, 5, 6]), nextDate: '2026-11-15' }
+  it('on or after allowance day it answers the check-in: next date moves a cycle', () => {
+    expect(afterAllowanceLogged(weekly, '2026-11-15')?.nextDate).toBe('2026-11-22')
+  })
+  it('while waiting after "Not yet" it keeps the usual day and stops waiting', () => {
+    const waiting = { ...weekly, nextDate: '2026-11-18', lateFrom: '2026-11-15' }
+    expect(afterAllowanceLogged(waiting, '2026-11-16')).toMatchObject({ nextDate: '2026-11-22', lateFrom: undefined })
+  })
+  it('extra money mid-cycle, or an irregular schedule, leaves the date alone', () => {
+    expect(afterAllowanceLogged(weekly, '2026-11-12')).toBeNull()
+    expect(afterAllowanceLogged({ ...weekly, frequency: 'irregular' }, '2026-11-15')).toBeNull()
   })
 })

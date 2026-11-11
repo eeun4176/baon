@@ -68,7 +68,7 @@ describe('sync', () => {
   // The device account list is one shared fake database here (each device has its own records database).
   beforeEach(() => deviceDb.accounts.clear())
 
-  it('the first device uploads its key and only scrambled records; a wiped cloud is filled again', async () => {
+  it('the first device uploads its key and only scrambled records; after the account is deleted it never re-uploads', async () => {
     device()()
     const cloud = new FakeCloud()
     const vault = await phone('Jasmine', { t1: { note: 'Jeep' }, cash: { name: 'Cash' } })
@@ -78,9 +78,11 @@ describe('sync', () => {
     expect(cloud.key?.dek).toMatch(/^[A-Za-z0-9+/]{43}=$/)
     expect(await lastSyncedAt('u1')).toBeTruthy()
 
-    await cloud.deleteAll()
-    await syncNow(vault, cloud)
-    expect(cloud.rows.size).toBe(4)
+    await cloud.deleteAll() // Delete account on another device
+    await expect(syncNow(vault, cloud)).rejects.toMatchObject({ problem: 'deleted' })
+    expect(cloud.rows.size).toBe(0)
+    expect(cloud.key).toBeNull()
+    expect(await vault.get('t1')).toEqual({ note: 'Jeep' }) // still on this device
     vault.lock()
   })
 

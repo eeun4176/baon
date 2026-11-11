@@ -5,26 +5,30 @@
  *   more of that day's budget used, ink = over). "How streaks work" explains the rules.
  * Phones show the last 15 weeks of the map, larger screens 26 weeks (about 6 months).
  */
+import { useState } from 'react'
 import flame from '../assets/streak-flame.png'
 import { useToday } from '../home/useToday.ts'
+import { useSession } from '../session.ts'
 import { addDays, weekday } from '../budget/days.ts'
 import { Card, Icon, Page, PageHeader, type IconName } from '../ui/kit.tsx'
 import { mapLevel } from './streak.ts'
 import { useStreak } from './useStreak.ts'
+import { shareStreak } from './share.ts'
 import { WeekRow } from './WeekRow.tsx'
+import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const WEEKS = 26
 const PHONE_WEEKS = 15
-const ROW_LABELS = ['', 'M', '', 'W', '', 'F', '']
-const month = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short' })
-const shortDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' })
+const ROW_LABELS = ['', tr('M'), '', tr('W'), '', tr('F'), '']
+const month = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'short' })
+const shortDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'short', day: 'numeric' })
 const LEVEL_CLASS = { 0: 'bg-map-0', 1: 'bg-map-1', 2: 'bg-map-2', 3: 'bg-map-3', over: 'bg-map-over' } as const
 
 const RULES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'check', title: 'Log every class day', text: 'A class day counts when you log what you spent, or tap “No spending today”. ₱0 days earn nothing extra — never skip meals.' },
-  { icon: 'flame', title: 'Went over? It still counts', text: 'Logging honestly is what matters. Over-budget days show dark on your map, and tomorrow’s budget adjusts.' },
-  { icon: 'ticket', title: 'One free pass a week', text: 'Forgot to log a day? Your free pass covers it automatically, once every Monday–Sunday.' },
-  { icon: 'calendar', title: 'No class? It’s frozen', text: 'Weekends without class and breaks like sembreak or suspensions never break your streak.' },
+  { icon: 'check', title: tr('Log every class day'), text: tr('A class day counts when you log what you spent, or tap “No spending today”. ₱0 days earn nothing extra — never skip meals.') },
+  { icon: 'flame', title: tr('Went over? It still counts'), text: tr('Logging honestly is what matters. Over-budget days show dark on your map, and tomorrow’s budget adjusts.') },
+  { icon: 'ticket', title: tr('One free pass a week'), text: tr('Forgot to log a day? Your free pass covers it automatically, once every Monday–Sunday.') },
+  { icon: 'calendar', title: tr('No class? It’s frozen'), text: tr('Weekends without class and breaks like sembreak or suspensions never break your streak.') },
 ]
 
 /** Small white stat tile (Best streak, Free pass, On-budget days). */
@@ -42,6 +46,8 @@ function Tile({ title, value, sub, blue = false, className = '' }: { title: stri
 export function Streak() {
   const streak = useStreak()
   const { result, breakUntil } = useToday()
+  const { showToast } = useSession()
+  const [sharing, setSharing] = useState(false)
   const today = result.today
   const n = streak.current
 
@@ -56,9 +62,30 @@ export function Streak() {
     if (status === 'over') overDays++
   }
 
+  /** Makes the streak picture and opens the share sheet (or downloads it on a computer). */
+  async function share() {
+    const sunday = addDays(today, -weekday(today))
+    const week = Array.from({ length: 7 }, (_, i) => ['on', tr('over')].includes(streak.days.get(addDays(sunday, i))?.status ?? ''))
+    setSharing(true)
+    try {
+      if ((await shareStreak(n, week, weekday(today))) === 'downloaded') showToast({ message: tr('Streak picture saved to your downloads') })
+    } catch {
+      showToast({ message: tr('Couldn’t make the picture. Try again.') })
+    } finally {
+      setSharing(false)
+    }
+  }
+
   return (
     <Page>
-      <PageHeader title="Streak" sub="Log your spending every class day — that’s a streak day." />
+      <PageHeader
+        title={tr('Streak')}
+        sub={tr('Log your spending every class day — that’s a streak day.')}
+        actions={
+          <button type="button" disabled={sharing} onClick={share} className="flex min-h-11 items-center gap-2 rounded-full bg-blue px-5 font-black text-white disabled:opacity-60">
+            <Icon name="share" className="size-5" /> {tr('Share')}</button>
+        }
+      />
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
         {/* Hero */}
@@ -68,27 +95,27 @@ export function Streak() {
             <img src={flame} alt="" className="size-16 shrink-0 animate-pop sm:size-20 md:size-24" />
             <div className="min-w-0">
               <h2 id="streak-now" className="text-[clamp(2.75rem,12vw,4.5rem)] leading-none font-black">
-                <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? 'day' : 'days'}
+                <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? tr('day') : tr('days')}
               </h2>
               <p className="mt-1.5 font-bold text-white/80 md:text-lg">
-                {breakUntil ? `in a row · frozen during your break until ${shortDay.format(new Date(`${breakUntil}T00:00:00Z`))}` : 'logged in a row'}
+                {breakUntil ? tr('in a row · frozen during your break until {0}', shortDay.format(new Date(`${breakUntil}T00:00:00Z`))) : tr('logged in a row')}
               </p>
             </div>
           </div>
           <div>
-            <p className="mb-3 text-sm font-extrabold tracking-[0.12em] text-white/60 uppercase">This week</p>
+            <p className="mb-3 text-sm font-extrabold tracking-[0.12em] text-white/60 uppercase">{tr('This week')}</p>
             <WeekRow today={today} streak={streak} dark />
           </div>
         </section>
 
         {/* Tiles */}
         <div className="grid grid-cols-2 gap-4 lg:col-span-4 lg:gap-5">
-          <Tile title="Best streak" value={streak.best} sub={streak.best === 1 ? 'day' : 'days'} />
-          <Tile title="Free pass" value={streak.passLeft ? 1 : 0} sub={streak.passLeft ? 'left this week' : 'used this week'} blue={streak.passLeft} />
+          <Tile title={tr('Best streak')} value={streak.best} sub={streak.best === 1 ? tr('day') : tr('days')} />
+          <Tile title={tr('Free pass')} value={streak.passLeft ? 1 : 0} sub={streak.passLeft ? tr('left this week') : tr('used this week')} blue={streak.passLeft} />
           <Card className="col-span-2 flex animate-rise items-center justify-between gap-3">
             <div>
-              <h2 className="font-black">On-budget days</h2>
-              <p className="text-sm font-semibold text-muted">Last 6 months</p>
+              <h2 className="font-black">{tr('On-budget days')}</h2>
+              <p className="text-sm font-semibold text-muted">{tr('Last 6 months')}</p>
             </div>
             <p key={onDays} className="animate-pop text-4xl font-black">{onDays}</p>
           </Card>
@@ -97,10 +124,10 @@ export function Streak() {
         {/* Spending map */}
         <Card className="animate-rise lg:col-span-12">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-xl font-black">Spending map</h2>
-            <p className="text-sm font-semibold text-muted">Each square is a day · darker blue = more of that day’s budget used</p>
+            <h2 className="text-xl font-black">{tr('Spending map')}</h2>
+            <p className="text-sm font-semibold text-muted">{tr('Each square is a day · darker blue = more of that day’s budget used')}</p>
           </div>
-          <p className="sr-only">{onDays} on-budget days and {overDays} over-budget days in the last 6 months.</p>
+          <p className="sr-only">{tr('{0} on-budget days and {1} over-budget days in the last 6 months.', onDays, overDays)}</p>
           <div
             aria-hidden="true"
             className="grid grid-flow-col grid-cols-[auto_repeat(15,minmax(0,1fr))] grid-rows-[auto_repeat(7,auto)] gap-1 md:grid-cols-[auto_repeat(26,minmax(0,1fr))] md:gap-1.5"
@@ -131,17 +158,15 @@ export function Streak() {
           </div>
           <div className="mt-4 flex flex-wrap items-center justify-end gap-x-4 gap-y-2 text-sm font-extrabold text-muted" aria-hidden="true">
             <span className="flex items-center gap-1.5">
-              Less
-              {([0, 1, 2, 3] as const).map((l) => <span key={l} className={`size-3.5 rounded-[3px] ${LEVEL_CLASS[l]}`} />)}
-              More
-            </span>
-            <span className="flex items-center gap-1.5"><span className="size-3.5 rounded-[3px] bg-map-over" /> Over budget</span>
+              {tr('Less')}{([0, 1, 2, 3] as const).map((l) => <span key={l} className={`size-3.5 rounded-[3px] ${LEVEL_CLASS[l]}`} />)}
+              {tr('More')}</span>
+            <span className="flex items-center gap-1.5"><span className="size-3.5 rounded-[3px] bg-map-over" /> {tr('Over budget')}</span>
           </div>
         </Card>
 
         {/* How streaks work */}
         <Card className="animate-rise lg:col-span-12">
-          <h2 className="text-xl font-black">How streaks work</h2>
+          <h2 className="text-xl font-black">{tr('How streaks work')}</h2>
           <ul className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
             {RULES.map((r) => (
               <li key={r.title} className="flex gap-3 sm:block sm:rounded-3xl sm:bg-page sm:p-5">

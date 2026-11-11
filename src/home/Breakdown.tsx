@@ -9,14 +9,15 @@ import { weekday } from '../budget/days.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { BigMoney, Card, Page } from '../ui/kit.tsx'
 import { divisionText, useToday, type Today } from './useToday.ts'
+import { tr } from '../i18n/i18n.ts'
 
-const SHORT = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
-const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+const SHORT = [tr('Su'), tr('Mo'), tr('Tu'), tr('We'), tr('Th'), tr('Fr'), tr('Sa')]
+const LONG = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
 
 /** Round pills for the days the money covers; today is blue. */
 export function DayPills({ t, dark = false }: { t: Today; dark?: boolean }) {
   return (
-    <ul className="flex flex-wrap justify-center gap-1.5" aria-label="Days this budget covers">
+    <ul className="flex flex-wrap justify-center gap-1.5" aria-label={tr('Days this budget covers')}>
       {t.budgetDays.map((d) => (
         <li
           key={d}
@@ -38,19 +39,19 @@ export function MoneyTiles({ t }: { t: Today }) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <Card className="text-center">
-        <p className="text-lg font-black">In wallets</p>
+        <p className="text-lg font-black">{tr('In wallets')}</p>
         <p className="truncate font-semibold text-muted">{t.spendingWallets.map((w) => w.name).join(' + ')}</p>
         <p className="mt-3 text-[clamp(1.5rem,7vw,2rem)] font-black">{formatPeso(r.inWallets)}</p>
       </Card>
       <Card className="text-center">
-        <p className="text-lg font-black">Set aside</p>
-        <p className="truncate font-semibold text-muted">{r.setAside ? 'For school' : 'Nothing yet'}</p>
+        <p className="text-lg font-black">{tr('Set aside')}</p>
+        <p className="truncate font-semibold text-muted">{r.setAside ? tr('For school') : tr('Nothing yet')}</p>
         <p className="mt-3 text-[clamp(1.5rem,7vw,2rem)] font-black">{formatPeso(-r.setAside)}</p>
       </Card>
       <Card className="col-span-2 flex items-center justify-between gap-3">
         <div>
-          <p className="text-lg font-black">Ready to spend</p>
-          <p className="font-semibold text-muted">Until {LONG[weekday(t.allowance.nextDate)]}’s allowance</p>
+          <p className="text-lg font-black">{tr('Ready to spend')}</p>
+          <p className="font-semibold text-muted">{tr('Until {0}’s allowance', LONG[weekday(t.allowance.nextDate)])}</p>
         </div>
         <p className="text-[clamp(1.5rem,7vw,2rem)] font-black text-blue">{formatPeso(r.readyToSpend)}</p>
       </Card>
@@ -64,21 +65,21 @@ export function Breakdown() {
   return (
     <Page>
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-[clamp(1.5rem,7vw,2rem)] font-black">How it’s counted</h1>
-        <Link to="/" className="grid min-h-11 place-items-center rounded-full bg-card px-5 font-black">Done</Link>
+        <h1 className="text-[clamp(1.5rem,7vw,2rem)] font-black">{tr('How it’s counted')}</h1>
+        <Link to="/" className="grid min-h-11 place-items-center rounded-full bg-card px-5 font-black">{tr('Done')}</Link>
       </div>
 
       <div className="mx-auto mt-6 max-w-xl space-y-3">
         {t.result.allowanceDue ? (
           // Allowance day, not answered yet: no budget to explain until the baon is in.
           <section className="rounded-3xl bg-hero p-4 sm:rounded-[30px] sm:p-6 text-center text-white">
-            <p className="font-extrabold text-white/70">Allowance day</p>
-            <p className="mt-2 text-2xl font-black">Your new daily budget starts once your baon is in.</p>
-            <Link to="/" className="mt-5 inline-grid min-h-12 place-items-center rounded-full bg-blue px-6 font-black text-white">Did it arrive?</Link>
+            <p className="font-extrabold text-white/70">{tr('Allowance day')}</p>
+            <p className="mt-2 text-2xl font-black">{tr('Your new daily budget starts once your baon is in.')}</p>
+            <Link to="/" className="mt-5 inline-grid min-h-12 place-items-center rounded-full bg-blue px-6 font-black text-white">{tr('Did it arrive?')}</Link>
           </section>
         ) : (
           <section className="rounded-3xl bg-hero p-4 sm:rounded-[30px] sm:p-6 text-center text-white">
-            <p className="font-extrabold text-white/70">Safe to spend today</p>
+            <p className="font-extrabold text-white/70">{tr('Safe to spend today')}</p>
             <BigMoney centavos={t.result.dailyBudget} className="mt-1 block text-[clamp(3rem,17vw,4.5rem)]" />
             <p className="mt-2 mb-5 text-lg font-extrabold text-white/70">{divisionText(t)}</p>
             <DayPills t={t} dark />
@@ -86,8 +87,7 @@ export function Breakdown() {
         )}
         <MoneyTiles t={t} />
         <p className="px-4 pt-6 text-center font-semibold text-muted">
-          Savings aren’t counted. Spend a bit more today and tomorrow’s budget adjusts on its own.
-        </p>
+          {tr('Savings aren’t counted. Spend a bit more today and tomorrow’s budget adjusts on its own.')}</p>
       </div>
     </Page>
   )

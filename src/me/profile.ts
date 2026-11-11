@@ -7,6 +7,7 @@
  */
 import * as z from 'zod/mini'
 import type { Vault } from '../vault/vault.ts'
+import { tr } from '../i18n/i18n.ts'
 
 export const ProfileSchema = z.object({
   school: z.optional(z.string().check(z.trim(), z.maxLength(60))),
@@ -17,13 +18,13 @@ export const ProfileSchema = z.object({
 })
 export type Profile = z.infer<typeof ProfileSchema>
 
-export const LEVELS = [['shs', 'Senior high'], ['college', 'College']] as const
+export const LEVELS = [['shs', tr('Senior high')], ['college', tr('College')]] as const
 
 /** Checks a display name; returns the cleaned name or a friendly problem. */
 export function checkName(raw: string): { name: string } | { problem: string } {
   const name = raw.trim().replace(/\s+/g, ' ')
-  if (!name) return { problem: 'Enter the name you want Baon to call you.' }
-  if (name.length > 40) return { problem: 'Keep it under 40 letters.' }
+  if (!name) return { problem: tr('Enter the name you want Baon to call you.') }
+  if (name.length > 40) return { problem: tr('Keep it under 40 letters.') }
   return { name }
 }
 

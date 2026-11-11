@@ -8,6 +8,7 @@ import type { SignedInUser } from '../auth/auth.ts'
 import type { DocId } from '../legal/docs.ts'
 import { PolicyDialog } from '../legal/Legal.tsx'
 import { Button, Card, Icon, Screen, StepHeader, Title } from '../ui/kit.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 const policyLink = 'font-extrabold text-blue underline'
 
@@ -46,7 +47,7 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
     try {
       await action()
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Something went wrong. Try again.')
+      setError(e instanceof Error ? e.message : tr('Something went wrong. Try again.'))
     } finally {
       setBusy(false)
     }
@@ -70,7 +71,7 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
       const auth = await import('../auth/auth.ts')
       await auth.verifyEmailCode(email.trim(), code)
       const user = await auth.currentUser()
-      if (!user) throw new Error('Signed in, but we couldn’t read your account. Try again.')
+      if (!user) throw new Error(tr('Signed in, but we couldn’t read your account. Try again.'))
       onSignedIn(user)
     })
 
@@ -82,46 +83,42 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue">
             <Icon name="shield" />
           </span>
-          <p className="font-semibold">Your records are encrypted and stored on your phone. Signing in doesn’t send them anywhere.</p>
+          <p className="font-semibold">{tr('Your records are scrambled on your phone, and a scrambled copy syncs with your account so your other devices get them.')}</p>
         </Card>
         <p className="mt-3 text-center text-sm font-semibold text-muted">
-          By continuing, you agree to the <button type="button" onClick={() => setPolicy('terms')} className={policyLink}>Terms</button>,{' '}
-          <button type="button" onClick={() => setPolicy('privacy')} className={policyLink}>Privacy Policy</button> and{' '}
-          <button type="button" onClick={() => setPolicy('storage')} className={policyLink}>Local Storage Policy</button>.
+          {tr('By continuing, you agree to the')}{' '}<button type="button" onClick={() => setPolicy('terms')} className={policyLink}>{tr('Terms')}</button>,{' '}
+          <button type="button" onClick={() => setPolicy('privacy')} className={policyLink}>{tr('Privacy Policy')}</button> {tr('and')}{' '}
+          <button type="button" onClick={() => setPolicy('storage')} className={policyLink}>{tr('Local Storage Policy')}</button>.
         </p>
         {policy && <PolicyDialog id={policy} onClose={() => setPolicy(null)} />}
         </>
       }
     >
       <StepHeader step={1} onBack={onBack} />
-      <Title sub="No new password to make. We only use this to know it’s you.">Sign in to get started</Title>
+      <Title sub={tr('No new password to make. We only use this to know it’s you.')}>{tr('Sign in to get started')}</Title>
 
       {!online && (
         <p role="status" className="mb-4 rounded-2xl bg-pebble p-4 font-bold">
-          You’re offline. Connect to Wi‑Fi or data once to set up — after that, Baon works offline.
-        </p>
+          {tr('You’re offline. Connect to Wi‑Fi or data once to set up — after that, Baon works offline.')}</p>
       )}
 
       <Card className="space-y-3">
         {mode === 'choose' && (
           <>
             <Button variant="dark" disabled={!online || busy} onClick={google}>
-              <span className="grid size-7 place-items-center rounded-full bg-white text-sm font-black text-ink" aria-hidden="true">G</span>
-              Continue with Google
-            </Button>
+              <span className="grid size-7 place-items-center rounded-full bg-white text-sm font-black text-ink" aria-hidden="true">{tr('G')}</span>
+              {tr('Continue with Google')}</Button>
             <Button variant="secondary" disabled={!online || busy} onClick={() => setMode('email')}>
               <Icon name="mail" />
-              Use email instead
-            </Button>
-            <p className="text-center font-semibold text-muted">With email, we’ll send you a 6‑digit code.</p>
+              {tr('Use email instead')}</Button>
+            <p className="text-center font-semibold text-muted">{tr('With email, we’ll send you a 6‑digit code.')}</p>
           </>
         )}
 
         {mode === 'email' && (
           <form onSubmit={(e) => { e.preventDefault(); sendCode() }} className="space-y-3">
             <label className="block font-extrabold">
-              Your email
-              <input
+              {tr('Your email')}<input
                 type="email"
                 required
                 autoComplete="email"
@@ -131,15 +128,15 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
                 className="mt-2 block min-h-14 w-full rounded-full bg-pebble px-5 text-lg font-bold outline-blue"
               />
             </label>
-            <Button type="submit" disabled={!online || busy || !email.includes('@')}>{busy ? 'Sending…' : 'Send code'}</Button>
-            <Button variant="secondary" onClick={() => setMode('choose')}>Back to Google</Button>
+            <Button type="submit" disabled={!online || busy || !email.includes('@')}>{busy ? tr('Sending…') : tr('Send code')}</Button>
+            <Button variant="secondary" onClick={() => setMode('choose')}>{tr('Back to Google')}</Button>
           </form>
         )}
 
         {mode === 'code' && (
           <form onSubmit={(e) => { e.preventDefault(); verify() }} className="space-y-3">
             <label className="block font-extrabold">
-              6‑digit code sent to {email}
+              {tr('6‑digit code sent to')}{' '}{email}
               <input
                 inputMode="numeric"
                 autoComplete="one-time-code"
@@ -150,10 +147,9 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
                 className="mt-2 block min-h-14 w-full rounded-full bg-pebble px-5 text-center text-2xl font-black tracking-[0.4em] outline-blue"
               />
             </label>
-            <Button type="submit" disabled={!online || busy || code.length !== 6}>{busy ? 'Checking…' : 'Continue'}</Button>
+            <Button type="submit" disabled={!online || busy || code.length !== 6}>{busy ? tr('Checking…') : tr('Continue')}</Button>
             <button type="button" onClick={() => setMode('email')} className="min-h-11 w-full font-extrabold text-blue">
-              Use a different email
-            </button>
+              {tr('Use a different email')}</button>
           </form>
         )}
 

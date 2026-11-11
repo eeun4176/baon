@@ -12,6 +12,7 @@ import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Card, Icon } from '../ui/kit.tsx'
 import { PresetEditor } from './PresetEditor.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 /** Grid of one-tap buttons + Edit + the "Make it a button?" suggestion. */
 export function OneTapAdd() {
@@ -31,9 +32,9 @@ export function OneTapAdd() {
         id, kind: 'expense', amountCentavos: p.amountCentavos, walletId,
         categoryId: p.categoryId, occurredAt: new Date().toISOString(), note: p.label,
       })
-      showToast({ message: `Saved ${formatPeso(p.amountCentavos)} · ${p.label}`, undo: () => removeTransaction(id) })
+      showToast({ message: tr('Saved {0} · {1}', formatPeso(p.amountCentavos), p.label), undo: () => removeTransaction(id) })
     } catch (e) {
-      showToast({ message: e instanceof Error ? e.message : 'Couldn’t save. Try again.' })
+      showToast({ message: e instanceof Error ? e.message : tr('Couldn’t save. Try again.') })
     } finally {
       setBusy(null)
     }
@@ -49,16 +50,15 @@ export function OneTapAdd() {
         ? { ...presets, items: [...presets.items, { id: crypto.randomUUID(), label, amountCentavos, categoryId }] }
         : { ...presets, dismissed: [...presets.dismissed, key] },
     )
-    showToast({ message: accept ? `Added ${label} ${formatPeso(amountCentavos)} to one-tap` : 'Okay, we won’t ask again', undo: () => savePresets(before) })
+    showToast({ message: accept ? tr('Added {0} {1} to one-tap', label, formatPeso(amountCentavos)) : tr('Okay, we won’t ask again'), undo: () => savePresets(before) })
   }
 
   return (
     <Card>
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-black">One-tap add</h2>
+        <h2 className="text-xl font-black">{tr('One-tap add')}</h2>
         <button type="button" onClick={() => setEditor('list')} className="-mr-2 flex min-h-11 items-center gap-1.5 rounded-full px-3 font-extrabold text-blue hover:bg-blue-tint">
-          <Icon name="pencil" className="size-4" /> Edit
-        </button>
+          <Icon name="pencil" className="size-4" /> {tr('Edit')}</button>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-2.5">
@@ -68,7 +68,7 @@ export function OneTapAdd() {
             type="button"
             disabled={busy !== null}
             onClick={() => log(p)}
-            aria-label={`Add ${p.label}, ${formatPeso(p.amountCentavos)}`}
+            aria-label={tr('Add {0}, {1}', p.label, formatPeso(p.amountCentavos))}
             className="flex min-h-14 animate-rise items-center gap-2 rounded-[20px] bg-page px-3 text-left text-[1.0625rem] font-black hover:bg-pebble active:bg-pebble disabled:opacity-60"
             style={{ animationDelay: `${i * 30}ms` }}
           >
@@ -78,19 +78,17 @@ export function OneTapAdd() {
         ))}
         {presets.items.length === 0 && (
           <button type="button" onClick={() => setEditor('new')} className="col-span-2 flex min-h-14 items-center justify-center gap-2 rounded-[20px] border-2 border-dashed border-pebble-2 font-black text-blue">
-            <Icon name="plus" className="size-5" /> Add a one-tap button
-          </button>
+            <Icon name="plus" className="size-5" /> {tr('Add a one-tap button')}</button>
         )}
       </div>
 
       {suggestion && (
         <div className="mt-4 animate-rise rounded-[20px] bg-blue-tint p-4">
           <p className="font-bold">
-            You logged <strong className="font-black">{suggestion.label} {formatPeso(suggestion.amountCentavos)}</strong> {suggestion.times} times. Make it a one-tap button?
-          </p>
+            {tr('You logged')}{' '}<strong className="font-black">{suggestion.label} {formatPeso(suggestion.amountCentavos)}</strong> {suggestion.times} {tr('times. Make it a one-tap button?')}</p>
           <div className="mt-3 flex flex-wrap gap-2">
-            <button type="button" onClick={() => answer(true)} className="min-h-11 rounded-full bg-blue px-5 font-black text-white">Add button</button>
-            <button type="button" onClick={() => answer(false)} className="min-h-11 rounded-full px-4 font-extrabold text-muted hover:bg-card">No thanks</button>
+            <button type="button" onClick={() => answer(true)} className="min-h-11 rounded-full bg-blue px-5 font-black text-white">{tr('Add button')}</button>
+            <button type="button" onClick={() => answer(false)} className="min-h-11 rounded-full px-4 font-extrabold text-muted hover:bg-card">{tr('No thanks')}</button>
           </div>
         </div>
       )}

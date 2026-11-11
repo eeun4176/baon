@@ -5,6 +5,7 @@
  */
 import { useEffect, useRef, type ReactNode } from 'react'
 import { Icon } from './kit.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 /** Native <dialog> shell (focus trap + Esc): sheet from the bottom on phones, card on desktop. */
 export function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
@@ -21,7 +22,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose: ()
       <div className="p-4 pb-[max(env(safe-area-inset-bottom),1.25rem)] sm:p-5 md:p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <h2 className="text-xl font-black md:text-2xl">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" className="grid size-11 shrink-0 place-items-center rounded-full bg-pebble hover:bg-pebble-2">
+          <button type="button" onClick={onClose} aria-label={tr('Close')} className="grid size-11 shrink-0 place-items-center rounded-full bg-pebble hover:bg-pebble-2">
             <Icon name="x" className="size-5" />
           </button>
         </div>

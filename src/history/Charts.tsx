@@ -6,8 +6,9 @@
  */
 import { weekday } from '../budget/days.ts'
 import { formatPeso } from '../ledger/money.ts'
+import { tr } from '../i18n/i18n.ts'
 
-const SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const SHORT = [tr('Sun'), tr('Mon'), tr('Tue'), tr('Wed'), tr('Thu'), tr('Fri'), tr('Sat')]
 
 /** Vertical "Spent per day" bars with a budget line. */
 export function SpentPerDay({ days, today, budget }: { days: { day: string; spent: number }[]; today: string; budget: number }) {
@@ -17,7 +18,7 @@ export function SpentPerDay({ days, today, budget }: { days: { day: string; spen
   return (
     <figure>
       <figcaption className="mb-4 text-sm font-semibold text-muted">
-        {formatPeso(average)} on average · budget line at {formatPeso(budget)}
+        {tr('{0} on average · budget line at {1}', formatPeso(average), formatPeso(budget))}
       </figcaption>
       <div aria-hidden="true">
         <div className="grid grid-cols-7 gap-2 text-center">
@@ -52,7 +53,7 @@ export function SpentPerDay({ days, today, budget }: { days: { day: string; spen
 
 /** Horizontal bars per category. */
 export function CategoryBars({ rows }: { rows: { categoryId: string; label: string; spent: number }[] }) {
-  if (rows.length === 0) return <p className="font-semibold text-muted">No spending yet this week.</p>
+  if (rows.length === 0) return <p className="font-semibold text-muted">{tr('No spending yet this week.')}</p>
   const top = rows[0].spent
   return (
     <ul className="space-y-3.5">

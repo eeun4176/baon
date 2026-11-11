@@ -9,6 +9,7 @@ import type { Presets } from './add/presets.ts'
 import type { Allowance } from './budget/allowance.ts'
 import type { Profile } from './me/profile.ts'
 import type { Transaction, Wallet } from './ledger/ledger.ts'
+import type { Limits } from './plan/limits.ts'
 import type { SchoolExpense } from './plan/school.ts'
 import type { DaySnapshot } from './streak/streak.ts'
 import type { Vault } from './vault/vault.ts'
@@ -30,6 +31,7 @@ export interface Session {
   snapshots: DaySnapshot[] // each day's budget, for the streak
   presets: Presets // one-tap buttons on Home
   profile: Profile // school, Senior high / College
+  limits: Limits // category limits for this allowance cycle (Plan)
   /** Validates, encrypts and saves a transaction; throws a friendly message if a rule is broken. */
   addTransaction(tx: Transaction): Promise<void>
   /** Deletes a transaction (Undo, delete in History). */
@@ -44,6 +46,8 @@ export interface Session {
   saveSnapshot(snap: DaySnapshot): Promise<void>
   /** Saves the one-tap buttons (order = button order). */
   savePresets(presets: Presets): Promise<void>
+  /** Saves the category limits (an empty object = none). */
+  saveLimits(limits: Limits): Promise<void>
   /** Changes the display name (already checked with checkName). */
   rename(name: string): Promise<void>
   /** Saves school / level. */

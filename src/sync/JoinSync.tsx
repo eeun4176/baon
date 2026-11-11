@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
 import { Button, Screen, StepHeader, Title } from '../ui/kit.tsx'
 import type { Vault } from '../vault/vault.ts'
+import { tr } from '../i18n/i18n.ts'
 
 /** The screen. Calls onDone with the unlocked vault once the records are here. */
 export function JoinSync({ user, onDone, onSkip }: { user: SignedInUser; onDone: (vault: Vault, name: string) => void; onSkip: () => void }) {
@@ -22,7 +23,7 @@ export function JoinSync({ user, onDone, onSkip }: { user: SignedInUser; onDone:
       if (joined) onDone(joined.vault, joined.name)
       else onSkip()
     } catch {
-      setError('Couldn’t bring your records here. Check your internet and try again.')
+      setError(tr('Couldn’t bring your records here. Check your internet and try again.'))
     }
   }, [user, onDone, onSkip])
 
@@ -33,13 +34,13 @@ export function JoinSync({ user, onDone, onSkip }: { user: SignedInUser; onDone:
   }, [join])
 
   return (
-    <Screen footer={<Button disabled={!error} onClick={() => { setError(''); join() }}>{error ? 'Try again' : 'Bringing your records…'}</Button>}>
+    <Screen footer={<Button disabled={!error} onClick={() => { setError(''); join() }}>{error ? tr('Try again') : tr('Bringing your records…')}</Button>}>
       <StepHeader step={2} />
-      <Title sub="Your records are on your other device. We’re bringing them here — this takes a few seconds.">Welcome back, {user.name.split(' ')[0]}</Title>
+      <Title sub={tr('Your records are on your other device. We’re bringing them here — this takes a few seconds.')}>{tr('Welcome back, {0}', user.name.split(' ')[0])}</Title>
       {error && (
         <>
           <p role="alert" className="mt-4 rounded-2xl bg-card p-3 text-center font-bold">{error}</p>
-          <button type="button" onClick={onSkip} className="mt-6 min-h-11 font-extrabold text-blue hover:underline">Set up this device as new instead</button>
+          <button type="button" onClick={onSkip} className="mt-6 min-h-11 font-extrabold text-blue hover:underline">{tr('Set up this device as new instead')}</button>
         </>
       )}
     </Screen>

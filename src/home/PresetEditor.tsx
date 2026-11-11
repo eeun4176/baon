@@ -12,6 +12,7 @@ import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
@@ -34,8 +35,8 @@ function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone:
   function done(e: FormEvent) {
     e.preventDefault()
     const centavos = parsePeso(amount)
-    if (!name.trim()) return setError('Give it a short name, e.g. Tricycle.')
-    if (!centavos) return setError('Enter how much it usually costs.')
+    if (!name.trim()) return setError(tr('Give it a short name, e.g. Tricycle.'))
+    if (!centavos) return setError(tr('Enter how much it usually costs.'))
     onDone({
       id: preset?.id ?? crypto.randomUUID(),
       label: name.trim(),
@@ -51,12 +52,10 @@ function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone:
     <form onSubmit={done} noValidate>
       <div className="grid grid-cols-[1fr_8rem] gap-3">
         <label className={label}>
-          Name
-          <input value={name} maxLength={24} autoFocus onChange={(e) => { setName(e.target.value); setError('') }} placeholder="e.g. Tricycle" className={`${field} placeholder:text-muted/60`} />
+          {tr('Name')}<input value={name} maxLength={24} autoFocus onChange={(e) => { setName(e.target.value); setError('') }} placeholder={tr('e.g. Tricycle')} className={`${field} placeholder:text-muted/60`} />
         </label>
         <label className={label}>
-          Amount
-          <span className={`${field} flex items-center gap-1`}>
+          {tr('Amount')}<span className={`${field} flex items-center gap-1`}>
             <span className="text-muted" aria-hidden="true">₱</span>
             <input
               inputMode="decimal"
@@ -70,8 +69,8 @@ function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone:
         </label>
       </div>
 
-      <p className={`${label} mt-4`}>Category</p>
-      <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label="Category">
+      <p className={`${label} mt-4`}>{tr('Category')}</p>
+      <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('Category')}>
         {CATEGORIES.map((c) => (
           <button key={c.id} type="button" role="radio" aria-checked={categoryId === c.id} onClick={() => setCategoryId(c.id)} className={`${pill(categoryId === c.id)} flex items-center gap-1.5`}>
             <Icon name={c.icon} className="size-4" /> {c.label}
@@ -81,9 +80,9 @@ function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone:
 
       {spending.length > 1 && (
         <>
-          <p className={`${label} mt-4`}>Pay from</p>
-          <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label="Pay from">
-            <button type="button" role="radio" aria-checked={!walletId} onClick={() => setWalletId('')} className={pill(!walletId)}>Last used</button>
+          <p className={`${label} mt-4`}>{tr('Pay from')}</p>
+          <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('Pay from')}>
+            <button type="button" role="radio" aria-checked={!walletId} onClick={() => setWalletId('')} className={pill(!walletId)}>{tr('Last used')}</button>
             {spending.map((w) => (
               <button key={w.id} type="button" role="radio" aria-checked={walletId === w.id} onClick={() => setWalletId(w.id)} className={pill(walletId === w.id)}>{w.name}</button>
             ))}
@@ -93,8 +92,8 @@ function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone:
 
       {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
       <div className="mt-5 flex gap-2.5">
-        <button type="button" onClick={onBack} className={grayButton}>Back</button>
-        <button type="submit" className={mainButton}>Done</button>
+        <button type="button" onClick={onBack} className={grayButton}>{tr('Back')}</button>
+        <button type="submit" className={mainButton}>{tr('Done')}</button>
       </div>
     </form>
   )
@@ -128,15 +127,15 @@ export function PresetEditor({ onClose, startNew = false }: { onClose: () => voi
       await savePresets({ ...presets, items: draft })
     } catch {
       setBusy(false)
-      return showToast({ message: 'Couldn’t save. Try again.' })
+      return showToast({ message: tr('Couldn’t save. Try again.') })
     }
     onClose()
-    showToast({ message: 'One-tap buttons saved', undo: () => savePresets(before) })
+    showToast({ message: tr('One-tap buttons saved'), undo: () => savePresets(before) })
   }
 
   // Both views return <Modal> at the top, so React keeps the same open <dialog> while switching.
   const preset = editing === null || editing === 'new' ? null : draft[editing]
-  const title = editing === null ? 'One-tap buttons' : preset ? `Edit ${preset.label}` : 'New one-tap button'
+  const title = editing === null ? tr('One-tap buttons') : preset ? tr('Edit {0}', preset.label) : tr('New one-tap button')
   if (editing !== null) {
     return (
       <Modal title={title} onClose={onClose}>
@@ -147,7 +146,7 @@ export function PresetEditor({ onClose, startNew = false }: { onClose: () => voi
 
   return (
     <Modal title={title} onClose={onClose}>
-      <p className="font-semibold text-muted">One tap on Home logs the expense right away. Up to {MAX_PRESETS} buttons; the first ones show first.</p>
+      <p className="font-semibold text-muted">{tr('One tap on Home logs the expense right away. Up to {0} buttons; the first ones show first.', MAX_PRESETS)}</p>
       {draft.length ? (
         <ul className="mt-4 divide-y divide-page rounded-3xl bg-page/60">
           {draft.map((p, i) => (
@@ -156,17 +155,17 @@ export function PresetEditor({ onClose, startNew = false }: { onClose: () => voi
               <button type="button" onClick={() => setEditing(i)} className="min-w-0 flex-1 rounded-xl py-1 text-left">
                 <span className="block truncate font-black">{p.label} {formatPeso(p.amountCentavos)}</span>
                 <span className="block truncate text-sm font-semibold text-muted">
-                  {categoryLabel(p.categoryId)} · {wallets.find((w) => w.id === p.walletId)?.name ?? 'Last used wallet'}
+                  {categoryLabel(p.categoryId)} · {wallets.find((w) => w.id === p.walletId)?.name ?? tr('Last used wallet')}
                 </span>
               </button>
-              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={`Move ${p.label} up`} className={iconButton}><Icon name="chevron-up" className="size-5" /></button>
-              <button type="button" onClick={() => move(i, 1)} disabled={i === draft.length - 1} aria-label={`Move ${p.label} down`} className={iconButton}><Icon name="chevron-down" className="size-5" /></button>
-              <button type="button" onClick={() => setDraft(draft.filter((_, j) => j !== i))} aria-label={`Delete ${p.label}`} className={iconButton}><Icon name="trash" className="size-5" /></button>
+              <button type="button" onClick={() => move(i, -1)} disabled={i === 0} aria-label={tr('Move {0} up', p.label)} className={iconButton}><Icon name="chevron-up" className="size-5" /></button>
+              <button type="button" onClick={() => move(i, 1)} disabled={i === draft.length - 1} aria-label={tr('Move {0} down', p.label)} className={iconButton}><Icon name="chevron-down" className="size-5" /></button>
+              <button type="button" onClick={() => setDraft(draft.filter((_, j) => j !== i))} aria-label={tr('Delete {0}', p.label)} className={iconButton}><Icon name="trash" className="size-5" /></button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="mt-4 rounded-3xl bg-page p-4 font-semibold text-muted">No buttons yet. Add the things you buy most, like your jeep fare or lunch.</p>
+        <p className="mt-4 rounded-3xl bg-page p-4 font-semibold text-muted">{tr('No buttons yet. Add the things you buy most, like your jeep fare or lunch.')}</p>
       )}
       <button
         type="button"
@@ -174,11 +173,11 @@ export function PresetEditor({ onClose, startNew = false }: { onClose: () => voi
         disabled={draft.length >= MAX_PRESETS}
         className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-dashed border-pebble-2 font-black text-blue hover:bg-page disabled:text-muted disabled:opacity-60"
       >
-        <Icon name="plus" className="size-5" /> {draft.length >= MAX_PRESETS ? `All ${MAX_PRESETS} buttons used` : 'Add a button'}
+        <Icon name="plus" className="size-5" /> {draft.length >= MAX_PRESETS ? tr('All {0} buttons used', MAX_PRESETS) : tr('Add a button')}
       </button>
       <div className="mt-5 flex gap-2.5">
-        <button type="button" onClick={onClose} className={grayButton}>Cancel</button>
-        <button type="button" onClick={save} disabled={busy} className={mainButton}>Save</button>
+        <button type="button" onClick={onClose} className={grayButton}>{tr('Cancel')}</button>
+        <button type="button" onClick={save} disabled={busy} className={mainButton}>{tr('Save')}</button>
       </div>
     </Modal>
   )

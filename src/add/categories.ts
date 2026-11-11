@@ -5,6 +5,7 @@
  */
 import type { Transaction } from '../ledger/ledger.ts'
 import type { IconName } from '../ui/kit.tsx'
+import { tr } from '../i18n/i18n.ts'
 
 export interface Category {
   id: string
@@ -13,21 +14,21 @@ export interface Category {
 }
 
 export const CATEGORIES: Category[] = [
-  { id: 'fare', icon: 'bus', label: 'Fare' },
-  { id: 'food', icon: 'utensils', label: 'Food' },
-  { id: 'load', icon: 'phone', label: 'Load' },
-  { id: 'school', icon: 'book', label: 'School' },
-  { id: 'snacks', icon: 'cup', label: 'Snacks' },
-  { id: 'shopping', icon: 'wallet', label: 'Shopping' },
-  { id: 'health', icon: 'help', label: 'Health' },
-  { id: 'gifts', icon: 'piggy', label: 'Gifts' },
-  { id: 'fun', icon: 'flame', label: 'Fun' },
-  { id: 'other', icon: 'dots', label: 'Other' },
+  { id: 'fare', icon: 'bus', label: tr('Fare') },
+  { id: 'food', icon: 'utensils', label: tr('Food') },
+  { id: 'load', icon: 'phone', label: tr('Load') },
+  { id: 'school', icon: 'book', label: tr('School') },
+  { id: 'snacks', icon: 'cup', label: tr('Snacks') },
+  { id: 'shopping', icon: 'wallet', label: tr('Shopping') },
+  { id: 'health', icon: 'help', label: tr('Health') },
+  { id: 'gifts', icon: 'piggy', label: tr('Gifts') },
+  { id: 'fun', icon: 'flame', label: tr('Fun') },
+  { id: 'other', icon: 'dots', label: tr('Other') },
 ]
 
 /** Category label for an id (falls back to "Other" for unknown ids). */
 export function categoryLabel(id: string | undefined): string {
-  return CATEGORIES.find((c) => c.id === id)?.label ?? 'Other'
+  return CATEGORIES.find((c) => c.id === id)?.label ?? tr('Other')
 }
 
 /** Categories ordered by how often the student used them; ties keep the default order. */
