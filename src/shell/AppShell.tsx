@@ -10,7 +10,7 @@
  * Also hosts the Add dialog (opened by "?add=1" in the URL) and the Undo toast.
  */
 import { useEffect, useState } from 'react'
-import { Link, NavLink, Outlet, useSearchParams } from 'react-router'
+import { Link, NavLink, Outlet, useLocation, useSearchParams } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
 import { QuickAdd } from '../add/QuickAdd.tsx'
 import { Icon, type IconName } from '../ui/kit.tsx'
@@ -18,6 +18,7 @@ import { useKeepTodaySnapshot } from '../streak/useStreak.ts'
 import { useGooglePhotoSync } from '../me/photo.ts'
 import { ProfileMenu } from './ProfileMenu.tsx'
 import { Snackbar } from './Snackbar.tsx'
+import { pageTitle } from '../pageTitle.ts'
 import { useAddDialog } from './useAddDialog.ts'
 
 const MAIN: { to: string; label: string; icon: IconName; phone: boolean }[] = [
@@ -82,10 +83,16 @@ function SideLink({ to, label, icon, collapsed }: { to: string; label: string; i
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(initialCollapsed)
   const [params] = useSearchParams()
+  const { pathname } = useLocation()
   const addDialog = useAddDialog()
   const storage = useStorageUsed()
   const addOpen = params.has('add')
   useKeepTodaySnapshot()
+
+  // Browser tab title follows the page ("Plan | Baon Student Budget Tracker").
+  useEffect(() => {
+    document.title = pageTitle(pathname)
+  }, [pathname])
   useGooglePhotoSync() // copies the Google profile photo when online
 
   /** Collapses/expands the sidebar and remembers it. */
