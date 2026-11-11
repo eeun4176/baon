@@ -209,13 +209,13 @@ function OtherDeviceDialog({ onClose }: { onClose: () => void }) {
     <Modal title="Your account already syncs" onClose={onClose}>
       <form onSubmit={submit} noValidate>
         <p className="font-semibold text-muted">
-          Your records are already synced from another device. Enter the recovery code you saved there to use those records here.
+          Your records are already synced from another device. Enter the recovery code from that device (its newest one) to use those records here.
         </p>
         <p className="mt-3 rounded-2xl bg-pebble p-3 font-bold">Records that are only on this device will be replaced.</p>
         <Link to="/backup" onClick={onClose} className="mt-3 inline-block font-extrabold text-blue hover:underline">Make a backup first</Link>
         <label className="mt-4 block font-extrabold text-muted">
           Recovery code
-          <input autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="XXXX-XXXX-XXXX-…" value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className={`${field} uppercase`} />
+          <input autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className={`${field} uppercase`} />
         </label>
         {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
         <button type="submit" disabled={busy} className={`${pill} mt-5 w-full bg-blue text-white`}>{busy ? 'Switching…' : 'Use my synced records'}</button>

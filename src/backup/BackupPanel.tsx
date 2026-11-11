@@ -146,9 +146,9 @@ export function RecoveryKitDialog({ replacing, doneLabel = 'Export backup', onCl
             </p>
           )}
           <p className="font-semibold text-muted">Your backup opens only with this code. Save it somewhere other than this phone — a photo, a notebook, or your email.</p>
-          <ol className="mt-4 grid grid-cols-4 gap-2 rounded-2xl bg-page p-3" aria-label="Recovery code">
+          <ol className="mt-4 grid grid-cols-5 gap-1.5 rounded-2xl bg-page p-2.5 sm:gap-2 sm:p-3" aria-label="Recovery code">
             {groups.map((g, i) => (
-              <li key={i} className="rounded-xl bg-card py-2 text-center text-lg font-black tracking-wider tabular-nums sm:text-xl">
+              <li key={i} className="rounded-xl bg-card py-2 text-center text-sm font-black min-[360px]:text-base min-[360px]:tracking-wide sm:text-xl sm:tracking-wider tabular-nums sm:text-xl">
                 <span className="sr-only">Group {i + 1}: </span>{g}
               </li>
             ))}
@@ -210,7 +210,7 @@ export function RestoreForm({ userId, fallbackName, onRestored }: { userId: stri
       </label>
       <label className={`${label} mt-4`}>
         Recovery code
-        <input autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="XXXX-XXXX-XXXX-…" value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className={`${field} uppercase`} />
+        <input autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className={`${field} uppercase`} />
       </label>
       {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
       <button type="submit" disabled={busy} className={`${primary} mt-5 w-full`}>{busy ? 'Restoring…' : 'Restore my records'}</button>

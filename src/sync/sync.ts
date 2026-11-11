@@ -129,10 +129,11 @@ export async function cloudHasAccount(remote: Remote): Promise<boolean> {
  *   'on'         done; first device uploads everything, a returning device uploads its changes
  */
 export async function turnOnSync(vault: Vault, remote: Remote, name: string): Promise<'on' | 'needs-kit' | 'other-key'> {
-  const meta = await withDb(vault.userId, (db) => db.meta.get('vault'))
-  if (!meta?.recovery) return 'needs-kit'
+  // Cloud first: a device with its own records must never be shown a new code it can't use to switch.
   const cloud = await remote.getKey()
   if (cloud && !(await sameKey(vault, cloud))) return 'other-key'
+  const meta = await withDb(vault.userId, (db) => db.meta.get('vault'))
+  if (!meta?.recovery) return 'needs-kit'
 
   await vault.put('settings', 'account-name', { name }) // so a new device shows the same name
   const mine = lockedKey(meta.recovery)

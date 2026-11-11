@@ -28,12 +28,13 @@ async function exported(): Promise<{ vault: Vault; code: string; file: BackupFil
 describe('backup', () => {
   beforeEach(wipePhone)
 
-  it('makes 8 groups of 4 and forgives case, spaces and look-alike letters', () => {
+  it('makes 5 groups of 4, still takes older 32-character codes, and forgives case, spaces and look-alike letters', () => {
     const code = newRecoveryCode()
-    expect(code).toMatch(/^([0-9A-Z]{4}-){7}[0-9A-Z]{4}$/)
+    expect(code).toMatch(/^([0-9A-Z]{4}-){4}[0-9A-Z]{4}$/)
     expect(normalizeCode(code.toLowerCase().replace(/-/g, ' '))).toBe(code.replace(/-/g, ''))
     expect(normalizeCode('O'.repeat(32))).toBe('0'.repeat(32))
     expect(normalizeCode('ABCD')).toBeNull()
+    expect(normalizeCode('A'.repeat(24))).toBeNull()
   })
 
   it('restores every record exactly after the phone is wiped', async () => {
