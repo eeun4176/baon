@@ -10,10 +10,21 @@
  *
  * For now only My phone mode (device key). Shared mode (passphrase + Recovery Kit)
  * is added later and only changes how the DEK is wrapped, not the records.
+ *
+ * Sync (sync/sync.ts): every put/remove also notes the record id in the outbox, in the
+ * same database transaction, so a change can never be saved without being queued for upload.
  */
 import { decryptJson, encryptJson, generateDek, generateDeviceKey, recordAad, unwrapDek, wrapDek } from '../crypto/crypto.ts'
 import Dexie from 'dexie'
 import { deviceDb, openAccountDb, type AccountDb, type StoredRecord } from '../db/db.ts'
+
+const savedListeners = new Set<() => void>()
+
+/** Calls `listener` after every local save or delete (sync uses it to upload soon). Returns an unsubscribe. */
+export function onLocalChange(listener: () => void): () => void {
+  savedListeners.add(listener)
+  return () => savedListeners.delete(listener)
+}
 
 /** Current record schema version; bump it with a migration when record shapes change. */
 export const SCHEMA_VERSION = 1
@@ -29,6 +40,10 @@ export interface Vault {
   list(type: string): Promise<unknown[]>
   /** Deletes one record. */
   remove(id: string): Promise<void>
+  /** Encrypts a value as a record without saving it (sync's key check). */
+  seal(type: string, id: string, data: unknown): Promise<StoredRecord>
+  /** True if a stored-format record (e.g. one downloaded by sync) opens with this account's key. */
+  canOpen(row: StoredRecord): Promise<boolean>
   /** Forgets the key and closes the database. Used on lock and account switch. */
   lock(): void
 }
@@ -102,7 +117,11 @@ function unlocked(userId: string, db: AccountDb, dek: CryptoKey): Vault {
     userId,
     async put(type, id, data) {
       const sealed = await encryptJson(requireKey(), recordAad(userId, id, type, SCHEMA_VERSION), data)
-      await db.records.put({ id, type, v: SCHEMA_VERSION, ...sealed })
+      await db.transaction('rw', db.records, db.outbox, async () => {
+        await db.records.put({ id, type, v: SCHEMA_VERSION, ...sealed })
+        await db.outbox.put({ id, n: crypto.randomUUID() })
+      })
+      savedListeners.forEach((l) => l())
     },
     async get(id) {
       requireKey()
@@ -116,7 +135,22 @@ function unlocked(userId: string, db: AccountDb, dek: CryptoKey): Vault {
     },
     async remove(id) {
       requireKey()
-      await db.records.delete(id)
+      await db.transaction('rw', db.records, db.outbox, async () => {
+        await db.records.delete(id)
+        await db.outbox.put({ id, n: crypto.randomUUID() })
+      })
+      savedListeners.forEach((l) => l())
+    },
+    async seal(type, id, data) {
+      return { id, type, v: SCHEMA_VERSION, ...(await encryptJson(requireKey(), recordAad(userId, id, type, SCHEMA_VERSION), data)) }
+    },
+    async canOpen(row) {
+      try {
+        await open(row)
+        return true
+      } catch {
+        return false
+      }
     },
     lock() {
       key = null // Dexie would silently reopen a closed db, so the null key is the real lock

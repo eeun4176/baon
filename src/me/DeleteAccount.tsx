@@ -1,7 +1,8 @@
 /*
  * DeleteAccount.tsx — "Delete account" on Me → Security (RA 10173 right to erasure).
  * Type DELETE, then:
- *   1. try to delete the online sign-in account (only works if Neon Auth allows it and the
+ *   1. delete the synced online copies (if any), then try to delete the online sign-in account
+ *      (only works if Neon Auth allows it and the
  *      sign-in is recent — so it may fail, and we say so),
  *   2. sign out and delete everything baon saved on this phone (always),
  *   3. tell the student exactly what was deleted, then go back to Welcome.
@@ -29,7 +30,14 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
     setBusy(true)
     try {
       const auth = await import('../auth/auth.ts').catch(() => null) // offline and never loaded: skip online steps
-      const online = (await auth?.deleteSignInAccount()) ?? false
+      // Online copies first (needs the sign-in). If that fails while sync is on, keep the sign-in
+      // account too, so the copies can still be removed later.
+      const { syncState } = await import('../sync/sync.ts')
+      const syncOn = (await syncState(vault.userId)).on
+      const cloudOk = auth
+        ? await import('../sync/neonRemote.ts').then(({ neonRemote }) => neonRemote(vault.userId).deleteAll()).then(() => true, () => !syncOn)
+        : !syncOn
+      const online = cloudOk && ((await auth?.deleteSignInAccount()) ?? false)
       if (!online) await auth?.signOut().catch(() => {})
       vault.lock()
       await deleteAccountFromDevice(vault.userId)
@@ -50,8 +58,8 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       <Modal title={done === 'all' ? 'Your account is deleted' : 'Deleted from this phone'} onClose={() => location.replace('/')}>
         <p className="font-semibold text-muted">
           {done === 'all'
-            ? 'Your sign-in account and everything baon saved on this phone are gone.'
-            : 'Everything baon saved on this phone is gone. Your sign-in account (email and name) couldn’t be removed from here — message the baon team and we’ll remove it.'}
+            ? 'Your sign-in account, your synced copies online and everything baon saved on this phone are gone.'
+            : 'Everything baon saved on this phone is gone. Your sign-in account (and any synced copies online) couldn’t be removed from here — message the baon team and we’ll remove them.'}
         </p>
         <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>OK</button>
       </Modal>
@@ -62,7 +70,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
     <Modal title="Delete your account?" onClose={onClose}>
       <form onSubmit={remove} noValidate>
         <p className="font-semibold text-muted">
-          This deletes your sign-in account and removes your records, wallets, plans, streak and recovery code from this phone. It can’t be undone. Backups you saved elsewhere aren’t touched.
+          This deletes your sign-in account and synced copies online, and removes your records, wallets, plans, streak and recovery code from this phone. Your other devices keep their own records. It can’t be undone. Backups you saved elsewhere aren’t touched.
         </p>
         <Link to="/backup" className="mt-3 inline-block font-extrabold text-blue hover:underline">Make a backup first</Link>
         <label className="mt-4 block font-extrabold text-muted">

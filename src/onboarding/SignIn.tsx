@@ -26,8 +26,11 @@ function useOnline() {
   return useSyncExternalStore(subscribeOnline, () => navigator.onLine)
 }
 
-/** Sign-in step. Calls onSignedIn after the email code works (Google returns via redirect). */
-export function SignIn({ onBack, onSignedIn }: { onBack: () => void; onSignedIn: (user: SignedInUser) => void }) {
+/**
+ * Sign-in step. Calls onSignedIn after the email code works; Google leaves the page and comes
+ * back to `returnTo` (default: the start page).
+ */
+export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => void; onSignedIn: (user: SignedInUser) => void; returnTo?: string }) {
   const online = useOnline()
   const [mode, setMode] = useState<'choose' | 'email' | 'code'>('choose')
   const [email, setEmail] = useState('')
@@ -52,7 +55,7 @@ export function SignIn({ onBack, onSignedIn }: { onBack: () => void; onSignedIn:
   const google = () =>
     attempt(async () => {
       const auth = await import('../auth/auth.ts')
-      await auth.signInWithGoogle(`${location.origin}/`)
+      await auth.signInWithGoogle(`${location.origin}${returnTo}`)
     })
 
   const sendCode = () =>

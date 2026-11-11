@@ -20,6 +20,7 @@ import { ProfileMenu } from './ProfileMenu.tsx'
 import { Snackbar } from './Snackbar.tsx'
 import { pageTitle } from '../pageTitle.ts'
 import { formatBytes, keepStorage, useStorage } from '../storage.ts'
+import { useAutoSync } from '../sync/useSync.ts'
 import { useAddDialog } from './useAddDialog.ts'
 
 const MAIN: { to: string; label: string; icon: IconName; phone: boolean }[] = [
@@ -85,6 +86,7 @@ export function AppShell() {
     document.title = pageTitle(pathname)
   }, [pathname])
   useGooglePhotoSync() // copies the Google profile photo when online
+  useAutoSync() // keeps other devices in step, if sync is on for this one
   useEffect(() => void keepStorage(), []) // ask the browser not to clear baon when space runs low
 
   /** Collapses/expands the sidebar and remembers it. */

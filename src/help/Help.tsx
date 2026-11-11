@@ -17,12 +17,12 @@ const PRIVACY: { icon: IconName; title: string; text: ReactNode }[] = [
   {
     icon: 'shield',
     title: 'Your records stay on this phone, encrypted',
-    text: 'Amounts, notes, wallets, plans and your streak are scrambled (encrypted) so only baon on this phone can read them. baon works without internet and doesn’t send them anywhere.',
+    text: 'Amounts, notes, wallets, plans and your streak are scrambled (encrypted) so only baon on this phone can read them. baon works without internet and only sends them online if you turn on sync — as scrambled copies we can’t read.',
   },
   {
     icon: 'user',
-    title: 'What we receive: only your sign-in',
-    text: 'Our sign-in service keeps your email, name and Google photo so you can sign in. It never gets your money records, and signing in never unlocks them by itself.',
+    title: 'What we receive',
+    text: 'Your email, name and Google photo so you can sign in. If you turn on sync, also scrambled copies of your records — we can’t read them, and signing in never unlocks them by itself.',
   },
   {
     icon: 'cloud',
@@ -42,6 +42,7 @@ const FAQ: [string, ReactNode][] = [
   ['What is the free pass?', 'Once a week (Monday to Sunday), a class day you forgot to log is covered automatically, so your streak keeps going.'],
   ['No classes for a while?', 'On Plan → Class days, set a break (one day, or until a date). Your budget then counts every day and your streak is frozen until classes are back.'],
   ['Does baon work without internet?', 'Yes. After the first sign-in, everything works offline. Only signing in and syncing your Google photo need internet.'],
+  ['Can I use baon on more than one device?', 'Yes. Turn on Sync across devices on Me → Backup. On your other device, sign in and enter your recovery code.'],
   ['What if my phone breaks or gets reset?', <>Restore from your latest backup on the new phone: sign in, then tap “Restore a backup”. Keep backups fresh from <Link to="/backup" className="font-extrabold text-blue hover:underline">Backup</Link>.</>],
   ['I lost my recovery code.', 'On Backup, tap “Lost it? Make a new code”, then export a new backup. Backups made before still need the old code.'],
   ['How do I install baon?', 'Android (Chrome): menu ⋮ → Install app. iPhone (Safari): Share → Add to Home Screen. On a computer: the install icon in the address bar.'],

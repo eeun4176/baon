@@ -18,6 +18,7 @@ import { useSession } from '../session.ts'
 import { ThemePicker } from '../shell/ThemePicker.tsx'
 import { formatBytes, isStorageLow, keepStorage, useStorage } from '../storage.ts'
 import { BackupPanel } from '../backup/BackupPanel.tsx'
+import { SyncSection } from '../sync/SyncSection.tsx'
 import { useStreak } from '../streak/useStreak.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
 import { Avatar } from './Avatar.tsx'
@@ -259,7 +260,7 @@ function SecurityTab() {
 
       <div className="mt-6 border-t border-pebble pt-5">
         <h3 className="font-black">Delete account</h3>
-        <p className="mt-1 font-semibold text-muted">Deletes your sign-in account and everything baon saved on this phone. Make a backup first if you might come back.</p>
+        <p className="mt-1 font-semibold text-muted">Deletes your sign-in account, your synced copies online and everything baon saved on this phone. Make a backup first if you might come back.</p>
         <button type="button" onClick={() => setDeleting(true)} className="mt-3 flex min-h-12 items-center gap-2 rounded-full bg-red px-5 font-black text-white hover:brightness-110">
           <Icon name="trash" className="size-5" /> Delete account
         </button>
@@ -340,7 +341,12 @@ export function Me() {
           <Card key={tab} className="mt-4 animate-rise">
             {tab === 'profile' && <ProfileTab />}
             {tab === 'security' && <SecurityTab />}
-            {tab === 'backup' && <BackupPanel />}
+            {tab === 'backup' && (
+              <>
+                <BackupPanel />
+                <div className="mt-6 border-t border-pebble pt-5"><SyncSection /></div>
+              </>
+            )}
             {tab === 'prefs' && <PrefsTab />}
           </Card>
         </div>

@@ -3,10 +3,17 @@
  * Only onboarding imports this, and only with `await import(...)`, so the Neon SDK
  * is never part of the offline app bundle. Signing in proves WHO the student is;
  * it never unlocks or sends their records (plan §7.1).
+ * The same client also reaches the database (Data API) for opt-in sync (sync/neonRemote.ts);
+ * every database request carries the signed-in user's token automatically.
  */
-import { createAuthClient } from '@neon/neon-js/auth'
+import { createClient } from '@neon/neon-js'
 
-const client = createAuthClient(import.meta.env.VITE_NEON_AUTH_URL)
+/** Sign-in + database client (Neon). */
+export const neon = createClient({
+  auth: { url: import.meta.env.VITE_NEON_AUTH_URL },
+  dataApi: { url: import.meta.env.VITE_NEON_DATA_API_URL },
+})
+const client = neon.auth
 
 /** Result shape every Better Auth call returns. */
 type Result = Promise<{ error: { message?: string } | null }>
