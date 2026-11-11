@@ -19,6 +19,7 @@ import { useGooglePhotoSync } from '../me/photo.ts'
 import { ProfileMenu } from './ProfileMenu.tsx'
 import { Snackbar } from './Snackbar.tsx'
 import { pageTitle } from '../pageTitle.ts'
+import { formatBytes, keepStorage, useStorage } from '../storage.ts'
 import { useAddDialog } from './useAddDialog.ts'
 
 const MAIN: { to: string; label: string; icon: IconName; phone: boolean }[] = [
@@ -44,17 +45,6 @@ function initialCollapsed(): boolean {
     // storage blocked (private mode): fall through to the screen-size default
   }
   return !window.matchMedia('(min-width: 1024px)').matches
-}
-
-/** How much this site stores on the device, e.g. "1.2 MB" (null if the browser won't say). */
-function useStorageUsed(): string | null {
-  const [used, setUsed] = useState<string | null>(null)
-  useEffect(() => {
-    navigator.storage?.estimate?.().then(({ usage = 0 }) => {
-      setUsed(usage < 1_000_000 ? `${Math.max(1, Math.round(usage / 1000))} KB` : `${(usage / 1_000_000).toFixed(1)} MB`)
-    }, () => {})
-  }, [])
-  return used
 }
 
 /** Label fade used by every sidebar text while the width animates. */
@@ -85,7 +75,8 @@ export function AppShell() {
   const [params] = useSearchParams()
   const { pathname } = useLocation()
   const addDialog = useAddDialog()
-  const storage = useStorageUsed()
+  const [storageState] = useStorage()
+  const storage = storageState?.usage ? formatBytes(storageState.usage) : null
   const addOpen = params.has('add')
   useKeepTodaySnapshot()
 
@@ -94,6 +85,7 @@ export function AppShell() {
     document.title = pageTitle(pathname)
   }, [pathname])
   useGooglePhotoSync() // copies the Google profile photo when online
+  useEffect(() => void keepStorage(), []) // ask the browser not to clear baon when space runs low
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {
