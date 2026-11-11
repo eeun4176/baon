@@ -8,9 +8,13 @@
  */
 import { createClient } from '@neon/neon-js'
 
+// Live site: sign-in goes through baon's own address (api/auth.ts), so phones keep the sign-in.
+// shortcut: the dev server has no api/ functions, so dev (and `vite preview`) talk to Neon directly.
+const AUTH_URL = import.meta.env.PROD ? `${location.origin}/api/auth` : import.meta.env.VITE_NEON_AUTH_URL
+
 /** Sign-in + database client (Neon). */
 export const neon = createClient({
-  auth: { url: import.meta.env.VITE_NEON_AUTH_URL },
+  auth: { url: AUTH_URL },
   dataApi: { url: import.meta.env.VITE_NEON_DATA_API_URL },
 })
 const client = neon.auth

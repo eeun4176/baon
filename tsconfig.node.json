@@ -1,4 +1,4 @@
-// tsconfig.node.json — TypeScript settings for vite.config.ts (runs in Node at build time).
+// tsconfig.node.json — TypeScript settings for code that runs in Node: vite.config.ts (build) and api/ (Vercel functions).
 {
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
@@ -20,5 +20,5 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["vite.config.ts"]
+  "include": ["vite.config.ts", "api"]
 }
