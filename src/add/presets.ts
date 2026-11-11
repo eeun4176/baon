@@ -10,7 +10,7 @@
 import * as z from 'zod/mini'
 import type { Transaction } from '../ledger/ledger.ts'
 import type { Vault } from '../vault/vault.ts'
-import { CATEGORIES, categoryLabel } from './categories.ts'
+import { categoryLabel, pickableCategories } from './categories.ts'
 import { tr } from '../i18n/i18n.ts'
 
 export const MAX_PRESETS = 8
@@ -44,7 +44,7 @@ export const DEFAULT_PRESETS: Presets = {
 
 /** Icon for a button: its own override, else its category's icon. */
 export function presetIcon(p: Preset) {
-  return p.icon ?? CATEGORIES.find((c) => c.id === p.categoryId)?.icon ?? 'dots'
+  return p.icon ?? pickableCategories().find((c) => c.id === p.categoryId)?.icon ?? 'dots'
 }
 
 /** Same name + amount + category = the same everyday expense. */

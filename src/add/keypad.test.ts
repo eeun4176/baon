@@ -4,7 +4,7 @@
 import { describe, expect, it } from 'vitest'
 import type { Transaction } from '../ledger/ledger.ts'
 import { parsePeso } from '../ledger/money.ts'
-import { byMostUsed, categoryLabel, lastUsedWalletId } from './categories.ts'
+import { byMostUsed, categoryLabel, lastUsedWalletId, pickableCategories, setOwnCategories } from './categories.ts'
 import { acceptTyped, centavosToText, displayAmount, pressKey, type Key } from './keypad.ts'
 
 /** Presses keys in order from an empty amount. */
@@ -62,6 +62,15 @@ describe('categories', () => {
   })
 
   it('labels unknown categories as Other', () => expect(categoryLabel('nope')).toBe('Other'))
+
+  it('own categories sit before "Other"; a removed one keeps its name but leaves the list', () => {
+    setOwnCategories([{ id: 'own-a', label: 'Milk tea' }, { id: 'own-b', label: 'Gym', removed: true }])
+    const ids = pickableCategories().map((c) => c.id)
+    expect(ids.slice(-2)).toEqual(['own-a', 'other'])
+    expect(ids).not.toContain('own-b')
+    expect(categoryLabel('own-b')).toBe('Gym')
+    setOwnCategories([])
+  })
 
   it('defaults to the wallet of the latest expense', () => {
     expect(lastUsedWalletId([tx('food', 'cash'), tx('food', 'gcash')], 'cash')).toBe('gcash')

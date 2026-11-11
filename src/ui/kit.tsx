@@ -11,7 +11,7 @@ import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
   ArrowRight, Book, Bus, Calendar, ChartPie, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
   Ellipsis, Flame, HardDrive, History, House, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pencil, PiggyBank, Plus, Printer,
-  Search, Share2, Shield, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
+  Search, Share2, Shield, Tag, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
 import { formatPeso } from '../ledger/money.ts'
 import { tr } from '../i18n/i18n.ts'
@@ -242,6 +242,7 @@ const ICONS = {
   pie: ChartPie,
   ticket: Ticket,
   share: Share2,
+  tag: Tag,
 } as const
 
 /** Icon name type, for components that take an icon as a prop. */

@@ -2,9 +2,14 @@
  * categories.ts — Expense categories and the starter one-tap presets (plan §4.2).
  * Quick Add shows the 5 most-used categories plus "More" (design: Fare, Food,
  * Load, School, Snacks, More). One-tap buttons live in presets.ts.
+ * Students can add their own categories (e.g. "Milk tea", from Plan → Category limits). They're
+ * one encrypted 'settings' record, so they sync; a removed one is kept (marked removed) so old
+ * entries still show its name.
  */
+import * as z from 'zod/mini'
 import type { Transaction } from '../ledger/ledger.ts'
 import type { IconName } from '../ui/kit.tsx'
+import type { Vault } from '../vault/vault.ts'
 import { tr } from '../i18n/i18n.ts'
 
 export interface Category {
@@ -26,9 +31,43 @@ export const CATEGORIES: Category[] = [
   { id: 'other', icon: 'dots', label: tr('Other') },
 ]
 
+export const MAX_OWN = 10
+export const OWN_NAME_MAX = 20
+const OwnSchema = z.array(z.object({
+  id: z.string().check(z.regex(/^own-[\w-]{1,36}$/)),
+  label: z.string().check(z.minLength(1), z.maxLength(OWN_NAME_MAX)),
+  removed: z.optional(z.boolean()),
+}))
+export type OwnCategory = z.infer<typeof OwnSchema>[number]
+const RECORD_ID = 'own-categories'
+
+let own: OwnCategory[] = [] // set by the session (setOwnCategories) whenever they load or change
+
+/** Tells every label lookup about the student's own categories. */
+export function setOwnCategories(list: OwnCategory[]) {
+  own = list
+}
+
+/** Validates and saves the student's own categories. */
+export async function saveOwnCategories(vault: Vault, list: OwnCategory[]): Promise<void> {
+  await vault.put('settings', RECORD_ID, OwnSchema.parse(list))
+}
+
+/** Loads the student's own categories (none yet = []). */
+export async function loadOwnCategories(vault: Vault): Promise<OwnCategory[]> {
+  const raw = await vault.get(RECORD_ID)
+  return raw === undefined ? [] : OwnSchema.parse(raw)
+}
+
+/** Categories to pick from: the built-in ones, then the student's own (`list`, default the saved ones), "Other" last. */
+export function pickableCategories(list = own): Category[] {
+  const mine = list.filter((c) => !c.removed).map((c): Category => ({ id: c.id, label: c.label, icon: 'tag' }))
+  return [...CATEGORIES.slice(0, -1), ...mine, CATEGORIES[CATEGORIES.length - 1]]
+}
+
 /** Category label for an id (falls back to "Other" for unknown ids). */
 export function categoryLabel(id: string | undefined): string {
-  return CATEGORIES.find((c) => c.id === id)?.label ?? tr('Other')
+  return CATEGORIES.find((c) => c.id === id)?.label ?? own.find((c) => c.id === id)?.label ?? tr('Other')
 }
 
 /** Categories ordered by how often the student used them; ties keep the default order. */
@@ -37,7 +76,7 @@ export function byMostUsed(transactions: Transaction[]): Category[] {
   for (const tx of transactions) {
     if (tx.kind === 'expense' && tx.categoryId) uses.set(tx.categoryId, (uses.get(tx.categoryId) ?? 0) + 1)
   }
-  return [...CATEGORIES].sort((a, b) => (uses.get(b.id) ?? 0) - (uses.get(a.id) ?? 0))
+  return pickableCategories().sort((a, b) => (uses.get(b.id) ?? 0) - (uses.get(a.id) ?? 0))
 }
 
 /** Wallet the student used for their latest expense, so it's the default next time. */

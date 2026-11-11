@@ -3,6 +3,7 @@
  * keeps them in memory, and gives every screen the same data plus save/undo actions.
  */
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { loadOwnCategories, saveOwnCategories as storeOwnCategories, setOwnCategories, type OwnCategory } from '../add/categories.ts'
 import { loadPresets, savePresets as storePresets, type Presets } from '../add/presets.ts'
 import { loadAllowance, saveAllowance, type Allowance } from '../budget/allowance.ts'
 import { sortWallets, type Transaction, type Wallet } from '../ledger/ledger.ts'
@@ -25,15 +26,17 @@ interface Records {
   presets: Presets
   profile: Profile
   limits: Limits
+  ownCategories: OwnCategory[]
 }
 
 /** Decrypts everything the screens need (a student has a few thousand records a year at most). */
 async function loadRecords(vault: Vault): Promise<Records> {
-  const [wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile, limits] = await Promise.all([
-    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault), loadPresets(vault), loadProfile(vault), loadLimits(vault),
+  const [wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile, limits, ownCategories] = await Promise.all([
+    loadWallets(vault), loadTransactions(vault), loadAllowance(vault), loadSchoolExpenses(vault), loadSnapshots(vault), loadPresets(vault), loadProfile(vault), loadLimits(vault), loadOwnCategories(vault),
   ])
   if (!allowance) throw new Error(tr('Allowance not set up'))
-  return { wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile, limits }
+  setOwnCategories(ownCategories)
+  return { wallets, transactions, allowance, schoolExpenses, snapshots, presets, profile, limits, ownCategories }
 }
 
 /** Keeps transactions in time order after adding one. */
@@ -114,6 +117,15 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
     [vault],
   )
 
+  const saveOwnCategories = useCallback(
+    async (list: OwnCategory[]) => {
+      await storeOwnCategories(vault, list)
+      setOwnCategories(list)
+      setRecords((r) => r && { ...r, ownCategories: list })
+    },
+    [vault],
+  )
+
   const rename = useCallback(
     async (next: string) => {
       await renameAccount(vault.userId, next)
@@ -165,8 +177,8 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
   }, [vault, onSignOut, name])
 
   const session = useMemo<Session | null>(
-    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, saveLimits, rename, saveProfile, saveWallet, toast, showToast: setToast, dismissToast, signOut, reload } : null,
-    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, saveLimits, rename, saveProfile, saveWallet, toast, dismissToast, signOut, reload],
+    () => records ? { vault, name, ...records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, saveLimits, saveOwnCategories, rename, saveProfile, saveWallet, toast, showToast: setToast, dismissToast, signOut, reload } : null,
+    [vault, name, records, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, updateAllowance, saveSnapshot, savePresets, saveLimits, saveOwnCategories, rename, saveProfile, saveWallet, toast, dismissToast, signOut, reload],
   )
 
   if (records === undefined) return null // decrypting takes a moment; avoid flashing empty screens

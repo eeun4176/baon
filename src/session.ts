@@ -9,6 +9,7 @@ import type { Presets } from './add/presets.ts'
 import type { Allowance } from './budget/allowance.ts'
 import type { Profile } from './me/profile.ts'
 import type { Transaction, Wallet } from './ledger/ledger.ts'
+import type { OwnCategory } from './add/categories.ts'
 import type { Limits } from './plan/limits.ts'
 import type { SchoolExpense } from './plan/school.ts'
 import type { DaySnapshot } from './streak/streak.ts'
@@ -32,6 +33,7 @@ export interface Session {
   presets: Presets // one-tap buttons on Home
   profile: Profile // school, Senior high / College
   limits: Limits // category limits for this allowance cycle (Plan)
+  ownCategories: OwnCategory[] // categories the student added (removed ones kept for old entries)
   /** Validates, encrypts and saves a transaction; throws a friendly message if a rule is broken. */
   addTransaction(tx: Transaction): Promise<void>
   /** Deletes a transaction (Undo, delete in History). */
@@ -48,6 +50,8 @@ export interface Session {
   savePresets(presets: Presets): Promise<void>
   /** Saves the category limits (an empty object = none). */
   saveLimits(limits: Limits): Promise<void>
+  /** Saves the student's own categories. */
+  saveOwnCategories(list: OwnCategory[]): Promise<void>
   /** Changes the display name (already checked with checkName). */
   rename(name: string): Promise<void>
   /** Saves school / level. */

@@ -3,7 +3,8 @@
  * Phone: "History" + List/Charts toggle, search, then day cards (or the charts).
  * Desktop: title + subtitle, search on the right, category chips, day cards on the
  *   left and a summary column on the right ("Spent since Sunday", By category, export).
- * Tap any entry to edit or delete it.
+ * Tap any entry to edit or delete it. Share (header) makes a picture of today's / this week's /
+ * this month's spending for a story (ShareSpendingDialog).
  */
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
@@ -14,6 +15,7 @@ import { useSession } from '../session.ts'
 import { useAddDialog } from '../shell/useAddDialog.ts'
 import { Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
 import { CategoryBars, SpentPerDay } from './Charts.tsx'
+import { ShareSpendingDialog } from './ShareSpendingDialog.tsx'
 import { filterEntries, groupByDay, spentByCategory, spentPerDay, spentThisWeek } from './history.ts'
 import { TxRow } from './TxRow.tsx'
 import { LOCALE, tr } from '../i18n/i18n.ts'
@@ -55,6 +57,7 @@ export function History() {
   const [view, setView] = useState<'list' | 'charts'>('list')
   const [query, setQuery] = useState('')
   const [categoryId, setCategoryId] = useState<string | null>(null)
+  const [sharing, setSharing] = useState(false)
 
   const days = useMemo(() => groupByDay(filterEntries(transactions, wallets, query, categoryId)), [transactions, wallets, query, categoryId])
   const week = useMemo(() => spentThisWeek(transactions, today), [transactions, today])
@@ -112,6 +115,9 @@ export function History() {
           <>
             <Segmented options={[['list', tr('List')], ['charts', tr('Charts')]] as const} value={view} onChange={setView} label={tr('View')} className="lg:hidden" />
             <Search value={query} onChange={setQuery} className="hidden w-72 lg:flex" />
+            <button type="button" onClick={() => setSharing(true)} aria-label={tr('Share your spending')} className="grid size-11 shrink-0 place-items-center rounded-full bg-blue text-white">
+              <Icon name="share" className="size-5" />
+            </button>
           </>
         }
       />
@@ -159,6 +165,7 @@ export function History() {
           </aside>
         </div>
       </div>
+      {sharing && <ShareSpendingDialog onClose={() => setSharing(false)} />}
     </Page>
   )
 }

@@ -65,7 +65,7 @@ export function Streak() {
   /** Makes the streak picture and opens the share sheet (or downloads it on a computer). */
   async function share() {
     const sunday = addDays(today, -weekday(today))
-    const week = Array.from({ length: 7 }, (_, i) => ['on', tr('over')].includes(streak.days.get(addDays(sunday, i))?.status ?? ''))
+    const week = Array.from({ length: 7 }, (_, i) => ['on', 'over'].includes(streak.days.get(addDays(sunday, i))?.status ?? ''))
     setSharing(true)
     try {
       if ((await shareStreak(n, week, weekday(today))) === 'downloaded') showToast({ message: tr('Streak picture saved to your downloads') })

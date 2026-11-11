@@ -6,7 +6,7 @@
  */
 import { useState, type FormEvent } from 'react'
 import { acceptTyped, centavosToText } from '../add/keypad.ts'
-import { CATEGORIES, categoryLabel } from '../add/categories.ts'
+import { categoryLabel, pickableCategories } from '../add/categories.ts'
 import { MAX_PRESETS, presetIcon, type Preset } from '../add/presets.ts'
 import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
@@ -71,7 +71,7 @@ function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone:
 
       <p className={`${label} mt-4`}>{tr('Category')}</p>
       <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('Category')}>
-        {CATEGORIES.map((c) => (
+        {pickableCategories().map((c) => (
           <button key={c.id} type="button" role="radio" aria-checked={categoryId === c.id} onClick={() => setCategoryId(c.id)} className={`${pill(categoryId === c.id)} flex items-center gap-1.5`}>
             <Icon name={c.icon} className="size-4" /> {c.label}
           </button>
