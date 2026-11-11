@@ -16,6 +16,7 @@ import { balances, type Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { ThemePicker } from '../shell/ThemePicker.tsx'
+import { formatBytes, isStorageLow, keepStorage, useStorage } from '../storage.ts'
 import { BackupPanel } from '../backup/BackupPanel.tsx'
 import { useStreak } from '../streak/useStreak.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
@@ -193,6 +194,39 @@ function ProfileTab() {
   )
 }
 
+/** "Kept on this device" — whether the browser may clear baon when space runs low, with a button to ask it not to. */
+function StorageItem() {
+  const { showToast } = useSession()
+  const [storage, refresh] = useStorage()
+  if (!storage || storage.persisted === null) return null // browser can't tell: say nothing rather than guess
+
+  /** Asks the browser (needs a tap in some browsers) and reports what it answered. */
+  async function keep() {
+    const kept = await keepStorage()
+    refresh()
+    showToast({ message: kept ? 'Your records will be kept on this device' : 'Browser said no — keep a backup' })
+  }
+
+  const used = storage.usage ? ` Using ${formatBytes(storage.usage)}.` : ''
+  return (
+    <li className="flex items-start gap-3 rounded-2xl bg-page p-4">
+      <Icon name="drive" className={`mt-0.5 size-5 shrink-0 ${storage.persisted ? 'text-blue' : 'text-muted'}`} />
+      <span>
+        <span className="block font-black">{storage.persisted ? 'Kept on this device · on' : 'Records could be cleared'}</span>
+        <span className="block font-semibold text-muted">
+          {storage.persisted
+            ? `The browser won’t delete baon’s records to free up space.${used}`
+            : `If your phone runs low on space, the browser may delete baon’s data. Installing baon on your home screen helps.${used}`}
+          {isStorageLow(storage) && ' Your phone is almost full.'}
+        </span>
+        {!storage.persisted && (
+          <button type="button" onClick={keep} className="mt-3 min-h-11 rounded-full bg-blue px-5 font-black text-white">Keep my records</button>
+        )}
+      </span>
+    </li>
+  )
+}
+
 /** Security tab: how this device protects the records (shared mode isn't built yet). */
 function SecurityTab() {
   const { signOut } = useSession()
@@ -207,6 +241,7 @@ function SecurityTab() {
             <span className="block font-semibold text-muted">Your records are encrypted on this device, and the key is locked to this browser. Keep your phone’s screen lock on — it protects baon too.</span>
           </span>
         </li>
+        <StorageItem />
         <li className="flex items-start gap-3 rounded-2xl bg-page p-4 opacity-70">
           <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
           <span>

@@ -27,6 +27,7 @@ import { randomGreeting } from './greetings.ts'
 import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
 import { BackupReminder } from '../backup/BackupReminder.tsx'
 import { OneTapAdd } from './OneTapAdd.tsx'
+import { StorageWarning } from './StorageWarning.tsx'
 import { useToday, type Today } from './useToday.ts'
 
 const LONG = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -203,6 +204,7 @@ export function Home() {
         <div className="lg:col-span-7">{t.result.allowanceDue ? <AllowanceCheckIn t={t} /> : <Hero t={t} />}</div>
         <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} streak={streak} /></div>
 
+        <StorageWarning className="lg:col-span-12" />
         <div className="lg:col-span-6"><OneTapAdd /></div>
         <Card className="hidden animate-rise md:block lg:col-span-6">
           <div className="flex items-baseline justify-between">
