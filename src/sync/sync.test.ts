@@ -196,6 +196,7 @@ describe('sync', () => {
     useB()
     await deviceDb.accounts.clear() // B's own account list (shared in this test)
     const other = await createVault('u1', 'Jas')
+    expect(await turnOnSync(other, cloud, 'Jas')).toBe('other-key') // before any Recovery Kit: no new code to confuse with
     await saveRecoveryCode('u1', newRecoveryCode())
     expect(await turnOnSync(other, cloud, 'Jas')).toBe('other-key')
     expect((await syncState('u1')).on).toBe(false)

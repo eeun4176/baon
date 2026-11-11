@@ -15,10 +15,13 @@ import { SCHEMA_VERSION, type Vault } from '../vault/vault.ts'
 const ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ' // Crockford base32: no I, L, O or U to misread
 const NAME_ID = 'account-name' // the display name travels inside the backup as an encrypted record
 const encoder = new TextEncoder()
+// 100 random bits: far beyond guessing, even with a copy of the locked key. Codes made before were 32 long (still accepted).
+const CODE_LENGTH = 20
+const OLD_CODE_LENGTH = 32
 
-/** New Recovery Kit code: 32 random characters (160 bits), shown as 8 groups of 4. */
+/** New Recovery Kit code: 20 random characters (100 bits), shown as 5 groups of 4. */
 export function newRecoveryCode(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32))
+  const bytes = crypto.getRandomValues(new Uint8Array(CODE_LENGTH))
   const chars = Array.from(bytes, (b) => ALPHABET[b % 32]).join('') // 256 is a multiple of 32, so no bias
   return chars.match(/.{4}/g)!.join('-')
 }
@@ -26,13 +29,13 @@ export function newRecoveryCode(): string {
 /** Cleans a typed code (case, spaces and dashes don't matter; O→0, I/L→1); null if it can't be a code. */
 export function normalizeCode(typed: string): string | null {
   const code = typed.toUpperCase().replace(/[\s-]/g, '').replace(/O/g, '0').replace(/[IL]/g, '1')
-  return code.length === 32 && [...code].every((c) => ALPHABET.includes(c)) ? code : null
+  return (code.length === CODE_LENGTH || code.length === OLD_CODE_LENGTH) && [...code].every((c) => ALPHABET.includes(c)) ? code : null
 }
 
 /** Wrapping key from the code. HKDF is enough: the code is already random, not a password. */
 export async function recoveryKey(code: string, salt: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
   const clean = normalizeCode(code)
-  if (!clean) throw new Error('That isn’t a recovery code. It has 8 groups of 4 letters and numbers.')
+  if (!clean) throw new Error('That isn’t a recovery code. It’s groups of 4 letters and numbers, like ABCD-1234-…')
   const base = await crypto.subtle.importKey('raw', encoder.encode(clean), 'HKDF', false, ['deriveKey'])
   return crypto.subtle.deriveKey(
     { name: 'HKDF', hash: 'SHA-256', salt, info: encoder.encode('baon recovery v1') },

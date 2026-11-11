@@ -44,7 +44,7 @@ export function JoinSync({ user, onDone, onSkip }: { user: SignedInUser; onDone:
       <form onSubmit={submit} noValidate>
         <label className="block font-extrabold text-muted">
           Recovery code
-          <input autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="XXXX-XXXX-XXXX-…" value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className={field} />
+          <input autoComplete="off" autoCapitalize="characters" spellCheck={false} placeholder="XXXX-XXXX-XXXX-XXXX-XXXX" value={code} onChange={(e) => { setCode(e.target.value); setError('') }} className={field} />
         </label>
         {error && <p role="alert" className="mt-4 rounded-2xl bg-card p-3 text-center font-bold">{error}</p>}
       </form>
