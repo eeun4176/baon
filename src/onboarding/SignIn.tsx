@@ -5,7 +5,11 @@
  */
 import { useState, useSyncExternalStore } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
+import type { DocId } from '../legal/docs.ts'
+import { PolicyDialog } from '../legal/Legal.tsx'
 import { Button, Card, Icon, Screen, StepHeader, Title } from '../ui/kit.tsx'
+
+const policyLink = 'font-extrabold text-blue underline'
 
 /** Subscribes to the browser's online/offline events. */
 function subscribeOnline(onChange: () => void) {
@@ -30,6 +34,7 @@ export function SignIn({ onBack, onSignedIn }: { onBack: () => void; onSignedIn:
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [policy, setPolicy] = useState<DocId | null>(null)
 
   /** Runs an auth action with a busy state and a friendly error message. */
   async function attempt(action: () => Promise<void>) {
@@ -69,12 +74,20 @@ export function SignIn({ onBack, onSignedIn }: { onBack: () => void; onSignedIn:
   return (
     <Screen
       footer={
+        <>
         <Card className="flex items-center gap-4">
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue">
             <Icon name="shield" />
           </span>
           <p className="font-semibold">Your records are encrypted and stored on your phone. Signing in doesn’t send them anywhere.</p>
         </Card>
+        <p className="mt-3 text-center text-sm font-semibold text-muted">
+          By continuing, you agree to the <button type="button" onClick={() => setPolicy('terms')} className={policyLink}>Terms</button>,{' '}
+          <button type="button" onClick={() => setPolicy('privacy')} className={policyLink}>Privacy Policy</button> and{' '}
+          <button type="button" onClick={() => setPolicy('storage')} className={policyLink}>Local Storage Policy</button>.
+        </p>
+        {policy && <PolicyDialog id={policy} onClose={() => setPolicy(null)} />}
+        </>
       }
     >
       <StepHeader step={1} onBack={onBack} />

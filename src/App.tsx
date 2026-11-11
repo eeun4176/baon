@@ -7,6 +7,7 @@
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { BackupPanel } from './backup/BackupPanel.tsx'
+import { Help } from './help/Help.tsx'
 import { History } from './history/History.tsx'
 import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
@@ -15,7 +16,6 @@ import { Onboarding } from './onboarding/Onboarding.tsx'
 import { Plan } from './plan/Plan.tsx'
 import { Streak } from './streak/Streak.tsx'
 import { AppShell } from './shell/AppShell.tsx'
-import { ComingSoon } from './shell/ComingSoon.tsx'
 import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
 import { firstName } from './home/greetings.ts'
@@ -102,7 +102,7 @@ function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; o
             <Route path="streak" element={<Streak />} />
             <Route path="me" element={<Me />} />
             <Route path="backup" element={<BackupPage />} />
-            <Route path="help" element={<ComingSoon title="Help & privacy" text="How baon keeps your records private, and answers to common questions — coming next." />} />
+            <Route path="help" element={<Help />} />
           </Route>
           {/* Old Quick Add address and the home-screen shortcut open the Add dialog on Home. */}
           <Route path="add" element={<Navigate to="/?add=1" replace />} />

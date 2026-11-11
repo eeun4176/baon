@@ -2,7 +2,7 @@
  * Me.tsx — Your account, money settings and data (design p11 phone, p22 desktop).
  *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / "My phone mode" chips, Sign out.
  *   Tabs: Profile (name, school, Senior high / College) · Security (device mode) ·
- *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, install).
+ *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, install, Help & privacy link — phones have no sidebar).
  *   Side cards: "Your baon" (allowance, Edit) and Wallets (add, rename, remove, Move money).
  * Phones show the side cards first, then the tabs; theme and sign out live here on phones.
  */
@@ -21,6 +21,7 @@ import { BackupPanel } from '../backup/BackupPanel.tsx'
 import { useStreak } from '../streak/useStreak.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
 import { Avatar } from './Avatar.tsx'
+import { DeleteAccountDialog } from './DeleteAccount.tsx'
 import { AllowanceDialog, WalletDialog } from './MeDialogs.tsx'
 import { imageToDataUrl } from './photo.ts'
 import { checkName, LEVELS, type Profile } from './profile.ts'
@@ -230,6 +231,7 @@ function StorageItem() {
 /** Security tab: how this device protects the records (shared mode isn't built yet). */
 function SecurityTab() {
   const { signOut } = useSession()
+  const [deleting, setDeleting] = useState(false)
   return (
     <div>
       <h2 className="text-xl font-black">Security</h2>
@@ -238,14 +240,14 @@ function SecurityTab() {
           <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
           <span>
             <span className="block font-black">My phone mode · on</span>
-            <span className="block font-semibold text-muted">Your records are encrypted on this device, and the key is locked to this browser. Keep your phone’s screen lock on — it protects baon too.</span>
+            <span className="block font-semibold text-muted">Your records are scrambled (encrypted) so only baon on this phone can read them. Keep your phone’s screen lock on — it protects baon too.</span>
           </span>
         </li>
         <StorageItem />
         <li className="flex items-start gap-3 rounded-2xl bg-page p-4 opacity-70">
           <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
           <span>
-            <span className="block font-black">Shared device mode · coming soon</span>
+            <span className="block font-black">Shared phone mode · coming soon</span>
             <span className="block font-semibold text-muted">For a phone shared with family: a passphrase and recovery kit for each account. Until then, use baon on your own phone only.</span>
           </span>
         </li>
@@ -254,6 +256,15 @@ function SecurityTab() {
         <Icon name="logout" className="size-5" /> Sign out
       </button>
       <p className="mt-2 text-sm font-semibold text-muted">Signing out keeps your records encrypted on this device.</p>
+
+      <div className="mt-6 border-t border-pebble pt-5">
+        <h3 className="font-black">Delete account</h3>
+        <p className="mt-1 font-semibold text-muted">Deletes your sign-in account and everything baon saved on this phone. Make a backup first if you might come back.</p>
+        <button type="button" onClick={() => setDeleting(true)} className="mt-3 flex min-h-12 items-center gap-2 rounded-full bg-red px-5 font-black text-white hover:brightness-110">
+          <Icon name="trash" className="size-5" /> Delete account
+        </button>
+      </div>
+      {deleting && <DeleteAccountDialog onClose={() => setDeleting(false)} />}
     </div>
   )
 }
@@ -273,6 +284,11 @@ function PrefsTab() {
         </span>
         <span className="font-extrabold text-muted">English</span>
       </div>
+      <Link to="/help" className="mt-4 flex min-h-14 items-center gap-3 rounded-2xl bg-page px-4 font-black hover:bg-pebble">
+        <Icon name="help" className="size-5 shrink-0" />
+        <span className="flex-1">Help & privacy</span>
+        <Icon name="chevron-right" className="size-5 text-muted" />
+      </Link>
       {canInstall && (
         <button type="button" onClick={() => promptInstall()} className="mt-4 flex min-h-12 items-center gap-2 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">
           <Icon name="download" className="size-5" /> Install baon on this device
