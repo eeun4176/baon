@@ -162,7 +162,7 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
   if (!session) {
     return (
       <Screen>
-        <p role="alert" className="mt-10 text-lg font-bold">Couldn’t open your records on this device. Close baon and open it again.</p>
+        <p role="alert" className="mt-10 text-lg font-bold">Couldn’t open your records on this device. Close Baon and open it again.</p>
       </Screen>
     )
   }

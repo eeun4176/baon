@@ -167,7 +167,8 @@ export function Home() {
   const t = useToday()
   const streak = useStreak()
   const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid').slice(0, 3)
-  const [greeting] = useState(() => randomGreeting(name))
+  const [pick] = useState(Math.random) // same greeting all visit; the name updates if it syncs
+  const greeting = randomGreeting(name, pick)
   const today = t.result.today
   const recent = [...transactions].reverse().slice(0, 5)
 
@@ -176,16 +177,16 @@ export function Home() {
       {/* Phone: logo header (the sidebar shows it on larger screens). */}
       <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
         <img src={logoIcon} alt="" className="size-10" />
-        baon
+        Baon
         <Link to="/streak" aria-label={`${streak.current}-day streak`} className="ml-auto flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black tracking-normal">
           <img src={flame} alt="" className="size-6" /> {streak.current}
         </Link>
       </header>
 
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
+        <div className="min-w-0 max-w-full">
           <p className="text-sm font-extrabold tracking-[0.12em] text-muted uppercase">{dateLine.format(new Date())}</p>
-          <h1 className="mt-1 text-[clamp(1.5rem,7vw,2rem)] leading-tight font-black lg:text-[2rem]">{greeting}</h1>
+          <h1 className="mt-1 truncate text-[clamp(1.375rem,6.4vw,2rem)] leading-tight font-black lg:text-[2rem]" title={greeting}>{greeting}</h1>
         </div>
         <Link to="/history" className="hidden min-h-11 w-64 items-center gap-2.5 rounded-full bg-card px-4 font-bold text-muted hover:text-ink lg:flex">
           <Icon name="search" className="size-5" /> Search entries

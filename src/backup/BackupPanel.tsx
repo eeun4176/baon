@@ -117,7 +117,7 @@ export function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: 
 
   /** Downloads the code as a small text file. */
   function save() {
-    const text = `baon Recovery Kit\n\nAccount: ${name}\nRecovery code: ${code}\nMade: ${manilaDate()}\n\nYou need this code to open your baon backups.\nIf you lose it, your backups can't be opened, not even by us.\n`
+    const text = `Baon Recovery Kit\n\nAccount: ${name}\nRecovery code: ${code}\nMade: ${manilaDate()}\n\nYou need this code to open your Baon backups.\nIf you lose it, your backups can't be opened, not even by us.\n`
     download(new Blob([text], { type: 'text/plain' }), 'baon-recovery-kit.txt')
   }
 

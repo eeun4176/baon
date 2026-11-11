@@ -17,7 +17,7 @@ const PRIVACY: { icon: IconName; title: string; text: ReactNode }[] = [
   {
     icon: 'shield',
     title: 'Your records are scrambled',
-    text: 'Amounts, notes, wallets, plans and your streak are scrambled (encrypted) on this phone. A scrambled copy is kept online with your account, so your records follow you to every device where you sign in. baon still works without internet.',
+    text: 'Amounts, notes, wallets, plans and your streak are scrambled (encrypted) on this phone. A scrambled copy is kept online with your account, so your records follow you to every device where you sign in. Baon still works without internet.',
   },
   {
     icon: 'user',
@@ -27,12 +27,12 @@ const PRIVACY: { icon: IconName; title: string; text: ReactNode }[] = [
   {
     icon: 'cloud',
     title: 'Backups are files you keep',
-    text: 'A backup is an extra encrypted file you save yourself — on Google Drive, email or a computer. It opens only with your recovery code. baon doesn’t upload it anywhere.',
+    text: 'A backup is an extra encrypted file you save yourself — on Google Drive, email or a computer. It opens only with your recovery code. Baon doesn’t upload it anywhere.',
   },
   {
     icon: 'phone',
     title: 'What it can’t protect',
-    text: 'Anyone who can unlock your phone and open baon can see your records, so keep your screen lock on. Anyone who gets into your Google or email account could sign in to baon as you, so keep that account safe too.',
+    text: 'Anyone who can unlock your phone and open Baon can see your records, so keep your screen lock on. Anyone who gets into your Google or email account could sign in to Baon as you, so keep that account safe too.',
   },
 ]
 
@@ -41,11 +41,11 @@ const FAQ: [string, ReactNode][] = [
   ['I went over my budget. Is my streak gone?', 'No. A class day still counts as long as you logged it. Tomorrow’s budget just gets a little smaller.'],
   ['What is the free pass?', 'Once a week (Monday to Sunday), a class day you forgot to log is covered automatically, so your streak keeps going.'],
   ['No classes for a while?', 'On Plan → Class days, set a break (one day, or until a date). Your budget then counts every day and your streak is frozen until classes are back.'],
-  ['Does baon work without internet?', 'Yes. After the first sign-in, everything works offline. Only signing in and syncing your Google photo need internet.'],
-  ['Can I use baon on more than one device?', 'Yes. Just sign in with the same account on your other device — your records sync by themselves.'],
+  ['Does Baon work without internet?', 'Yes. After the first sign-in, everything works offline. Only signing in and syncing your Google photo need internet.'],
+  ['Can I use Baon on more than one device?', 'Yes. Just sign in with the same account on your other device — your records sync by themselves.'],
   ['What if my phone breaks or gets reset?', 'Sign in on the new phone with the same account and your records come back. Changes made while offline sync once you’re back online.'],
   ['I lost my recovery code.', 'On Backup, tap “Lost it? Make a new code”, then export a new backup. Backups made before still need the old code.'],
-  ['How do I install baon?', 'Android (Chrome): menu ⋮ → Install app. iPhone (Safari): Share → Add to Home Screen. On a computer: the install icon in the address bar.'],
+  ['How do I install Baon?', 'Android (Chrome): menu ⋮ → Install app. iPhone (Safari): Share → Add to Home Screen. On a computer: the install icon in the address bar.'],
 ]
 
 /** Help & privacy page. */
@@ -53,7 +53,7 @@ export function Help() {
   const [policy, setPolicy] = useState<DocId | null>(null)
   return (
     <Page>
-      <PageHeader title="Help & privacy" sub="How baon keeps your records private, and answers to common questions." />
+      <PageHeader title="Help & privacy" sub="How Baon keeps your records private, and answers to common questions." />
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
         <div className="space-y-4 lg:col-span-7 lg:space-y-5">
           <Card className="animate-rise">
@@ -70,7 +70,7 @@ export function Help() {
               ))}
             </ul>
             <p className="mt-4 text-sm font-semibold text-muted">
-              baon is built around the Data Privacy Act of 2012 (RA 10173): it collects only what sign-in needs, and you can delete your data anytime.
+              Baon is built around the Data Privacy Act of 2012 (RA 10173): it collects only what sign-in needs, and you can delete your data anytime.
               If you’re under 18, read this with a parent or guardian.
             </p>
           </Card>

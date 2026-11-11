@@ -43,7 +43,7 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
 
           {canInstall && (
             <button type="button" className={`${item} mt-1`} onClick={() => { setOpen(false); promptInstall() }}>
-              <Icon name="download" className="size-5" /> Install baon
+              <Icon name="download" className="size-5" /> Install Baon
             </button>
           )}
 

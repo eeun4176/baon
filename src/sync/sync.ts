@@ -98,6 +98,18 @@ async function queueAll(db: AccountDb, except = new Set<string>()): Promise<void
   await db.outbox.bulkPut(ids.map((id) => ({ id, n: crypto.randomUUID() })))
 }
 
+/**
+ * Shows the account's synced display name (the 'account-name' record) on this device:
+ * the name screens use is the device's account label, which sync must keep in step. True if it changed.
+ */
+async function applyAccountName(vault: Vault): Promise<boolean> {
+  const saved = (await vault.get('account-name')) as { name?: unknown } | undefined
+  const name = typeof saved?.name === 'string' ? saved.name.trim() : ''
+  if (!name || (await deviceDb.accounts.get(vault.userId))?.label === name) return false
+  await renameAccount(vault.userId, name)
+  return true
+}
+
 /** When this device last synced (undefined = not yet). */
 export async function lastSyncedAt(userId: string): Promise<string | undefined> {
   return (await withDb(userId, (db) => db.meta.get('vault')))?.sync?.lastSyncedAt
@@ -227,6 +239,7 @@ export async function syncNow(vault: Vault, remote: Remote): Promise<{ changed: 
       await push(db, remote)
     }
     await db.meta.update('vault', { sync: { cursor, lastSyncedAt: new Date().toISOString() } })
+    if (await applyAccountName(vault)) changed++ // renamed on another device
     return { changed }
   })
 }
@@ -261,8 +274,5 @@ export async function joinSync(userId: string, fallbackName: string, remote: Rem
     if (e instanceof SyncError) throw e
     return null
   }
-  const saved = (await vault.get('account-name')) as { name?: unknown } | undefined // the name travels as a record
-  const name = typeof saved?.name === 'string' && saved.name ? saved.name : fallbackName
-  await renameAccount(userId, name)
-  return { vault, name }
+  return { vault, name: (await deviceDb.accounts.get(userId))?.label ?? fallbackName } // syncNow applied the synced name
 }

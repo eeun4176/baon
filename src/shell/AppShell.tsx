@@ -87,7 +87,7 @@ export function AppShell() {
   }, [pathname])
   useGooglePhotoSync() // copies the Google profile photo when online
   useAutoSync() // keeps other devices in step, if sync is on for this one
-  useEffect(() => void keepStorage(), []) // ask the browser not to clear baon when space runs low
+  useEffect(() => void keepStorage(), []) // ask the browser not to clear Baon when space runs low
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {

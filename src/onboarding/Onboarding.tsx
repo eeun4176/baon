@@ -96,7 +96,7 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
       <Screen>
         <StepHeader step={2} onBack={() => go('phone')} />
         <Title sub="Pick your baon-backup file and type the recovery code you saved.">Restore your backup</Title>
-        <RestoreForm userId={user.id} fallbackName={user.name} onRestored={(name) => openVault(user.id).then((vault) => onDone(vault, name), () => setError('Restored, but couldn’t open it. Close baon and open it again.'))} />
+        <RestoreForm userId={user.id} fallbackName={user.name} onRestored={(name) => openVault(user.id).then((vault) => onDone(vault, name), () => setError('Restored, but couldn’t open it. Close Baon and open it again.'))} />
         {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
       </Screen>
     ),

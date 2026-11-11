@@ -20,7 +20,7 @@ export function Welcome({ onStart }: { onStart: () => void }) {
     >
       <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight lg:hidden">
         <img src={logoIcon} alt="" className="size-10" />
-        baon
+        Baon
       </header>
 
       {/* Preview of the Home hero card — decorative, so hidden from screen readers. */}

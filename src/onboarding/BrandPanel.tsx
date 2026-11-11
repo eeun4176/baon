@@ -19,7 +19,7 @@ export function BrandPanel() {
       <div className="flex h-full flex-col justify-between rounded-[32px] bg-hero p-12 text-white">
         <div className="flex items-center gap-3 text-[2.125rem] font-black tracking-tight">
           <img src={logoIcon} alt="" className="size-12 rounded-xl ring-1 ring-white/20" />
-          baon
+          Baon
         </div>
 
         <div>

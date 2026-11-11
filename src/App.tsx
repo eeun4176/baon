@@ -61,7 +61,7 @@ function SignedOut({ name, onContinue }: { name: string; onContinue: () => void 
     <Screen footer={<Button onClick={onContinue}>Continue as {firstName(name)}</Button>}>
       <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight">
         <img src={logoIcon} alt="" className="size-10" />
-        baon
+        Baon
       </header>
       <div className="mt-16 animate-rise">
         <h1 className="text-[2rem] leading-tight font-black">You’re signed out</h1>
@@ -81,7 +81,7 @@ function SignedOut({ name, onContinue }: { name: string; onContinue: () => void 
 function BackupPage() {
   return (
     <Page>
-      <PageHeader title="Backup" sub="Keep a copy of your records, and use baon on all your devices." />
+      <PageHeader title="Backup" sub="Keep a copy of your records, and use Baon on all your devices." />
       <div className="max-w-2xl space-y-4">
         <Card className="animate-rise">
           <BackupPanel />
@@ -167,7 +167,7 @@ export default function App() {
       return (
         <Screen>
           <p role="alert" className="mt-10 text-lg font-bold">
-            baon couldn’t open its storage on this phone. Close the app and open it again.
+            Baon couldn’t open its storage on this phone. Close the app and open it again.
           </p>
         </Screen>
       )

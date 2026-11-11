@@ -22,7 +22,7 @@ export const LEVELS = [['shs', 'Senior high'], ['college', 'College']] as const
 /** Checks a display name; returns the cleaned name or a friendly problem. */
 export function checkName(raw: string): { name: string } | { problem: string } {
   const name = raw.trim().replace(/\s+/g, ' ')
-  if (!name) return { problem: 'Enter the name you want baon to call you.' }
+  if (!name) return { problem: 'Enter the name you want Baon to call you.' }
   if (name.length > 40) return { problem: 'Keep it under 40 letters.' }
   return { name }
 }

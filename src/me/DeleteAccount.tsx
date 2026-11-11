@@ -47,7 +47,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       setDone(online ? 'all' : 'phone')
     } catch {
       setBusy(false)
-      setError('Couldn’t delete. Close baon, open it again and try once more.')
+      setError('Couldn’t delete. Close Baon, open it again and try once more.')
     }
   }
 
@@ -56,8 +56,8 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       <Modal title={done === 'all' ? 'Your account is deleted' : 'Deleted from this phone'} onClose={() => location.replace('/')}>
         <p className="font-semibold text-muted">
           {done === 'all'
-            ? 'Your sign-in account, your synced copies online and everything baon saved on this phone are gone.'
-            : 'Everything baon saved on this phone is gone. Your sign-in account (and any synced copies online) couldn’t be removed from here — message the baon team and we’ll remove them.'}
+            ? 'Your sign-in account, your synced copies online and everything Baon saved on this phone are gone.'
+            : 'Everything Baon saved on this phone is gone. Your sign-in account (and any synced copies online) couldn’t be removed from here — message the Baon team and we’ll remove them.'}
         </p>
         <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>OK</button>
       </Modal>

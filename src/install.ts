@@ -17,7 +17,7 @@ const listeners = new Set<() => void>()
 const notify = () => listeners.forEach((l) => l())
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault() // we show our own "Install baon" item instead of the browser's mini-bar
+  e.preventDefault() // we show our own "Install Baon" item instead of the browser's mini-bar
   deferred = e as InstallPromptEvent
   notify()
 })

@@ -121,6 +121,26 @@ describe('sync', () => {
     a.lock()
   })
 
+  it('a name changed on one device shows on the other after it syncs', async () => {
+    const [useA, useB] = [device(), device()]
+    const cloud = new FakeCloud()
+    useA()
+    const a = await phone('Jas', {})
+    await syncNow(a, cloud)
+    useB()
+    const b = (await joinSync('u1', 'x', cloud))!.vault
+    await b.put('settings', 'account-name', { name: 'Jasmine Cruz' })
+    await syncNow(b, cloud)
+    await deviceDb.accounts.update('u1', { label: 'Jas' }) // the account list is shared in this test: put A's label back
+    useA()
+    expect((await syncNow(a, cloud)).changed).toBeGreaterThan(0) // so the screens reload
+    expect((await listDeviceAccounts()).find((x) => x.userId === 'u1')?.label).toBe('Jasmine Cruz')
+    expect((await syncNow(a, cloud)).changed).toBe(0)
+    a.lock()
+    useB()
+    b.lock()
+  })
+
   it('a clash keeps the version of the device that syncs last, and ends the same everywhere', async () => {
     const [useA, useB] = [device(), device()]
     const cloud = new FakeCloud()

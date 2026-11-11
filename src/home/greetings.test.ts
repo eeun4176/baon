@@ -23,4 +23,12 @@ describe('randomGreeting', () => {
       expect(g).not.toContain('Cabalquinto')
     }
   })
+
+  it('every greeting fits one phone line with a usual first name', () => {
+    for (let i = 0; i < 8; i++) expect(randomGreeting('Jasmine', (i + 0.5) / 8).length).toBeLessThanOrEqual(22)
+  })
+
+  it('keeps the same greeting for the same pick, with the current name', () => {
+    expect(randomGreeting('John', 0.3).replace('John', 'Ana')).toBe(randomGreeting('Ana', 0.3))
+  })
 })

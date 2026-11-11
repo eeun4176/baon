@@ -75,7 +75,7 @@ describe('backup', () => {
     await expect(restoreBackup(file, code, 'user-b', 'x')).rejects.toThrow('different account')
     const damaged = { ...file, records: file.records.map((r) => ({ ...r, ciphertext: r.ciphertext.replace(/^./, (c) => (c === 'A' ? 'B' : 'A')) })) }
     await expect(restoreBackup(damaged, code, 'user-a', 'x')).rejects.toThrow('damaged')
-    await expect(readBackupFile(new Blob(['{"hello":1}']))).rejects.toThrow('isn’t a baon backup')
+    await expect(readBackupFile(new Blob(['{"hello":1}']))).rejects.toThrow('isn’t a Baon backup')
 
     const still = await openVault('user-a')
     expect(await still.get('t1')).toEqual({ amountCentavos: 1500, note: 'Jeep' })

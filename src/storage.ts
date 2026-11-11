@@ -10,8 +10,8 @@ import { useEffect, useState } from 'react'
 /** What the browser says about baon's storage. `persisted` is null when the browser can't tell. */
 export interface StorageState {
   persisted: boolean | null
-  usage: number // bytes baon uses
-  quota: number // bytes baon may use (shrinks as the phone fills up); 0 = unknown
+  usage: number // bytes Baon uses
+  quota: number // bytes Baon may use (shrinks as the phone fills up); 0 = unknown
 }
 
 const LOW_BYTES = 50_000_000 // under 50 MB left: new entries and backups may start failing

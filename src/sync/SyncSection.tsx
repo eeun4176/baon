@@ -49,7 +49,7 @@ export function SyncSection() {
       : status.problem === 'signin'
         ? 'You’re signed out, so this device isn’t syncing.'
         : status.problem === 'server'
-          ? 'Couldn’t sync just now. baon will try again.'
+          ? 'Couldn’t sync just now. Baon will try again.'
           : status.lastSyncedAt
             ? `Synced · ${when(status.lastSyncedAt)}`
             : 'Not synced yet'

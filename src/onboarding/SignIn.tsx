@@ -98,7 +98,7 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
 
       {!online && (
         <p role="status" className="mb-4 rounded-2xl bg-pebble p-4 font-bold">
-          You’re offline. Connect to Wi‑Fi or data once to set up — after that, baon works offline.
+          You’re offline. Connect to Wi‑Fi or data once to set up — after that, Baon works offline.
         </p>
       )}
 

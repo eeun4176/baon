@@ -217,8 +217,8 @@ function StorageItem() {
         <span className="block font-black">{storage.persisted ? 'Kept on this device · on' : 'Records could be cleared'}</span>
         <span className="block font-semibold text-muted">
           {storage.persisted
-            ? `The browser won’t delete baon’s records to free up space.${used}`
-            : `If your phone runs low on space, the browser may delete baon’s data. Installing baon on your home screen helps.${used}`}
+            ? `The browser won’t delete Baon’s records to free up space.${used}`
+            : `If your phone runs low on space, the browser may delete Baon’s data. Installing Baon on your home screen helps.${used}`}
           {isStorageLow(storage) && ' Your phone is almost full.'}
         </span>
         {!storage.persisted && (
@@ -240,7 +240,7 @@ function SecurityTab() {
           <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
           <span>
             <span className="block font-black">My phone mode · on</span>
-            <span className="block font-semibold text-muted">Your records are scrambled (encrypted) on this phone and online. Keep your phone’s screen lock on — it protects baon too.</span>
+            <span className="block font-semibold text-muted">Your records are scrambled (encrypted) on this phone and online. Keep your phone’s screen lock on — it protects Baon too.</span>
           </span>
         </li>
         <StorageItem />
@@ -248,14 +248,14 @@ function SecurityTab() {
           <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
           <span>
             <span className="block font-black">Shared phone mode · coming soon</span>
-            <span className="block font-semibold text-muted">For a phone shared with family: a passphrase and recovery kit for each account. Until then, use baon on your own phone only.</span>
+            <span className="block font-semibold text-muted">For a phone shared with family: a passphrase and recovery kit for each account. Until then, use Baon on your own phone only.</span>
           </span>
         </li>
       </ul>
 
       <div className="mt-6 border-t border-pebble pt-5">
         <h3 className="font-black">Delete account</h3>
-        <p className="mt-1 font-semibold text-muted">Deletes your sign-in account, your synced copies online and everything baon saved on this phone. Make a backup first if you might come back.</p>
+        <p className="mt-1 font-semibold text-muted">Deletes your sign-in account, your synced copies online and everything Baon saved on this phone. Make a backup first if you might come back.</p>
         <button type="button" onClick={() => setDeleting(true)} className="mt-3 flex min-h-12 items-center gap-2 rounded-full bg-red px-5 font-black text-white hover:brightness-110">
           <Icon name="trash" className="size-5" /> Delete account
         </button>
@@ -287,7 +287,7 @@ function PrefsTab() {
       </Link>
       {canInstall && (
         <button type="button" onClick={() => promptInstall()} className="mt-4 flex min-h-12 items-center gap-2 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">
-          <Icon name="download" className="size-5" /> Install baon on this device
+          <Icon name="download" className="size-5" /> Install Baon on this device
         </button>
       )}
     </div>
@@ -334,7 +334,7 @@ export function Me() {
         <div className="min-w-0 lg:col-span-7">
           <Segmented options={TABS} value={tab} onChange={setTab} label="Me sections" />
           <Card key={tab} className="mt-4 animate-rise">
-            {tab === 'profile' && <ProfileTab />}
+            {tab === 'profile' && <ProfileTab key={name} />}{/* a name synced from another device refreshes the form */}
             {tab === 'security' && <SecurityTab />}
             {tab === 'backup' && (
               <>
