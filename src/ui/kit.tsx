@@ -18,7 +18,7 @@ import { formatPeso } from '../ledger/money.ts'
 /** Full-height page column with safe-area padding. `footer` sticks to the bottom (main action). */
 export function Screen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-5 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pt-[max(env(safe-area-inset-top),1.5rem)] pb-[max(env(safe-area-inset-bottom),1rem)]">
       <main className="flex flex-1 flex-col">{children}</main>
       {footer && <div className="sticky bottom-0 bg-page pt-4 pb-[max(env(safe-area-inset-bottom),0.5rem)]">{footer}</div>}
     </div>
@@ -32,7 +32,7 @@ export function Screen({ children, footer }: { children: ReactNode; footer?: Rea
  */
 export function Page({ children }: { children: ReactNode }) {
   return (
-    <main className="mx-auto w-full max-w-md animate-rise px-5 pt-[max(env(safe-area-inset-top),1.5rem)] pb-36 md:max-w-2xl md:px-8 md:pt-8 md:pb-10 lg:max-w-6xl">
+    <main className="mx-auto w-full max-w-md animate-rise px-4 pt-[max(env(safe-area-inset-top),1.25rem)] pb-36 md:max-w-2xl md:px-8 md:pt-8 md:pb-10 lg:max-w-6xl">
       {children}
     </main>
   )
@@ -41,9 +41,9 @@ export function Page({ children }: { children: ReactNode }) {
 /** Page heading (design pages 19–22): title + gray subtitle, actions on the right. */
 export function PageHeader({ title, sub, actions }: { title: string; sub?: string; actions?: ReactNode }) {
   return (
-    <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <div className="mb-4 flex flex-wrap items-end justify-between gap-3 md:mb-5">
       <div>
-        <h1 className="text-[clamp(1.75rem,8vw,2.125rem)] leading-tight font-black">{title}</h1>
+        <h1 className="text-[clamp(1.5rem,7vw,2rem)] leading-tight font-black">{title}</h1>
         {/* Subtitles are a desktop thing in the design; phones keep the title row compact. */}
         {sub && <p className="mt-1 hidden font-semibold text-muted md:block">{sub}</p>}
       </div>
@@ -71,7 +71,7 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
           role="tab"
           aria-selected={value === id}
           onClick={() => onChange(id)}
-          className={`min-h-10 flex-auto rounded-full px-2.5 text-sm font-extrabold whitespace-nowrap min-[400px]:text-[0.9375rem] sm:px-4 sm:text-base ${value === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+          className={`min-h-11 flex-auto rounded-full px-2 text-sm font-extrabold whitespace-nowrap min-[360px]:px-2.5 min-[400px]:text-[0.9375rem] sm:px-4 sm:text-base ${value === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
         >
           {text}
         </button>
@@ -80,9 +80,9 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
   )
 }
 
-/** White rounded card (design: radius 26–30px, no border). */
+/** White rounded card (design: radius 26–30px, no border). Phones: tighter corners and padding, same on every card. */
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-[28px] bg-card p-5 ${className}`}>{children}</div>
+  return <div className={`rounded-3xl bg-card p-4 sm:rounded-[28px] sm:p-5 ${className}`}>{children}</div>
 }
 
 const variants = {
@@ -129,9 +129,9 @@ export function StepHeader({ step, onBack }: { step: 1 | 2 | 3 | 4; onBack?: () 
 /** Screen title + optional gray subtitle (design: 900 weight, 32–34px). */
 export function Title({ children, sub }: { children: ReactNode; sub?: ReactNode }) {
   return (
-    <div className="mt-7 mb-6">
-      <h1 className="text-[clamp(1.75rem,8vw,2.125rem)] leading-tight font-black">{children}</h1>
-      {sub && <p className="mt-2 text-[1.0625rem] font-semibold text-muted">{sub}</p>}
+    <div className="mt-6 mb-5">
+      <h1 className="text-[clamp(1.5rem,7vw,2rem)] leading-tight font-black">{children}</h1>
+      {sub && <p className="mt-2 font-semibold text-muted">{sub}</p>}
     </div>
   )
 }

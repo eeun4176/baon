@@ -96,7 +96,7 @@ function PhotoAvatar() {
         aria-controls="photo-menu"
         aria-label="Change profile photo"
         title="Change profile photo"
-        className="absolute right-0 bottom-0 grid size-6 place-items-center rounded-full bg-blue text-white ring-[3px] ring-card hover:bg-[#1a52e0] md:size-7"
+        className="absolute right-0 bottom-0 grid size-6 place-items-center rounded-full bg-blue text-white ring-[3px] ring-card after:absolute after:-inset-2.5 hover:bg-[#1a52e0] md:size-7"
       >
         <Icon name="pencil" className="size-3 md:size-3.5" />
       </button>
@@ -211,7 +211,7 @@ function StorageItem() {
 
   const used = storage.usage ? ` Using ${formatBytes(storage.usage)}.` : ''
   return (
-    <li className="flex items-start gap-3 rounded-2xl bg-page p-4">
+    <li className="flex items-start gap-3 rounded-2xl bg-page p-3 sm:p-4">
       <Icon name="drive" className={`mt-0.5 size-5 shrink-0 ${storage.persisted ? 'text-blue' : 'text-muted'}`} />
       <span>
         <span className="block font-black">{storage.persisted ? 'Kept on this device · on' : 'Records could be cleared'}</span>
@@ -231,13 +231,12 @@ function StorageItem() {
 
 /** Security tab: how this device protects the records (shared mode isn't built yet). */
 function SecurityTab() {
-  const { signOut } = useSession()
   const [deleting, setDeleting] = useState(false)
   return (
     <div>
       <h2 className="text-xl font-black">Security</h2>
       <ul className="mt-4 space-y-3">
-        <li className="flex items-start gap-3 rounded-2xl bg-page p-4">
+        <li className="flex items-start gap-3 rounded-2xl bg-page p-3 sm:p-4">
           <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
           <span>
             <span className="block font-black">My phone mode · on</span>
@@ -245,7 +244,7 @@ function SecurityTab() {
           </span>
         </li>
         <StorageItem />
-        <li className="flex items-start gap-3 rounded-2xl bg-page p-4 opacity-70">
+        <li className="flex items-start gap-3 rounded-2xl bg-page p-3 opacity-70 sm:p-4">
           <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
           <span>
             <span className="block font-black">Shared phone mode · coming soon</span>
@@ -253,10 +252,6 @@ function SecurityTab() {
           </span>
         </li>
       </ul>
-      <button type="button" onClick={signOut} className="mt-5 flex min-h-12 items-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page">
-        <Icon name="logout" className="size-5" /> Sign out
-      </button>
-      <p className="mt-2 text-sm font-semibold text-muted">Signing out keeps your records encrypted on this device.</p>
 
       <div className="mt-6 border-t border-pebble pt-5">
         <h3 className="font-black">Delete account</h3>
@@ -278,7 +273,7 @@ function PrefsTab() {
       <h2 className="text-xl font-black">Preferences</h2>
       <p className={`${label} mt-4 mb-1.5`}>Theme</p>
       <div className="max-w-md"><ThemePicker large /></div>
-      <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-page p-4">
+      <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl bg-page p-3 sm:p-4">
         <span>
           <span className="block font-black">Language</span>
           <span className="block text-sm font-semibold text-muted">Filipino coming soon</span>
@@ -322,7 +317,7 @@ export function Me() {
       <Card className="relative z-20 flex animate-rise flex-wrap items-center gap-4 md:gap-5">{/* above the cards below, so the photo menu isn’t covered */}
         <PhotoAvatar />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-2xl font-black md:text-3xl">{name}</p>
+          <p className="truncate text-xl font-black sm:text-2xl md:text-3xl">{name}</p>
           <div className="mt-2 flex flex-wrap gap-2">
             <Chip><img src={flame} alt="" className="size-4" /> {streak.current}-day streak</Chip>
             {(level || profile.school) && <Chip>{[level, profile.school].filter(Boolean).join(' · ')}</Chip>}
@@ -336,7 +331,7 @@ export function Me() {
 
       <div className="mt-4 grid gap-4 lg:mt-5 lg:grid-cols-12 lg:gap-5">
         {/* Tabs */}
-        <div className="lg:col-span-7">
+        <div className="min-w-0 lg:col-span-7">
           <Segmented options={TABS} value={tab} onChange={setTab} label="Me sections" />
           <Card key={tab} className="mt-4 animate-rise">
             {tab === 'profile' && <ProfileTab />}
@@ -352,11 +347,11 @@ export function Me() {
         </div>
 
         {/* Side cards (first on phones) */}
-        <div className="order-first space-y-4 lg:order-none lg:col-span-5 lg:space-y-5">
-          <section className="animate-rise rounded-[28px] bg-hero p-6 text-white" aria-labelledby="your-baon">
+        <div className="order-first min-w-0 space-y-4 lg:order-none lg:col-span-5 lg:space-y-5">
+          <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white" aria-labelledby="your-baon">
             <h2 id="your-baon" className="font-extrabold text-white/80">Your baon</h2>
             <p className="mt-1">
-              {allowance.amountCentavos ? <BigMoney centavos={allowance.amountCentavos} className="text-5xl" /> : <span className="text-4xl font-black">It varies</span>}
+              {allowance.amountCentavos ? <BigMoney centavos={allowance.amountCentavos} className="text-[2.5rem] sm:text-5xl" /> : <span className="text-4xl font-black">It varies</span>}
             </p>
             <p className="mt-3 font-semibold text-white/80">
               {FREQUENCY_TEXT[allowance.frequency]} · {allowance.frequency === 'irregular' ? 'make it last until' : 'next on'} {DAY_NAMES[weekday(allowance.nextDate)]}, {nextDay.format(new Date(`${allowance.nextDate}T00:00:00Z`))}
@@ -370,11 +365,11 @@ export function Me() {
           <Card className="animate-rise">
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-xl font-black">Wallets</h2>
-              <button type="button" onClick={() => setDialog({ kind: 'wallet' })} aria-label="Add a wallet" className="grid size-10 place-items-center rounded-full bg-blue-tint text-blue hover:bg-blue hover:text-white">
+              <button type="button" onClick={() => setDialog({ kind: 'wallet' })} aria-label="Add a wallet" className="grid size-11 place-items-center rounded-full bg-blue-tint text-blue hover:bg-blue hover:text-white">
                 <Icon name="plus" className="size-5" />
               </button>
             </div>
-            <p key={ready} className="mt-1 animate-pop text-4xl font-black">{formatPeso(ready)}</p>
+            <p key={ready} className="mt-1 animate-pop text-[2rem] font-black sm:text-4xl">{formatPeso(ready)}</p>
             <p className="text-sm font-semibold text-muted">ready to spend · savings kept apart</p>
             <ul className="mt-3 divide-y divide-page border-t border-page">
               {active.map((w) => (

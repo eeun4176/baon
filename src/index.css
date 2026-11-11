@@ -84,10 +84,13 @@
   }
 }
 
-/* ── Desktop scale ──────────────────────────────────────────────────
- * Phones/tablets keep big touch sizes. On laptops (≥ 1024px) everything sized in rem
- * shrinks to normal web proportions (16px → 14px body). A percentage, not px,
- * so the user's own browser font-size setting still applies. */
+/* ── Scale ──────────────────────────────────────────────────────────
+ * Everything sized in rem follows the root size. Phones/tablets: 15px body (16px felt
+ * oversized on phones; buttons stay 41px+ tall). Laptops (≥ 1024px): 14px, normal web
+ * proportions. Percentages, not px, so the user's own browser font-size setting still applies. */
+html {
+  font-size: 93.75%;
+}
 @media (min-width: 1024px) {
   html {
     font-size: 87.5%;

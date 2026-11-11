@@ -63,7 +63,7 @@ export function Streak() {
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
         {/* Hero */}
         {/* Hero: flame + number on top, this week's row spread across the full card below */}
-        <section className="flex animate-rise flex-col justify-between gap-6 rounded-[28px] bg-hero p-6 text-white md:p-8 lg:col-span-8" aria-labelledby="streak-now">
+        <section className="flex animate-rise flex-col justify-between gap-5 rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8 lg:col-span-8" aria-labelledby="streak-now">
           <div className="flex items-center gap-4 md:gap-6">
             <img src={flame} alt="" className="size-16 shrink-0 animate-pop sm:size-20 md:size-24" />
             <div className="min-w-0">
@@ -142,12 +142,14 @@ export function Streak() {
         {/* How streaks work */}
         <Card className="animate-rise lg:col-span-12">
           <h2 className="text-xl font-black">How streaks work</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <ul className="mt-4 grid gap-4 sm:grid-cols-2 sm:gap-3 lg:grid-cols-4">
             {RULES.map((r) => (
-              <li key={r.title} className="rounded-3xl bg-page p-5">
-                <Icon name={r.icon} className="size-7 text-blue" />
-                <h3 className="mt-3 text-lg font-black">{r.title}</h3>
-                <p className="mt-1 font-semibold text-muted">{r.text}</p>
+              <li key={r.title} className="flex gap-3 sm:block sm:rounded-3xl sm:bg-page sm:p-5">
+                <Icon name={r.icon} className="mt-0.5 size-6 shrink-0 text-blue sm:size-7" />
+                <div>
+                  <h3 className="font-black sm:mt-3 sm:text-lg">{r.title}</h3>
+                  <p className="mt-1 font-semibold text-muted">{r.text}</p>
+                </div>
               </li>
             ))}
           </ul>

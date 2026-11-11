@@ -214,7 +214,7 @@ export function Plan() {
   const counts = { setAside: 0, planned: 0, paid: 0 }
   for (const i of schoolExpenses) counts[statusOf(i, transactions)]++
 
-  const tile = 'flex min-h-40 animate-rise flex-col items-start rounded-[28px] bg-card p-4 text-left sm:p-5 lg:hidden'
+  const tile = 'flex min-h-40 animate-rise flex-col items-start rounded-3xl bg-card p-4 text-left sm:rounded-[28px] sm:p-5 lg:hidden'
   const tileIcon = 'grid size-10 shrink-0 place-items-center rounded-xl bg-blue-tint text-blue'
 
   /** Category budgets aren't built yet; say so instead of a dead button. */
@@ -241,10 +241,10 @@ export function Plan() {
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
         {/* Left (desktop): hero with Category limits right under it, so neither column is half empty */}
-        <div className="space-y-5 lg:col-span-7">
-        <section className="animate-rise rounded-[28px] bg-hero p-6 text-white md:p-8" aria-labelledby="set-aside-title">
+        <div className="flex flex-col gap-5 lg:col-span-7">{/* gap, not space-y: the hidden desktop card must not leave a margin */}
+        <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8" aria-labelledby="set-aside-title">
           <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">Set aside for school</h2>
-          <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(3.5rem,18vw,5rem)]" /></p>
+          <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(2.75rem,15vw,4.25rem)]" /></p>
           <p className="mt-3 max-w-md font-semibold text-white/75">
             This stays in your wallets, but it isn’t counted in your daily budget until you mark it paid.
           </p>
@@ -318,7 +318,7 @@ export function Plan() {
               </p>
               <div className="mt-4 flex flex-wrap gap-2 md:hidden">
                 {QUICK.map((t) => (
-                  <button key={t.id} type="button" onClick={() => setOpen({ kind: 'item', template: t.id })} className="min-h-10 rounded-full bg-page px-4 font-extrabold">
+                  <button key={t.id} type="button" onClick={() => setOpen({ kind: 'item', template: t.id })} className="min-h-11 rounded-full bg-page px-4 font-extrabold">
                     {t.label}
                   </button>
                 ))}

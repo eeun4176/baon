@@ -16,7 +16,7 @@ export function WhosePhone({ onContinue, onRestore }: { onContinue: () => void; 
       <fieldset className="space-y-3">
         <legend className="sr-only">Device type</legend>
 
-        <label className="flex cursor-pointer items-center gap-4 rounded-[28px] border-[3px] border-blue bg-card p-4">
+        <label className="flex cursor-pointer items-center gap-4 rounded-3xl sm:rounded-[28px] border-[3px] border-blue bg-card p-4">
           <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue"><Icon name="phone" /></span>
           <span className="flex-1">
             <span className="block text-lg font-black">My own phone</span>
@@ -25,7 +25,7 @@ export function WhosePhone({ onContinue, onRestore }: { onContinue: () => void; 
           <input type="radio" name="mode" defaultChecked className="size-7 shrink-0 accent-blue" />
         </label>
 
-        <label className="flex items-center gap-4 rounded-[28px] border-[3px] border-transparent bg-card p-4 opacity-60">
+        <label className="flex items-center gap-4 rounded-3xl sm:rounded-[28px] border-[3px] border-transparent bg-card p-4 opacity-60">
           <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-pebble"><Icon name="users" /></span>
           <span className="flex-1">
             <span className="block text-lg font-black">Shared with family or classmates</span>

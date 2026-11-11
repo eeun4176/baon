@@ -124,7 +124,7 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
               type="button"
               aria-pressed={kind === t.id}
               onClick={() => pick(t.id)}
-              className={`min-h-10 rounded-full px-4 font-extrabold ${kind === t.id ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`}
+              className={`min-h-11 rounded-full px-4 font-extrabold ${kind === t.id ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`}
             >
               {t.label}
             </button>

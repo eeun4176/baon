@@ -180,7 +180,7 @@ export function QuickAdd({ editId, startMode, onClose }: { editId: string | null
         <Segmented options={MODES} value={mode} onChange={(m) => { setMode(m); setError('') }} label="What are you adding?" className="mt-3" />
 
         {/* Amount */}
-        <section className="mt-3 rounded-[28px] bg-card px-4 py-5 text-center md:bg-page md:px-5 md:text-left">
+        <section className="mt-3 rounded-3xl bg-card px-4 py-5 sm:rounded-[28px] text-center md:bg-page md:px-5 md:text-left">
           <p className="font-extrabold text-muted">{copy.question}</p>
           {/* Phone: shows what the keypad typed */}
           <p className="mt-1 text-[clamp(3rem,16vw,4.5rem)] leading-tight font-black md:hidden" aria-live="polite">

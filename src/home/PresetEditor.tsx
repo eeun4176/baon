@@ -15,10 +15,10 @@ import { Modal } from '../ui/Modal.tsx'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
-const pill = (on: boolean) => `min-h-10 rounded-full px-4 font-extrabold ${on ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`
+const pill = (on: boolean) => `min-h-11 rounded-full px-4 font-extrabold ${on ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`
 const mainButton = 'min-h-13 flex-1 rounded-full bg-blue px-6 text-lg font-black text-white disabled:opacity-60'
 const grayButton = 'min-h-13 flex-1 rounded-full bg-pebble px-6 text-lg font-black hover:bg-pebble-2'
-const iconButton = 'grid size-10 shrink-0 place-items-center rounded-full text-muted hover:bg-pebble hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent'
+const iconButton = 'grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-pebble hover:text-ink disabled:opacity-30 disabled:hover:bg-transparent'
 
 /** Name/amount/category/wallet form for one button. */
 function PresetForm({ preset, onDone, onBack }: { preset: Preset | null; onDone: (p: Preset) => void; onBack: () => void }) {

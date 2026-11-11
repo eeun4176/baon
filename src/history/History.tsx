@@ -76,7 +76,7 @@ export function History() {
     ) : (
       <div className="space-y-3">
         {days.map((d, i) => (
-          <section key={d.day} className="animate-rise rounded-[28px] bg-card px-3 pt-4 pb-2" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }} aria-label={dayTitle(d.day, today)}>
+          <section key={d.day} className="animate-rise rounded-3xl bg-card px-3 pt-4 pb-2 sm:rounded-[28px]" style={{ animationDelay: `${Math.min(i, 5) * 50}ms` }} aria-label={dayTitle(d.day, today)}>
             <header className="flex items-baseline justify-between gap-3 px-2 pb-1">
               <h2 className="text-lg font-black">{dayTitle(d.day, today)}</h2>
               <p className="shrink-0 text-sm font-extrabold text-muted">{formatPeso(d.spent)} {budgets.has(d.day) ? `of ${formatPeso(budgets.get(d.day)!)}` : 'spent'}</p>
@@ -91,7 +91,7 @@ export function History() {
 
   const summary = (
     <>
-      <section className="animate-rise rounded-[28px] bg-hero p-6 text-white">
+      <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white">
         <p className="font-extrabold text-white/70">Spent since Sunday</p>
         <p key={week.total} className="mt-1 animate-pop text-5xl font-black">{formatPeso(week.total)}</p>
         <p className="mt-1 font-semibold text-white/70">{formatPeso(week.perDay)} a day on average</p>
@@ -144,7 +144,7 @@ export function History() {
               role="radio"
               aria-checked={categoryId === c.categoryId}
               onClick={() => setCategoryId(c.categoryId)}
-              className={`min-h-10 rounded-full px-5 font-extrabold ${categoryId === c.categoryId ? 'bg-ink text-card' : 'bg-card hover:bg-pebble'}`}
+              className={`min-h-11 rounded-full px-5 font-extrabold ${categoryId === c.categoryId ? 'bg-ink text-card' : 'bg-card hover:bg-pebble'}`}
             >
               {c.label}
             </button>

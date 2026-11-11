@@ -71,15 +71,15 @@ export function Breakdown() {
       <div className="mx-auto mt-6 max-w-xl space-y-3">
         {t.result.allowanceDue ? (
           // Allowance day, not answered yet: no budget to explain until the baon is in.
-          <section className="rounded-[30px] bg-hero p-6 text-center text-white">
+          <section className="rounded-3xl bg-hero p-4 sm:rounded-[30px] sm:p-6 text-center text-white">
             <p className="font-extrabold text-white/70">Allowance day</p>
             <p className="mt-2 text-2xl font-black">Your new daily budget starts once your baon is in.</p>
             <Link to="/" className="mt-5 inline-grid min-h-12 place-items-center rounded-full bg-blue px-6 font-black text-white">Did it arrive?</Link>
           </section>
         ) : (
-          <section className="rounded-[30px] bg-hero p-6 text-center text-white">
+          <section className="rounded-3xl bg-hero p-4 sm:rounded-[30px] sm:p-6 text-center text-white">
             <p className="font-extrabold text-white/70">Safe to spend today</p>
-            <BigMoney centavos={t.result.dailyBudget} className="mt-1 block text-[clamp(3.5rem,20vw,5.25rem)]" />
+            <BigMoney centavos={t.result.dailyBudget} className="mt-1 block text-[clamp(3rem,17vw,4.5rem)]" />
             <p className="mt-2 mb-5 text-lg font-extrabold text-white/70">{divisionText(t)}</p>
             <DayPills t={t} dark />
           </section>

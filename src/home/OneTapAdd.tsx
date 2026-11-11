@@ -56,7 +56,7 @@ export function OneTapAdd() {
     <Card>
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-black">One-tap add</h2>
-        <button type="button" onClick={() => setEditor('list')} className="-mr-2 flex min-h-10 items-center gap-1.5 rounded-full px-3 font-extrabold text-blue hover:bg-blue-tint">
+        <button type="button" onClick={() => setEditor('list')} className="-mr-2 flex min-h-11 items-center gap-1.5 rounded-full px-3 font-extrabold text-blue hover:bg-blue-tint">
           <Icon name="pencil" className="size-4" /> Edit
         </button>
       </div>

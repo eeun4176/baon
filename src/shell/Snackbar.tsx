@@ -32,12 +32,12 @@ export function Snackbar() {
             <button
               type="button"
               onClick={() => { toast.undo?.(); dismissToast() }}
-              className="min-h-10 shrink-0 rounded-full bg-blue px-5 font-black text-white hover:bg-[#3d74ff]"
+              className="min-h-11 shrink-0 rounded-full bg-blue px-5 font-black text-white hover:bg-[#3d74ff]"
             >
               Undo
             </button>
           ) : (
-            <button type="button" onClick={dismissToast} aria-label="Dismiss" className="grid size-10 shrink-0 place-items-center rounded-full text-white/70 hover:bg-white/10">
+            <button type="button" onClick={dismissToast} aria-label="Dismiss" className="grid size-11 shrink-0 place-items-center rounded-full text-white/70 hover:bg-white/10">
               <Icon name="x" className="size-5" />
             </button>
           )}

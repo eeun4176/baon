@@ -58,7 +58,7 @@ function Hero({ t }: { t: Today }) {
     <Card className="h-full animate-rise px-4 py-8 text-center sm:px-6 lg:px-7 lg:py-7 lg:text-left">
       <p className="text-[1.0625rem] font-extrabold text-muted">{label}</p>
       <p className="mt-2" aria-live="polite">
-        <BigMoney centavos={spentOnDayOff ? r.spentToday : Math.abs(r.leftToday)} className="text-[clamp(3.5rem,22vw,5.25rem)] lg:text-[5.5rem]" />
+        <BigMoney centavos={spentOnDayOff ? r.spentToday : Math.abs(r.leftToday)} className="text-[clamp(3rem,18vw,4.5rem)] lg:text-[5.5rem]" />
         {(over || spentOnDayOff) && <span className="ml-1 text-3xl font-black">{over ? 'over' : 'spent'}</span>}
       </p>
       {over && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">That’s okay. Tomorrow’s budget adjusts — you’ve got this.</p>}
@@ -117,7 +117,7 @@ function Hero({ t }: { t: Today }) {
 function StreakCard({ today, streak }: { today: string; streak: Streak }) {
   const n = streak.current
   return (
-    <section className="flex h-full animate-rise flex-col rounded-[28px] bg-hero p-6 text-white" aria-labelledby="streak-title">
+    <section className="flex h-full animate-rise flex-col rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white" aria-labelledby="streak-title">
       <div className="flex items-center gap-3">
         <img src={flame} alt="" className="size-11 shrink-0" />
         <div>
@@ -177,7 +177,7 @@ export function Home() {
       <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
         <img src={logoIcon} alt="" className="size-10" />
         baon
-        <Link to="/streak" aria-label={`${streak.current}-day streak`} className="ml-auto flex items-center gap-1 rounded-full bg-card px-3.5 py-1.5 text-xl font-black tracking-normal">
+        <Link to="/streak" aria-label={`${streak.current}-day streak`} className="ml-auto flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black tracking-normal">
           <img src={flame} alt="" className="size-6" /> {streak.current}
         </Link>
       </header>

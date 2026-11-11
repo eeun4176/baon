@@ -12,7 +12,7 @@ export function StorageWarning({ className = '' }: { className?: string }) {
   const [storage] = useStorage()
   if (!storage || !isStorageLow(storage)) return null
   return (
-    <section role="status" className={`flex animate-rise flex-wrap items-center gap-4 rounded-[28px] bg-ink p-5 text-card ${className}`}>
+    <section role="status" className={`flex animate-rise flex-wrap items-center gap-4 rounded-3xl bg-ink p-4 sm:rounded-[28px] sm:p-5 text-card ${className}`}>
       <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-card/15"><Icon name="drive" /></span>
       <div className="min-w-48 flex-1">
         <h2 className="text-lg font-black">Your phone is almost full</h2>

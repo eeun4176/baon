@@ -18,7 +18,7 @@ import { Modal } from '../ui/Modal.tsx'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
-const pill = (on: boolean) => `min-h-10 rounded-full px-4 font-extrabold ${on ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`
+const pill = (on: boolean) => `min-h-11 rounded-full px-4 font-extrabold ${on ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`
 const mainButton = 'min-h-13 flex-1 rounded-full bg-blue px-6 text-lg font-black text-white disabled:opacity-60'
 
 /** Peso amount box (typed, centavos allowed). */

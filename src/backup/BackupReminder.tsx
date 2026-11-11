@@ -39,7 +39,7 @@ export function BackupReminder({ className = '' }: { className?: string }) {
   const days = last ? Math.floor((now - Date.parse(last)) / 86_400_000) : 0
 
   return (
-    <section className={`flex animate-rise flex-wrap items-center gap-4 rounded-[28px] bg-card p-5 ${className}`} aria-labelledby="backup-reminder">
+    <section className={`flex animate-rise flex-wrap items-center gap-4 rounded-3xl bg-card p-4 sm:rounded-[28px] sm:p-5 ${className}`} aria-labelledby="backup-reminder">
       <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue"><Icon name="cloud" /></span>
       <div className="min-w-48 flex-1">
         <h2 id="backup-reminder" className="text-lg font-black">{due === 'never' ? 'Not backed up yet' : `Last backup was ${days} days ago`}</h2>
