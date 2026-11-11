@@ -59,4 +59,14 @@ describe('toBalances / moneyTotal', () => {
     expect(toBalances(initialMoney)).toEqual({ cashCentavos: 0, eWallets: [] })
     expect(toBalances({ ...design, cashText: '6.5.0' })).toBe('Check the cash amount.')
   })
+
+  it('students name their own bank / e-wallet (no "Other e-wallet")', () => {
+    const bank = { id: 'b1', name: '  BPI  ', on: true, text: '300', custom: true }
+    expect(toBalances({ ...design, eWallets: [...design.eWallets, bank] })).toEqual({
+      cashCentavos: 65000,
+      eWallets: [{ id: 'gcash', name: 'GCash', centavos: 40000 }, { id: 'b1', name: 'BPI', centavos: 30000 }],
+    })
+    expect(toBalances({ ...design, eWallets: [...design.eWallets, { ...bank, name: ' ' }] })).toBe('Name each bank or e-wallet you added, e.g. BPI.')
+    expect(toBalances({ ...design, eWallets: [...design.eWallets, { ...bank, name: 'gcash' }] })).toBe('You added gcash twice.')
+  })
 })

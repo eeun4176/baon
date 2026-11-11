@@ -5,7 +5,8 @@
 import 'fake-indexeddb/auto'
 import { describe, expect, it } from 'vitest'
 import { createVault, listDeviceAccounts, renameAccount } from '../vault/vault.ts'
-import { checkName, loadProfile, saveProfile } from './profile.ts'
+import { googlePhotoAtSize } from './photo.ts'
+import { checkName, loadProfile, ProfileSchema, saveProfile } from './profile.ts'
 
 describe('checkName', () => {
   it('trims and squeezes spaces', () => expect(checkName('  Jasmine   Cruz ')).toEqual({ name: 'Jasmine Cruz' }))
@@ -27,5 +28,18 @@ describe('profile storage', () => {
     await createVault('rename-user', 'Old Name')
     await renameAccount('rename-user', 'New Name')
     expect((await listDeviceAccounts()).find((a) => a.userId === 'rename-user')?.label).toBe('New Name')
+  })
+})
+
+describe('profile photo', () => {
+  it('asks Google for a 256 px photo', () => {
+    expect(googlePhotoAtSize('https://lh3.googleusercontent.com/a/ACg8abc=s96-c')).toBe('https://lh3.googleusercontent.com/a/ACg8abc=s256-c')
+    expect(googlePhotoAtSize('https://lh3.googleusercontent.com/a/ACg8abc')).toBe('https://lh3.googleusercontent.com/a/ACg8abc')
+  })
+
+  it('only stores small image data, never a web link', () => {
+    expect(ProfileSchema.safeParse({ photo: 'data:image/jpeg;base64,AAAA', photoFrom: 'google' }).success).toBe(true)
+    expect(ProfileSchema.safeParse({ photo: 'https://evil.example/x.png' }).success).toBe(false)
+    expect(ProfileSchema.safeParse({ photo: `data:image/jpeg;base64,${'A'.repeat(400_001)}` }).success).toBe(false)
   })
 })

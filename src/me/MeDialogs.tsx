@@ -125,7 +125,7 @@ export function WalletDialog({ wallet, onClose }: { wallet?: Wallet; onClose: ()
   function save(e: FormEvent) {
     e.preventDefault()
     const clean = name.trim().replace(/\s+/g, ' ')
-    if (!clean) return setError('Name it, e.g. Maya or BPI.')
+    if (!clean) return setError('Name it after your bank or e-wallet, e.g. BPI.')
     if (clean.length > 40) return setError('Keep the name under 40 letters.')
     if (wallets.some((w) => !w.archived && w.id !== wallet?.id && w.name.toLowerCase() === clean.toLowerCase())) return setError('You already have a wallet with that name.')
     const centavos = opening.trim() === '' ? 0 : parsePeso(opening)
@@ -140,7 +140,7 @@ export function WalletDialog({ wallet, onClose }: { wallet?: Wallet; onClose: ()
         <div className="space-y-4">
           <label className={label}>
             Name
-            <input value={name} maxLength={40} autoFocus onChange={(e) => { setName(e.target.value); setError('') }} placeholder="e.g. Maya" className={`${field} placeholder:text-muted/60`} />
+            <input value={name} maxLength={40} autoFocus onChange={(e) => { setName(e.target.value); setError('') }} placeholder="e.g. BPI, SeaBank, GoTyme" className={`${field} placeholder:text-muted/60`} />
           </label>
           {!wallet && <PesoInput text="How much is in it now?" value={opening} onChange={(v) => { setOpening(v); setError('') }} />}
         </div>

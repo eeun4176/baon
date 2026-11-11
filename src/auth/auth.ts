@@ -24,6 +24,7 @@ export interface SignedInUser {
   id: string // stable UUID — names this account's vault (sbt_<id>)
   name: string // shown in greetings; email users get the part before "@"
   email: string
+  image?: string // Google profile photo URL (email-code users have none)
 }
 
 /** Returns the current signed-in user, or null (also null when offline). */
@@ -32,7 +33,7 @@ export async function currentUser(): Promise<SignedInUser | null> {
     const { data } = await client.getSession()
     const user = data?.user
     if (!user) return null
-    return { id: user.id, email: user.email, name: user.name?.trim() || user.email.split('@')[0] }
+    return { id: user.id, email: user.email, name: user.name?.trim() || user.email.split('@')[0], ...(user.image ? { image: user.image } : {}) }
   } catch {
     return null // offline or Neon unreachable: treat as signed out
   }

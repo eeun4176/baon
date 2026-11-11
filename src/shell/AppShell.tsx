@@ -15,6 +15,7 @@ import logoIcon from '../assets/logo-icon.png'
 import { QuickAdd } from '../add/QuickAdd.tsx'
 import { Icon, type IconName } from '../ui/kit.tsx'
 import { useKeepTodaySnapshot } from '../streak/useStreak.ts'
+import { useGooglePhotoSync } from '../me/photo.ts'
 import { ProfileMenu } from './ProfileMenu.tsx'
 import { Snackbar } from './Snackbar.tsx'
 import { useAddDialog } from './useAddDialog.ts'
@@ -85,6 +86,7 @@ export function AppShell() {
   const storage = useStorageUsed()
   const addOpen = params.has('add')
   useKeepTodaySnapshot()
+  useGooglePhotoSync() // copies the Google profile photo when online
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {
@@ -120,7 +122,7 @@ export function AppShell() {
               <img src={logoIcon} alt="" className="ml-[0.125rem] size-11 shrink-0" />
             )}
             <div className={`shrink-0 whitespace-nowrap ${fade(collapsed)}`} aria-hidden={collapsed}>
-              <p className="text-2xl leading-none font-black tracking-tight">baon</p>
+              <p className="text-2xl leading-none font-black tracking-tight">Baon</p>
               <p className="text-xs leading-tight font-bold text-muted">Your daily sakto baon</p>
             </div>
             {!collapsed && (
