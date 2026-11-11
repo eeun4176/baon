@@ -22,6 +22,20 @@ export const AllowanceSchema = z.object({
 })
 export type Allowance = z.infer<typeof AllowanceSchema>
 
+/** Frequency choices (onboarding + Me → Edit allowance). */
+export const FREQUENCIES = [
+  ['daily', 'Daily'],
+  ['weekly', 'Weekly'],
+  ['biweekly', 'Every 2 weeks'],
+  ['monthly', 'Monthly'],
+  ['irregular', 'Irregular'],
+] as const
+
+/** "Every week", "Every 2 weeks"… for sentences. */
+export const FREQUENCY_TEXT: Record<Allowance['frequency'], string> = {
+  daily: 'Every day', weekly: 'Every week', biweekly: 'Every 2 weeks', monthly: 'Every month', irregular: 'Irregular',
+}
+
 /**
  * The allowance date after `current`, for when the student taps "Yes, it arrived".
  * Returns null for irregular allowances — the student picks the next date themselves.

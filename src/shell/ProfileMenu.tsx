@@ -7,21 +7,14 @@ import { useEffect, useRef, useState } from 'react'
 import { firstName } from '../home/greetings.ts'
 import { promptInstall, useCanInstall } from '../install.ts'
 import { useSession } from '../session.ts'
-import { getTheme, setTheme, type ThemeChoice } from '../theme.ts'
-import { Icon, type IconName } from '../ui/kit.tsx'
-
-const THEMES: { id: ThemeChoice; label: string; icon: IconName }[] = [
-  { id: 'light', label: 'Light', icon: 'sun' },
-  { id: 'dark', label: 'Dark', icon: 'moon' },
-  { id: 'device', label: 'Device', icon: 'monitor' },
-]
+import { Icon } from '../ui/kit.tsx'
+import { ThemePicker } from './ThemePicker.tsx'
 
 /** Profile row + its pop-up menu. `collapsed` shows just the avatar. */
 export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
   const { name, signOut } = useSession()
   const canInstall = useCanInstall()
   const [open, setOpen] = useState(false)
-  const [theme, setThemeState] = useState<ThemeChoice>(getTheme)
   const box = useRef<HTMLDivElement>(null)
 
   // Close when clicking anywhere else or pressing Esc.
@@ -37,12 +30,6 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
     }
   }, [open])
 
-  /** Saves the theme choice and repaints the app. */
-  function choose(t: ThemeChoice) {
-    setTheme(t)
-    setThemeState(t)
-  }
-
   const item = 'flex min-h-11 w-full items-center gap-3 rounded-xl px-3 font-bold hover:bg-page'
 
   return (
@@ -52,23 +39,7 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
           id="profile-menu"
           className="absolute bottom-full left-0 z-50 mb-2 w-64 animate-rise rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]"
         >
-          <div role="radiogroup" aria-label="Theme" className="grid grid-cols-3 gap-1 rounded-xl bg-page p-1">
-            {THEMES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                role="radio"
-                aria-checked={theme === t.id}
-                onClick={() => choose(t.id)}
-                className={`flex min-h-9 items-center justify-center gap-1.5 rounded-lg text-sm font-extrabold ${
-                  theme === t.id ? 'bg-card text-blue shadow-sm' : 'text-muted hover:text-ink'
-                }`}
-              >
-                <Icon name={t.icon} className="size-4" />
-                {t.label}
-              </button>
-            ))}
-          </div>
+          <ThemePicker />
 
           {canInstall && (
             <button type="button" className={`${item} mt-1`} onClick={() => { setOpen(false); promptInstall() }}>

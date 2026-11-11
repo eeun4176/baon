@@ -43,6 +43,12 @@ export const TransactionSchema = z.object({
 })
 export type Transaction = z.infer<typeof TransactionSchema>
 
+/** Display order everywhere: Cash, then other spending wallets A–Z, then savings. */
+export function sortWallets(wallets: Wallet[]): Wallet[] {
+  const rank = (w: Wallet) => (w.id === 'cash' ? 0 : w.type === 'spending' ? 1 : 2)
+  return [...wallets].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+}
+
 /** Kinds that move money between two of the student's own wallets. */
 const MOVES = new Set<Transaction['kind']>(['transfer', 'save', 'withdraw'])
 

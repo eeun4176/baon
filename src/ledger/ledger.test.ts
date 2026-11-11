@@ -4,7 +4,7 @@
  * sample student: Cash ₱650 + GCash ₱400 = ₱1,050, Savings ₱0. Run: npm test
  */
 import { describe, expect, it } from 'vitest'
-import { balances, checkTransaction, spendingTotal, type Transaction, type Wallet } from './ledger.ts'
+import { balances, checkTransaction, sortWallets, spendingTotal, type Transaction, type Wallet } from './ledger.ts'
 
 const wallets: Wallet[] = [
   { id: 'cash', name: 'Cash', type: 'spending', openingCentavos: 65000, archived: false },
@@ -103,5 +103,13 @@ describe('checkTransaction', () => {
     ['refund not linked to anything', tx('refund', 500, 'cash')],
   ])('rejects %s', (_, t) => {
     expect(checkTransaction(t, wallets)).toEqual(expect.any(String))
+  })
+})
+
+describe('sortWallets', () => {
+  it('lists Cash first, other spending wallets A–Z, savings last', () => {
+    const w = (id: string, name: string, type: 'spending' | 'savings' = 'spending') => ({ id, name, type, openingCentavos: 0, archived: false })
+    const sorted = sortWallets([w('savings', 'Savings', 'savings'), w('x1', 'Maya'), w('gcash', 'GCash'), w('cash', 'Cash')])
+    expect(sorted.map((x) => x.name)).toEqual(['Cash', 'GCash', 'Maya', 'Savings'])
   })
 })

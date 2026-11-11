@@ -2,17 +2,10 @@
  * YourBaon.tsx — Onboarding screen 4 (design "4 Your baon"): allowance amount,
  * how often, next allowance date, and which days are class days.
  */
+import { FREQUENCIES } from '../budget/allowance.ts'
 import { addDays } from '../budget/days.ts'
 import { Button, Card, Chip, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
 import { defaultNextDate, type BaonAnswers } from './answers.ts'
-
-const FREQUENCIES = [
-  ['daily', 'Daily'],
-  ['weekly', 'Weekly'],
-  ['biweekly', 'Every 2 weeks'],
-  ['monthly', 'Monthly'],
-  ['irregular', 'Irregular'],
-] as const
 
 const DAYS = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
