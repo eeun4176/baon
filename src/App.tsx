@@ -6,6 +6,7 @@
  */
 import { useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
+import { BackupPanel } from './backup/BackupPanel.tsx'
 import { History } from './history/History.tsx'
 import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
@@ -19,7 +20,7 @@ import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
 import { firstName } from './home/greetings.ts'
 import { HOME_TITLE } from './pageTitle.ts'
-import { Button, Screen } from './ui/kit.tsx'
+import { Button, Card, Page, PageHeader, Screen } from './ui/kit.tsx'
 import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
 
 type State =
@@ -75,6 +76,18 @@ function SignedOut({ name, onContinue }: { name: string; onContinue: () => void 
   )
 }
 
+/** Backup page (sidebar link): the same panel as Me → Backup. */
+function BackupPage() {
+  return (
+    <Page>
+      <PageHeader title="Backup" sub="An encrypted copy of your records, for a new or reset phone." />
+      <Card className="max-w-2xl animate-rise">
+        <BackupPanel />
+      </Card>
+    </Page>
+  )
+}
+
 /** Signed-in routes. */
 function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; onSignOut: (name: string) => void }) {
   return (
@@ -88,7 +101,7 @@ function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; o
             <Route path="plan" element={<Plan />} />
             <Route path="streak" element={<Streak />} />
             <Route path="me" element={<Me />} />
-            <Route path="backup" element={<ComingSoon title="Backup" text="Export an encrypted copy of your records so a broken phone doesn’t lose them — coming next." />} />
+            <Route path="backup" element={<BackupPage />} />
             <Route path="help" element={<ComingSoon title="Help & privacy" text="How baon keeps your records private, and answers to common questions — coming next." />} />
           </Route>
           {/* Old Quick Add address and the home-screen shortcut open the Add dialog on Home. */}

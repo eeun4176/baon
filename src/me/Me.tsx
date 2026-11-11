@@ -2,7 +2,7 @@
  * Me.tsx — Your account, money settings and data (design p11 phone, p22 desktop).
  *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / "My phone mode" chips, Sign out.
  *   Tabs: Profile (name, school, Senior high / College) · Security (device mode) ·
- *         Backup (coming next) · Preferences (theme, install).
+ *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, install).
  *   Side cards: "Your baon" (allowance, Edit) and Wallets (add, rename, remove, Move money).
  * Phones show the side cards first, then the tabs; theme and sign out live here on phones.
  */
@@ -16,6 +16,7 @@ import { balances, type Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { ThemePicker } from '../shell/ThemePicker.tsx'
+import { BackupPanel } from '../backup/BackupPanel.tsx'
 import { useStreak } from '../streak/useStreak.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
 import { Avatar } from './Avatar.tsx'
@@ -222,18 +223,6 @@ function SecurityTab() {
   )
 }
 
-/** Backup tab: export arrives in the next update. */
-function BackupTab() {
-  return (
-    <div>
-      <h2 className="text-xl font-black">Not backed up yet</h2>
-      <p className="mt-1 font-semibold text-muted">Save a copy so you don’t lose your records if your phone breaks. Your backup will be encrypted, so only you can open it.</p>
-      <button type="button" disabled className="mt-5 min-h-12 rounded-full bg-blue px-6 font-black text-white opacity-40">Export a backup</button>
-      <p className="mt-2 text-sm font-semibold text-muted">Coming in the next update.</p>
-    </div>
-  )
-}
-
 /** Preferences tab: theme, install, language. */
 function PrefsTab() {
   const canInstall = useCanInstall()
@@ -300,7 +289,7 @@ export function Me() {
           <Card key={tab} className="mt-4 animate-rise">
             {tab === 'profile' && <ProfileTab />}
             {tab === 'security' && <SecurityTab />}
-            {tab === 'backup' && <BackupTab />}
+            {tab === 'backup' && <BackupPanel />}
             {tab === 'prefs' && <PrefsTab />}
           </Card>
         </div>

@@ -35,6 +35,8 @@ export interface VaultMeta {
   wrappedDek: Sealed
   deviceKey: CryptoKey // non-extractable; IndexedDB can store it without exposing its bytes
   schemaVersion: number
+  recovery?: Sealed & { salt: Uint8Array<ArrayBuffer> } // DEK wrapped by the Recovery Kit code (backup/backup.ts)
+  lastBackupAt?: string // ISO time of the last export (or of the backup this phone was restored from)
 }
 
 /** Device-wide account list (`sbt_device`). */

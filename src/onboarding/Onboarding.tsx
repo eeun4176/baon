@@ -1,13 +1,16 @@
 /*
  * Onboarding.tsx — Runs the 5 first-time screens in order (plan §4.1):
  *   Welcome → Sign in → Whose phone? → Your baon → Your money now → Home
+ * or, from "Whose phone?", Restore a backup → Home (records come from the file).
  * Google sign-in leaves the page and comes back; on return we detect the session
  * and continue at "Whose phone?" so nothing has to be re-typed.
  */
 import { useEffect, useState, type ReactNode } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
 import { manilaDate } from '../budget/days.ts'
-import type { Vault } from '../vault/vault.ts'
+import { RestoreForm } from '../backup/BackupPanel.tsx'
+import { Screen, StepHeader, Title } from '../ui/kit.tsx'
+import { openVault, type Vault } from '../vault/vault.ts'
 import { initialBaon, initialMoney, toAllowance, toBalances, type BaonAnswers, type MoneyAnswers } from './answers.ts'
 import { BrandPanel } from './BrandPanel.tsx'
 import { setupAccount } from './setupAccount.ts'
@@ -17,7 +20,7 @@ import { WhosePhone } from './WhosePhone.tsx'
 import { YourBaon } from './YourBaon.tsx'
 import { YourMoney } from './YourMoney.tsx'
 
-type Step = 'welcome' | 'signin' | 'phone' | 'baon' | 'money'
+type Step = 'welcome' | 'signin' | 'phone' | 'baon' | 'money' | 'restore'
 
 /** First-time setup. Calls onDone with the new, unlocked vault. */
 export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) => void }) {
@@ -76,7 +79,15 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
   const screens: Record<Step, ReactNode> = {
     welcome: <Welcome onStart={() => go(user ? 'phone' : 'signin')} />,
     signin: <SignIn onBack={() => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />,
-    phone: <WhosePhone onContinue={() => go('baon')} />,
+    phone: <WhosePhone onContinue={() => go('baon')} onRestore={() => go('restore')} />,
+    restore: user && (
+      <Screen>
+        <StepHeader step={2} onBack={() => go('phone')} />
+        <Title sub="Pick your baon-backup file and type the recovery code you saved.">Restore your backup</Title>
+        <RestoreForm userId={user.id} fallbackName={user.name} onRestored={(name) => openVault(user.id).then((vault) => onDone(vault, name), () => setError('Restored, but couldn’t open it. Close baon and open it again.'))} />
+        {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
+      </Screen>
+    ),
     baon: <YourBaon value={baon} onChange={setBaon} today={today} error={error} onBack={() => go('phone')} onContinue={continueFromBaon} />,
     money: <YourMoney value={money} onChange={setMoney} error={error} busy={busy} onBack={() => go('baon')} onFinish={finish} />,
   }

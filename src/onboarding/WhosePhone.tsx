@@ -6,8 +6,8 @@
  */
 import { Button, Icon, Screen, StepHeader, Title } from '../ui/kit.tsx'
 
-/** Device-mode choice. Only "My own phone" is available for now. */
-export function WhosePhone({ onContinue }: { onContinue: () => void }) {
+/** Device-mode choice. Only "My own phone" is available for now. Also the way into restoring a backup. */
+export function WhosePhone({ onContinue, onRestore }: { onContinue: () => void; onRestore: () => void }) {
   return (
     <Screen footer={<Button onClick={onContinue}>Continue</Button>}>
       <StepHeader step={2} />
@@ -34,6 +34,10 @@ export function WhosePhone({ onContinue }: { onContinue: () => void }) {
           <input type="radio" name="mode" disabled className="size-7 shrink-0" />
         </label>
       </fieldset>
+
+      <button type="button" onClick={onRestore} className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-full font-extrabold text-blue hover:underline">
+        Moving from another phone? Restore a backup
+      </button>
     </Screen>
   )
 }
