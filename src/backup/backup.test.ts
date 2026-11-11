@@ -7,7 +7,7 @@ import 'fake-indexeddb/auto'
 import { beforeEach, describe, expect, it } from 'vitest'
 import Dexie from 'dexie'
 import { createVault, listDeviceAccounts, openVault, type Vault } from '../vault/vault.ts'
-import { backupStatus, makeBackup, newRecoveryCode, normalizeCode, readBackupFile, restoreBackup, saveRecoveryCode, type BackupFile } from './backup.ts'
+import { backupDue, backupStatus, makeBackup, newRecoveryCode, normalizeCode, readBackupFile, restoreBackup, saveRecoveryCode, type BackupFile } from './backup.ts'
 
 /** Wipes every IndexedDB database ("clear site data"). */
 async function wipePhone() {
@@ -79,6 +79,28 @@ describe('backup', () => {
     const still = await openVault('user-a')
     expect(await still.get('t1')).toEqual({ amountCentavos: 1500, note: 'Jeep' })
     still.lock()
+  })
+
+  it('a new code opens new backups; old backups still need the old code', async () => {
+    const { vault, code, file: old } = await exported()
+    const fresh = newRecoveryCode()
+    await saveRecoveryCode('user-a', fresh)
+    const file = await readBackupFile(await makeBackup(vault, 'Jas'))
+    vault.lock()
+    await expect(restoreBackup(file, code, 'user-a', 'x')).rejects.toThrow('doesn’t open')
+    await expect(restoreBackup(old, fresh, 'user-a', 'x')).rejects.toThrow('doesn’t open')
+    await expect(restoreBackup(file, fresh, 'user-a', 'x')).resolves.toBe('Jas')
+    await expect(restoreBackup(old, code, 'user-a', 'x')).resolves.toBe('Jas')
+  })
+
+  it('reminds only when a backup is missing or old with newer entries', () => {
+    const now = Date.parse('2026-11-20T12:00:00+08:00')
+    const entries = ['2026-11-01T08:00:00+08:00', '2026-11-02T08:00:00+08:00']
+    expect(backupDue(undefined, entries, now)).toBeNull() // too new to nag
+    expect(backupDue(undefined, [...entries, '2026-11-03T08:00:00+08:00'], now)).toBe('never')
+    expect(backupDue('2026-11-10T12:00:00+08:00', entries, now)).toBeNull() // nothing new since
+    expect(backupDue('2026-11-10T12:00:00+08:00', [...entries, '2026-11-12T08:00:00+08:00'], now)).toBe('old')
+    expect(backupDue('2026-11-15T12:00:00+08:00', [...entries, '2026-11-16T08:00:00+08:00'], now)).toBeNull() // under a week
   })
 
   it('needs a Recovery Kit before exporting', async () => {
