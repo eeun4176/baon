@@ -18,6 +18,7 @@ import { ComingSoon } from './shell/ComingSoon.tsx'
 import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
 import { firstName } from './home/greetings.ts'
+import { HOME_TITLE } from './pageTitle.ts'
 import { Button, Screen } from './ui/kit.tsx'
 import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
 
@@ -102,6 +103,11 @@ function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; o
 /** App root. */
 export default function App() {
   const [state, setState] = useState<State>({ kind: 'loading' })
+
+  // Outside the signed-in pages (sign-in, signed out) the tab shows the Home title.
+  useEffect(() => {
+    if (state.kind !== 'app') document.title = HOME_TITLE
+  }, [state.kind])
 
   useEffect(() => {
     boot().then(setState, () => setState({ kind: 'error' }))

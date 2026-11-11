@@ -5,7 +5,8 @@
  *   Class days: which days the daily budget counts (edits the allowance setup), plus
  *     "No classes" breaks: the budget counts every day and the streak is frozen.
  *   Category limits: placeholder until category budgets are built.
- * Phone order: hero → list → two tiles. Desktop: hero beside the tiles, list below.
+ * Phone order: hero → list → two tiles. Desktop: hero + Category limits on the left,
+ * Class days on the right, list below.
  */
 import { useMemo, useState } from 'react'
 import { breakOn, classDaysText } from '../budget/allowance.ts'
@@ -239,8 +240,9 @@ export function Plan() {
       />
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
-        {/* Hero */}
-        <section className="animate-rise rounded-[28px] bg-hero p-6 text-white md:p-8 lg:col-span-7 lg:self-start" aria-labelledby="set-aside-title">
+        {/* Left (desktop): hero with Category limits right under it, so neither column is half empty */}
+        <div className="space-y-5 lg:col-span-7">
+        <section className="animate-rise rounded-[28px] bg-hero p-6 text-white md:p-8" aria-labelledby="set-aside-title">
           <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">Set aside for school</h2>
           <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(3.5rem,18vw,5rem)]" /></p>
           <p className="mt-3 max-w-md font-semibold text-white/75">
@@ -254,9 +256,22 @@ export function Plan() {
             </ul>
           )}
         </section>
+          {/* Desktop: Category limits, styled like the Class days card */}
+          <Card className="hidden animate-rise lg:block">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-xl font-black">Category limits</h2>
+              <p className="text-sm font-bold text-muted">Optional</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
+              <p className="min-w-0 flex-1 font-semibold text-muted">Cap a category each week, like snacks under ₱200.</p>
+              <button type="button" onClick={limitsSoon} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">Set up</button>
+            </div>
+          </Card>
+        </div>
 
-        {/* Tiles: two small ones on phones/tablets, full cards beside the hero on desktop */}
-        <div className="order-3 grid grid-cols-2 gap-3 lg:order-none lg:col-span-5 lg:grid-cols-1 lg:content-start lg:gap-5">
+        {/* Phone/tablet: two small tiles. Desktop: the Class days card beside the hero */}
+        <div className="order-3 grid grid-cols-2 gap-3 lg:order-none lg:col-span-5 lg:grid-cols-1 lg:gap-5">
           {/* Phone/tablet tiles share one shape (icon · title · note · value at the bottom) so they line up */}
           <button type="button" onClick={() => setOpen({ kind: 'days' })} className={tile}>
             <span className={tileIcon}><Icon name="calendar" className="size-5" /></span>
@@ -278,18 +293,6 @@ export function Plan() {
             <span className="block text-sm font-semibold text-muted">Optional</span>
             <span className="mt-auto block pt-3 text-xl leading-tight font-black text-blue">Set up</span>
           </button>
-          {/* Desktop: same header style as the Class days card */}
-          <Card className="hidden animate-rise lg:block">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h2 className="text-xl font-black">Category limits</h2>
-              <p className="text-sm font-bold text-muted">Optional</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
-              <p className="min-w-0 flex-1 font-semibold text-muted">Cap a category each week, like snacks under ₱200.</p>
-              <button type="button" onClick={limitsSoon} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">Set up</button>
-            </div>
-          </Card>
         </div>
 
         {/* School expenses */}

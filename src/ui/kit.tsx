@@ -61,7 +61,9 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
   className?: string
 }) {
   return (
-    <div role="tablist" aria-label={label} className={`grid auto-cols-fr grid-flow-col gap-1 rounded-full bg-pebble-2 p-1 ${className}`}>
+    // Tabs grow from their own text width (not equal columns), so a long label like
+    // "Preferences" never spills out of its pill on narrow phones.
+    <div role="tablist" aria-label={label} className={`flex gap-1 rounded-full bg-pebble-2 p-1 ${className}`}>
       {options.map(([id, text]) => (
         <button
           key={id}
@@ -69,7 +71,7 @@ export function Segmented<T extends string>({ options, value, onChange, label, c
           role="tab"
           aria-selected={value === id}
           onClick={() => onChange(id)}
-          className={`min-h-10 rounded-full px-2 text-[0.9375rem] font-extrabold sm:px-4 sm:text-base ${value === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
+          className={`min-h-10 flex-auto rounded-full px-2.5 text-sm font-extrabold whitespace-nowrap min-[400px]:text-[0.9375rem] sm:px-4 sm:text-base ${value === id ? 'bg-card text-ink shadow-sm' : 'text-muted hover:text-ink'}`}
         >
           {text}
         </button>
