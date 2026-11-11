@@ -10,7 +10,7 @@ import { createVault, type Vault } from '../vault/vault.ts'
 
 /** One e-wallet the student switched on in "How much do you have now?". */
 export interface StartingWallet {
-  id: string // 'gcash' | 'maya' | 'other'
+  id: string // 'gcash' | 'maya' | a random id for banks / e-wallets the student named
   name: string
   centavos: number
 }

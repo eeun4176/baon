@@ -1,17 +1,16 @@
 /*
  * Me.tsx — Your account, money settings and data (design p11 phone, p22 desktop).
- *   Header: avatar, name, streak / school level / "My phone mode" chips, Sign out.
+ *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / "My phone mode" chips, Sign out.
  *   Tabs: Profile (name, school, Senior high / College) · Security (device mode) ·
  *         Backup (coming next) · Preferences (theme, install).
  *   Side cards: "Your baon" (allowance, Edit) and Wallets (add, rename, remove, Move money).
  * Phones show the side cards first, then the tabs; theme and sign out live here on phones.
  */
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import flame from '../assets/streak-flame.png'
 import { classDaysText, FREQUENCY_TEXT } from '../budget/allowance.ts'
 import { weekday } from '../budget/days.ts'
-import { firstName } from '../home/greetings.ts'
 import { promptInstall, useCanInstall } from '../install.ts'
 import { balances, type Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
@@ -19,7 +18,9 @@ import { useSession } from '../session.ts'
 import { ThemePicker } from '../shell/ThemePicker.tsx'
 import { useStreak } from '../streak/useStreak.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
+import { Avatar } from './Avatar.tsx'
 import { AllowanceDialog, WalletDialog } from './MeDialogs.tsx'
+import { imageToDataUrl } from './photo.ts'
 import { checkName, LEVELS, type Profile } from './profile.ts'
 
 type Tab = 'profile' | 'security' | 'backup' | 'prefs'
@@ -33,6 +34,91 @@ const label = 'block font-extrabold text-muted'
 /** Small rounded chip in the header (streak, level, device mode). */
 function Chip({ children, blue = false }: { children: ReactNode; blue?: boolean }) {
   return <span className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-sm font-black ${blue ? 'bg-blue-tint text-blue' : 'bg-page'}`}>{children}</span>
+}
+
+/**
+ * The header avatar with a small pen button at its bottom-right. The button opens a small
+ * menu: Upload / Change photo, Remove photo, Use Google photo. Saves right away, with Undo.
+ */
+function PhotoAvatar() {
+  const { profile, saveProfile, showToast } = useSession()
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const item = 'flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-left font-bold hover:bg-page'
+
+  // Close when clicking anywhere else or pressing Esc.
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  /** Saves a photo change and offers Undo. */
+  async function change(next: Profile, message: string) {
+    const before = profile
+    setOpen(false)
+    try {
+      await saveProfile(next)
+      showToast({ message, undo: () => saveProfile(before) })
+    } catch {
+      showToast({ message: 'Couldn’t save. Try again.' })
+    }
+  }
+
+  /** Reads the chosen picture, shrinks it to 256×256 and saves it. */
+  async function upload(file: File | undefined) {
+    if (!file) return
+    if (!file.type.startsWith('image/') || file.size > 15_000_000) return showToast({ message: 'Pick a photo (JPG or PNG, under 15 MB).' })
+    try {
+      await change({ ...profile, photo: await imageToDataUrl(file), photoFrom: 'custom' }, 'Photo updated')
+    } catch {
+      showToast({ message: 'Couldn’t read that picture. Try a JPG or PNG.' })
+    }
+  }
+
+  return (
+    <div ref={box} className="relative shrink-0">
+      <Avatar className="size-16 text-3xl md:size-20" />
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls="photo-menu"
+        aria-label="Change profile photo"
+        title="Change profile photo"
+        className="absolute right-0 bottom-0 grid size-6 place-items-center rounded-full bg-blue text-white ring-[3px] ring-card hover:bg-[#1a52e0] md:size-7"
+      >
+        <Icon name="pencil" className="size-3 md:size-3.5" />
+      </button>
+      {open && (
+        <div id="photo-menu" className="absolute top-full left-0 z-30 mt-3 w-60 animate-rise rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
+          <label className={`${item} focus-within:ring-2 focus-within:ring-blue/40`}>
+            <Icon name="pencil" className="size-5" /> {profile.photo ? 'Change photo' : 'Upload a photo'}
+            <input type="file" accept="image/*" className="sr-only" onChange={(e) => { upload(e.target.files?.[0]); e.target.value = '' }} />
+          </label>
+          {profile.photoFrom === 'custom' && (
+            <button type="button" className={item} onClick={() => change({ ...profile, photoFrom: undefined, googlePhotoUrl: undefined }, 'Using your Google photo when you’re online')}>
+              <Icon name="user" className="size-5" /> Use Google photo
+            </button>
+          )}
+          {profile.photo && (
+            <button type="button" className={item} onClick={() => change({ ...profile, photo: undefined, photoFrom: 'custom' }, 'Photo removed')}>
+              <Icon name="trash" className="size-5" /> Remove photo
+            </button>
+          )}
+          <p className="px-3 pt-1 pb-1.5 text-sm font-semibold text-muted">
+            {profile.photoFrom === 'google' ? 'From your Google account.' : 'Saved encrypted on this device.'}
+          </p>
+        </div>
+      )}
+    </div>
+  )
 }
 
 /** Profile tab: display name, school, Senior high / College. */
@@ -51,7 +137,7 @@ function ProfileTab() {
     const checked = checkName(draftName)
     if ('problem' in checked) return setError(checked.problem)
     const before = { name, profile }
-    const next: Profile = { ...(school.trim() ? { school: school.trim() } : {}), ...(level ? { level } : {}) }
+    const next: Profile = { ...profile, school: school.trim() || undefined, level } // keeps the photo
     setBusy(true)
     try {
       if (checked.name !== name) await rename(checked.name)
@@ -192,10 +278,8 @@ export function Me() {
       <PageHeader title="Me" sub="Your account, money settings and data." />
 
       {/* Header card */}
-      <Card className="flex animate-rise flex-wrap items-center gap-4 md:gap-5">
-        <span className="grid size-16 shrink-0 place-items-center rounded-full bg-blue-tint text-3xl font-black text-blue md:size-20" aria-hidden="true">
-          {firstName(name).charAt(0).toUpperCase()}
-        </span>
+      <Card className="relative z-20 flex animate-rise flex-wrap items-center gap-4 md:gap-5">{/* above the cards below, so the photo menu isn’t covered */}
+        <PhotoAvatar />
         <div className="min-w-0 flex-1">
           <p className="truncate text-2xl font-black md:text-3xl">{name}</p>
           <div className="mt-2 flex flex-wrap gap-2">

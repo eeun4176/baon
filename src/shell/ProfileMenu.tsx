@@ -4,8 +4,8 @@
  * allows it) and Sign out. Closes on outside click or Esc.
  */
 import { useEffect, useRef, useState } from 'react'
-import { firstName } from '../home/greetings.ts'
 import { promptInstall, useCanInstall } from '../install.ts'
+import { Avatar } from '../me/Avatar.tsx'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
 import { ThemePicker } from './ThemePicker.tsx'
@@ -64,9 +64,7 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
         title={collapsed ? `${name} — theme & sign out` : undefined}
         className={`flex w-full items-center gap-3 overflow-hidden rounded-2xl p-1 text-left hover:bg-page ${open ? 'bg-page' : ''}`}
       >
-        <span className="grid size-10 shrink-0 place-items-center rounded-full bg-blue-tint font-black text-blue" aria-hidden="true">
-          {firstName(name).charAt(0).toUpperCase()}
-        </span>
+        <Avatar className="size-10" />
         {/* stays in place and fades (no re-wrapping while the sidebar animates) */}
         <span className={`min-w-0 transition-opacity duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 delay-75'}`}>
           <span className="block truncate font-black">{name}</span>

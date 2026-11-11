@@ -1,9 +1,10 @@
 /*
  * YourMoney.tsx — Onboarding screen 5 (design "5 Your money now"): cash in wallet,
- * optional e-wallet balances, running total, then "See my budget".
+ * GCash / Maya switches plus any bank or e-wallet the student names themselves
+ * (BPI, SeaBank, GoTyme…), a running total, then "See my budget".
  */
 import { formatPeso } from '../ledger/money.ts'
-import { Button, Card, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
+import { Button, Card, Icon, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
 import { moneyTotal, type MoneyAnswers } from './answers.ts'
 
 /** Starting-balances form; the last step before the vault is created. */
@@ -18,6 +19,13 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
   /** Updates one e-wallet row. */
   const setWallet = (id: string, patch: Partial<MoneyAnswers['eWallets'][number]>) =>
     onChange({ ...value, eWallets: value.eWallets.map((w) => (w.id === id ? { ...w, ...patch } : w)) })
+
+  /** Adds an empty row for a bank or e-wallet the student names. */
+  const addWallet = () =>
+    onChange({ ...value, eWallets: [...value.eWallets, { id: crypto.randomUUID(), name: '', on: true, text: '', custom: true }] })
+
+  /** Removes a row the student added. */
+  const removeWallet = (id: string) => onChange({ ...value, eWallets: value.eWallets.filter((w) => w.id !== id) })
 
   return (
     <Screen
@@ -42,7 +50,19 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
       <Card className="mt-4 divide-y divide-pebble py-1">
         {value.eWallets.map((w) => (
           <div key={w.id} className="flex min-h-16 items-center gap-3 py-2">
-            <span className="flex-1 text-lg font-black">{w.name}</span>
+            {w.custom ? (
+              <input
+                value={w.name}
+                maxLength={40}
+                autoFocus={!w.name}
+                aria-label="Bank or e-wallet name"
+                placeholder="e.g. BPI, SeaBank"
+                onChange={(e) => setWallet(w.id, { name: e.target.value })}
+                className="min-w-0 flex-1 rounded-full bg-page px-4 py-2.5 text-lg font-black outline-none placeholder:font-bold placeholder:text-muted/70 focus:ring-2 focus:ring-blue/40"
+              />
+            ) : (
+              <span className="flex-1 text-lg font-black">{w.name}</span>
+            )}
             {w.on && (
               <label className="flex min-h-11 w-32 items-center gap-1 rounded-full bg-pebble px-4">
                 <span className="font-black text-muted" aria-hidden="true">₱</span>
@@ -50,16 +70,25 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
                   inputMode="decimal"
                   autoComplete="off"
                   placeholder="0"
-                  aria-label={`${w.name} balance`}
+                  aria-label={`${w.name || 'New wallet'} balance`}
                   value={w.text}
                   onChange={(e) => setWallet(w.id, { text: e.target.value })}
                   className="w-full bg-transparent text-right text-lg font-black outline-none"
                 />
               </label>
             )}
-            <Switch label={`Use ${w.name}`} checked={w.on} onChange={(on) => setWallet(w.id, { on })} />
+            {w.custom ? (
+              <button type="button" onClick={() => removeWallet(w.id)} aria-label={`Remove ${w.name || 'this wallet'}`} className="grid size-11 shrink-0 place-items-center rounded-full text-muted hover:bg-pebble hover:text-ink">
+                <Icon name="x" className="size-5" />
+              </button>
+            ) : (
+              <Switch label={`Use ${w.name}`} checked={w.on} onChange={(on) => setWallet(w.id, { on })} />
+            )}
           </div>
         ))}
+        <button type="button" onClick={addWallet} className="flex min-h-14 w-full items-center gap-2 font-black text-blue">
+          <Icon name="plus" className="size-5" /> Add a bank or e-wallet
+        </button>
       </Card>
     </Screen>
   )

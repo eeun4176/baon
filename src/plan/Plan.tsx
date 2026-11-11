@@ -213,6 +213,9 @@ export function Plan() {
   const counts = { setAside: 0, planned: 0, paid: 0 }
   for (const i of schoolExpenses) counts[statusOf(i, transactions)]++
 
+  const tile = 'flex min-h-40 animate-rise flex-col items-start rounded-[28px] bg-card p-4 text-left sm:p-5 lg:hidden'
+  const tileIcon = 'grid size-10 shrink-0 place-items-center rounded-xl bg-blue-tint text-blue'
+
   /** Category budgets aren't built yet; say so instead of a dead button. */
   const limitsSoon = () => showToast({ message: 'Category limits are coming soon' })
   const close = () => setOpen(null)
@@ -254,10 +257,12 @@ export function Plan() {
 
         {/* Tiles: two small ones on phones/tablets, full cards beside the hero on desktop */}
         <div className="order-3 grid grid-cols-2 gap-3 lg:order-none lg:col-span-5 lg:grid-cols-1 lg:content-start lg:gap-5">
-          <button type="button" onClick={() => setOpen({ kind: 'days' })} className="animate-rise rounded-[28px] bg-card p-5 text-left lg:hidden">
-            <span className="block text-lg font-black">Class days</span>
+          {/* Phone/tablet tiles share one shape (icon · title · note · value at the bottom) so they line up */}
+          <button type="button" onClick={() => setOpen({ kind: 'days' })} className={tile}>
+            <span className={tileIcon}><Icon name="calendar" className="size-5" /></span>
+            <span className="mt-3 block leading-tight font-black">Class days</span>
             <span className="block text-sm font-semibold text-muted">Budget counts these</span>
-            <span className="mt-3 block text-[clamp(1.25rem,6vw,1.75rem)] leading-tight font-black">{breakOn(manilaDate(), allowance) ? 'On break' : classDaysText(allowance)}</span>
+            <span className="mt-auto block pt-3 text-xl leading-tight font-black">{breakOn(manilaDate(), allowance) ? 'On break' : classDaysText(allowance)}</span>
           </button>
           <Card className="hidden animate-rise lg:block">
             <div className="mb-4 flex items-baseline justify-between gap-3">
@@ -267,18 +272,23 @@ export function Plan() {
             <ClassDaysEditor />
           </Card>
 
-          <button type="button" onClick={limitsSoon} className="animate-rise rounded-[28px] bg-card p-5 text-left lg:hidden">
-            <span className="block text-lg font-black">Category limits</span>
+          <button type="button" onClick={limitsSoon} className={tile}>
+            <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
+            <span className="mt-3 block leading-tight font-black">Category limits</span>
             <span className="block text-sm font-semibold text-muted">Optional</span>
-            <span className="mt-3 block text-[clamp(1.25rem,6vw,1.75rem)] leading-tight font-black text-blue">Set up</span>
+            <span className="mt-auto block pt-3 text-xl leading-tight font-black text-blue">Set up</span>
           </button>
-          <Card className="hidden animate-rise items-center gap-4 lg:flex">
-            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue"><Icon name="pie" className="size-5" /></span>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg font-black">Category limits</h2>
-              <p className="text-sm font-semibold text-muted">Optional · e.g. snacks under ₱200 a week</p>
+          {/* Desktop: same header style as the Class days card */}
+          <Card className="hidden animate-rise lg:block">
+            <div className="mb-3 flex items-baseline justify-between gap-3">
+              <h2 className="text-xl font-black">Category limits</h2>
+              <p className="text-sm font-bold text-muted">Optional</p>
             </div>
-            <button type="button" onClick={limitsSoon} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">Set up</button>
+            <div className="flex items-center gap-4">
+              <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
+              <p className="min-w-0 flex-1 font-semibold text-muted">Cap a category each week, like snacks under ₱200.</p>
+              <button type="button" onClick={limitsSoon} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">Set up</button>
+            </div>
           </Card>
         </div>
 

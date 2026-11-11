@@ -20,7 +20,8 @@ export interface BaonAnswers {
 /** What "How much do you have now?" (screen 5) collects, as typed. */
 export interface MoneyAnswers {
   cashText: string
-  eWallets: { id: string; name: string; on: boolean; text: string }[]
+  // GCash and Maya are switches; `custom` rows are banks / e-wallets the student named (BPI, SeaBank…)
+  eWallets: { id: string; name: string; on: boolean; text: string; custom?: boolean }[]
 }
 
 /** Sensible first guess for the next allowance: tomorrow for daily, else the coming Sunday. */
@@ -39,7 +40,6 @@ export const initialMoney: MoneyAnswers = {
   eWallets: [
     { id: 'gcash', name: 'GCash', on: false, text: '' },
     { id: 'maya', name: 'Maya', on: false, text: '' },
-    { id: 'other', name: 'Other e-wallet', on: false, text: '' },
   ],
 }
 
@@ -62,10 +62,16 @@ export function toBalances(m: MoneyAnswers): { cashCentavos: number; eWallets: S
   const cash = balance(m.cashText)
   if (cash === null) return 'Check the cash amount.'
   const eWallets: StartingWallet[] = []
+  const names = new Set(['cash', 'savings'])
   for (const w of m.eWallets.filter((w) => w.on)) {
+    const name = w.name.trim().replace(/\s+/g, ' ')
+    if (!name) return 'Name each bank or e-wallet you added, e.g. BPI.'
+    if (name.length > 40) return `Keep “${name.slice(0, 20)}…” under 40 letters.`
+    if (names.has(name.toLowerCase())) return `You added ${name} twice.`
+    names.add(name.toLowerCase())
     const centavos = balance(w.text)
-    if (centavos === null) return `Check the ${w.name} amount.`
-    eWallets.push({ id: w.id, name: w.name, centavos })
+    if (centavos === null) return `Check the ${name} amount.`
+    eWallets.push({ id: w.id, name, centavos })
   }
   return { cashCentavos: cash, eWallets }
 }

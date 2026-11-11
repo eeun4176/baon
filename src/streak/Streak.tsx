@@ -62,18 +62,22 @@ export function Streak() {
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
         {/* Hero */}
-        <section className="flex animate-rise flex-col gap-6 rounded-[28px] bg-hero p-6 text-white sm:flex-row sm:items-center md:p-8 lg:col-span-8" aria-labelledby="streak-now">
-          <img src={flame} alt="" className="size-24 shrink-0 animate-pop md:size-28" />
-          <div className="min-w-0 flex-1">
-            <h2 id="streak-now" className="text-[clamp(3rem,14vw,4.5rem)] leading-none font-black">
-              <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? 'day' : 'days'}
-            </h2>
-            <p className="mt-2 text-lg font-bold text-white/80">
-              {breakUntil ? `in a row · frozen during your break until ${shortDay.format(new Date(`${breakUntil}T00:00:00Z`))}` : 'logged in a row'}
-            </p>
-            <div className="mt-5 max-w-sm">
-              <WeekRow today={today} streak={streak} dark />
+        {/* Hero: flame + number on top, this week's row spread across the full card below */}
+        <section className="flex animate-rise flex-col justify-between gap-6 rounded-[28px] bg-hero p-6 text-white md:p-8 lg:col-span-8" aria-labelledby="streak-now">
+          <div className="flex items-center gap-4 md:gap-6">
+            <img src={flame} alt="" className="size-16 shrink-0 animate-pop sm:size-20 md:size-24" />
+            <div className="min-w-0">
+              <h2 id="streak-now" className="text-[clamp(2.75rem,12vw,4.5rem)] leading-none font-black">
+                <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? 'day' : 'days'}
+              </h2>
+              <p className="mt-1.5 font-bold text-white/80 md:text-lg">
+                {breakUntil ? `in a row · frozen during your break until ${shortDay.format(new Date(`${breakUntil}T00:00:00Z`))}` : 'logged in a row'}
+              </p>
             </div>
+          </div>
+          <div>
+            <p className="mb-3 text-sm font-extrabold tracking-[0.12em] text-white/60 uppercase">This week</p>
+            <WeekRow today={today} streak={streak} dark />
           </div>
         </section>
 
