@@ -1,7 +1,7 @@
 /*
- * sync.test.ts — Two devices (separate fake browsers) syncing through a fake cloud:
- * first upload, joining with the recovery code, adds/edits/deletes both ways, clashes,
- * a bad cloud row, a new recovery code, a different account key, and turning off everywhere.
+ * sync.test.ts — Devices (separate fake browsers) syncing through a fake cloud, always on:
+ * the first device uploads, a new device just joins (no code), adds/edits/deletes both ways,
+ * clashes, a bad cloud row, a device set up on its own merging in, and nothing to join.
  * Run: npm test
  */
 import 'fake-indexeddb/auto'
@@ -9,9 +9,10 @@ import { IDBFactory, IDBKeyRange } from 'fake-indexeddb'
 import Dexie from 'dexie'
 import { beforeEach, describe, expect, it } from 'vitest'
 import { deviceDb } from '../db/db.ts'
-import { newRecoveryCode, saveRecoveryCode } from '../backup/backup.ts'
+import { backupStatus, newRecoveryCode, saveRecoveryCode } from '../backup/backup.ts'
+import { saveAllowance } from '../budget/allowance.ts'
 import { createVault, listDeviceAccounts, openVault, type Vault } from '../vault/vault.ts'
-import { joinSync, syncNow, syncState, turnOffSync, turnOnSync, type CloudKey, type CloudRecord, type Remote, type WireRecord } from './sync.ts'
+import { joinSync, lastSyncedAt, syncNow, type CloudKey, type CloudRecord, type Remote, type WireRecord } from './sync.ts'
 
 /** In-memory cloud for one signed-in user; the clock only moves forward, like the server's. */
 class FakeCloud implements Remote {
@@ -33,8 +34,9 @@ class FakeCloud implements Remote {
   async getKey() {
     return this.key
   }
-  async putKey(key: CloudKey) {
-    this.key = key
+  async claimKey(key: CloudKey) {
+    this.key ??= key
+    return this.key
   }
   async deleteAll() {
     this.rows.clear()
@@ -51,48 +53,49 @@ function device() {
   }
 }
 
-/** Device A with a few records and a Recovery Kit; returns its vault and code. */
-async function phoneA(): Promise<{ vault: Vault; code: string }> {
-  const vault = await createVault('u1', 'Jasmine')
-  await vault.put('transaction', 't1', { note: 'Jeep', amountCentavos: 1500 })
-  await vault.put('wallet', 'cash', { name: 'Cash' })
-  const code = newRecoveryCode()
-  await saveRecoveryCode('u1', code)
-  return { vault, code }
+const ALLOWANCE = { amountCentavos: 150000, frequency: 'weekly', nextDate: '2026-11-16', countClassDays: true, classWeekdays: [1, 2, 3, 4, 5] } as const
+
+/** A set-up account with a few records (what onboarding leaves behind). */
+async function phone(name: string, records: Record<string, unknown>): Promise<Vault> {
+  const vault = await createVault('u1', name)
+  await saveAllowance(vault, { ...ALLOWANCE, classWeekdays: [...ALLOWANCE.classWeekdays] })
+  await vault.put('settings', 'account-name', { name })
+  for (const [id, data] of Object.entries(records)) await vault.put(id.startsWith('t') ? 'transaction' : 'wallet', id, data)
+  return vault
 }
 
 describe('sync', () => {
   // The device account list is one shared fake database here (each device has its own records database).
   beforeEach(() => deviceDb.accounts.clear())
 
-  it('needs a Recovery Kit, then uploads only scrambled records and the locked key', async () => {
-    const useA = device()
-    useA()
+  it('the first device uploads its key and only scrambled records; a wiped cloud is filled again', async () => {
+    device()()
     const cloud = new FakeCloud()
-    const vault = await createVault('u1', 'Jasmine')
-    await vault.put('transaction', 't1', { note: 'Jeep' })
-    expect(await turnOnSync(vault, cloud, 'Jas')).toBe('needs-kit')
-    await saveRecoveryCode('u1', newRecoveryCode())
-    expect(await turnOnSync(vault, cloud, 'Jas')).toBe('on')
-    expect([...cloud.rows.keys()].sort()).toEqual(['account-name', 't1'])
-    expect(JSON.stringify([...cloud.rows.values()])).not.toMatch(/Jeep|Jas/)
-    expect(cloud.key).not.toBeNull()
-    expect((await syncState('u1')).on).toBe(true)
+    const vault = await phone('Jasmine', { t1: { note: 'Jeep' }, cash: { name: 'Cash' } })
+    await syncNow(vault, cloud)
+    expect([...cloud.rows.keys()].sort()).toEqual(['account-name', 'allowance', 'cash', 't1'].sort())
+    expect(JSON.stringify([...cloud.rows.values()])).not.toMatch(/Jeep|Jasmine|Cash/)
+    expect(cloud.key?.dek).toMatch(/^[A-Za-z0-9+/]{43}=$/)
+    expect(await lastSyncedAt('u1')).toBeTruthy()
+
+    await cloud.deleteAll()
+    await syncNow(vault, cloud)
+    expect(cloud.rows.size).toBe(4)
     vault.lock()
   })
 
-  it('a new device joins with the code and both stay in step (add, edit, delete)', async () => {
+  it('a new device just signs in and gets everything; both stay in step (add, edit, delete)', async () => {
     const [useA, useB] = [device(), device()]
     const cloud = new FakeCloud()
     useA()
-    const { vault: a, code } = await phoneA()
-    await turnOnSync(a, cloud, 'Jas')
+    const a = await phone('Jas', { t1: { note: 'Jeep' }, cash: { name: 'Cash' } })
+    await syncNow(a, cloud)
 
     useB()
-    await expect(joinSync('u1', 'Fallback', newRecoveryCode(), cloud)).rejects.toThrow('doesn’t match')
-    expect(await joinSync('u1', 'Fallback', code, cloud)).toBe('Jas')
-    let b = await openVault('u1')
-    expect(await b.get('t1')).toEqual({ note: 'Jeep', amountCentavos: 1500 })
+    const joined = await joinSync('u1', 'Google Name', cloud)
+    expect(joined?.name).toBe('Jas')
+    let b = joined!.vault
+    expect(await b.get('t1')).toEqual({ note: 'Jeep' })
     expect((await listDeviceAccounts()).find((x) => x.userId === 'u1')?.label).toBe('Jas')
 
     // B adds and deletes; A sees both.
@@ -122,11 +125,10 @@ describe('sync', () => {
     const [useA, useB] = [device(), device()]
     const cloud = new FakeCloud()
     useA()
-    const { vault: a, code } = await phoneA()
-    await turnOnSync(a, cloud, 'Jas')
+    const a = await phone('Jas', { t1: { note: 'Jeep' } })
+    await syncNow(a, cloud)
     useB()
-    await joinSync('u1', 'x', code, cloud)
-    const b = await openVault('u1')
+    const b = (await joinSync('u1', 'x', cloud))!.vault
 
     useA()
     await a.put('transaction', 't1', { note: 'from A' })
@@ -149,83 +151,58 @@ describe('sync', () => {
     const [useA, useB] = [device(), device()]
     const cloud = new FakeCloud()
     useA()
-    const { vault: a, code } = await phoneA()
-    await turnOnSync(a, cloud, 'Jas')
+    const a = await phone('Jas', { t1: { note: 'Jeep' } })
+    await syncNow(a, cloud)
     const t1 = cloud.rows.get('t1')!
     cloud.rows.set('evil', { ...t1, id: 'evil', updated_at: '2030-01-01T00:00:00.000Z' }) // copied row under another id
     useB()
-    await joinSync('u1', 'x', code, cloud)
-    const b = await openVault('u1')
+    const b = (await joinSync('u1', 'x', cloud))!.vault
     expect(await b.get('evil')).toBeUndefined()
-    expect(await b.get('t1')).toEqual({ note: 'Jeep', amountCentavos: 1500 })
+    expect(await b.get('t1')).toEqual({ note: 'Jeep' })
     b.lock()
     useA()
     a.lock()
   })
 
-  it('a new recovery code made on one device is used everywhere; the old one stops working', async () => {
-    const [useA, useB, useC] = [device(), device(), device()]
-    const cloud = new FakeCloud()
-    useA()
-    const { vault: a, code: oldCode } = await phoneA()
-    await turnOnSync(a, cloud, 'Jas')
-    useB()
-    await joinSync('u1', 'x', oldCode, cloud)
-
-    useA()
-    const newCode = newRecoveryCode()
-    await saveRecoveryCode('u1', newCode)
-    await syncNow(a, cloud) // uploads the newly locked key
-    useB()
-    const b = await openVault('u1')
-    await syncNow(b, cloud) // adopts it
-    useC()
-    await expect(joinSync('u1', 'x', oldCode, cloud)).rejects.toThrow('doesn’t match')
-    await expect(joinSync('u1', 'x', newCode, cloud)).resolves.toBe('Jas')
-    b.lock()
-    useA()
-    a.lock()
-  })
-
-  it('a device with its own separate records is told to switch instead of mixing keys', async () => {
+  it('a device set up on its own merges in: same id takes the online version, the rest is added everywhere', async () => {
     const [useA, useB] = [device(), device()]
     const cloud = new FakeCloud()
     useA()
-    const { vault: a } = await phoneA()
-    await turnOnSync(a, cloud, 'Jas')
+    const a = await phone('Jas', { t1: { note: 'Jeep' }, cash: { name: 'Cash from A' } })
+    await syncNow(a, cloud)
+
     useB()
     await deviceDb.accounts.clear() // B's own account list (shared in this test)
-    const other = await createVault('u1', 'Jas')
-    expect(await turnOnSync(other, cloud, 'Jas')).toBe('other-key') // before any Recovery Kit: no new code to confuse with
+    const b = await phone('Jas B', { t9: { note: 'Snack' }, cash: { name: 'Cash from B' } })
     await saveRecoveryCode('u1', newRecoveryCode())
-    expect(await turnOnSync(other, cloud, 'Jas')).toBe('other-key')
-    expect((await syncState('u1')).on).toBe(false)
-    other.lock()
+    await syncNow(b, cloud)
+    expect(await b.get('cash')).toEqual({ name: 'Cash from A' })
+    expect(await b.get('t1')).toEqual({ note: 'Jeep' })
+    expect(await b.get('t9')).toEqual({ note: 'Snack' })
+    await b.put('transaction', 't10', { note: 'Water' }) // still works with the account key
+    await syncNow(b, cloud)
+    expect((await backupStatus('u1')).hasCode).toBe(false) // its old Recovery Kit can't open new backups
+    b.lock()
+    const reopened = await openVault('u1')
+    expect(await reopened.get('t9')).toEqual({ note: 'Snack' })
+    reopened.lock()
+
     useA()
+    await syncNow(a, cloud)
+    expect(await a.get('t9')).toEqual({ note: 'Snack' })
+    expect(await a.get('t10')).toEqual({ note: 'Water' })
+    expect(await a.get('cash')).toEqual({ name: 'Cash from A' })
     a.lock()
   })
 
-  it('turning off everywhere deletes the cloud copies and stops the other devices', async () => {
-    const [useA, useB] = [device(), device()]
+  it('nothing usable online: joinSync leaves nothing behind and setup runs as normal', async () => {
+    device()()
     const cloud = new FakeCloud()
-    useA()
-    const { vault: a, code } = await phoneA()
-    await turnOnSync(a, cloud, 'Jas')
-    useB()
-    await joinSync('u1', 'x', code, cloud)
-    const b = await openVault('u1')
-
-    useA()
-    await turnOffSync('u1', cloud)
-    expect(cloud.rows.size).toBe(0)
-    expect(cloud.key).toBeNull()
-    expect((await syncState('u1')).on).toBe(false)
-    useB()
-    expect(await syncNow(b, cloud)).toEqual({ changed: 0, stopped: true })
-    expect((await syncState('u1')).on).toBe(false)
-    expect(await b.get('t1')).toEqual({ note: 'Jeep', amountCentavos: 1500 }) // records stay on the device
-    b.lock()
-    useA()
-    a.lock()
+    expect(await joinSync('u1', 'x', cloud)).toBeNull()
+    cloud.key = { dek: btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32)))) } // a key but no records
+    expect(await joinSync('u1', 'x', cloud)).toBeNull()
+    expect(await listDeviceAccounts()).toEqual([])
+    const v = await phone('Jas', {}) // the normal setup still works afterwards
+    v.lock()
   })
 })

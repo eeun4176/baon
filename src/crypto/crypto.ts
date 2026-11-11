@@ -5,8 +5,10 @@
  * Key ideas:
  * - Each account has one random DEK (data encryption key, AES-256-GCM).
  *   Every record is encrypted with it.
- * - The DEK is never stored as-is. It is "wrapped" (encrypted) by another key:
- *   the device key in My phone mode (later also a passphrase key / recovery key).
+ * - On the phone the DEK is never stored as-is. It is "wrapped" (encrypted) by another key:
+ *   the device key in My phone mode, or the Recovery Kit code inside backups.
+ *   Sync keeps a plain copy with the account online, so any signed-in device can open
+ *   the records (sync/sync.ts).
  * - Each record is bound to its owner and identity through AAD (extra data the
  *   cipher authenticates). A record copied to another account or renamed fails to open.
  */
@@ -64,6 +66,16 @@ export function unwrapDek(wrapped: Sealed, wrappingKey: CryptoKey, extractable =
     extractable,
     ['encrypt', 'decrypt'],
   )
+}
+
+/** The DEK's raw bytes (for sync). Needs an extractable DEK. */
+export async function exportDek(dek: CryptoKey): Promise<Uint8Array<ArrayBuffer>> {
+  return new Uint8Array(await crypto.subtle.exportKey('raw', dek))
+}
+
+/** A DEK from raw bytes (the account's key from sync). Extractable, so it can be wrapped for storage. */
+export function importDek(raw: Uint8Array<ArrayBuffer>): Promise<CryptoKey> {
+  return crypto.subtle.importKey('raw', raw, AES, true, ['encrypt', 'decrypt'])
 }
 
 /** Builds the AAD string that ties a record to its account, id, type and schema version. */

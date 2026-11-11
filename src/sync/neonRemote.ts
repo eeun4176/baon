@@ -9,7 +9,7 @@ import { neon } from '../auth/auth.ts'
 import { SyncError, type CloudKey, type CloudRecord, type Remote } from './sync.ts'
 
 const RECORD_COLUMNS = 'id,type,v,iv,ciphertext,deleted,updated_at'
-const KEY_COLUMNS = 'salt,iv,ciphertext,check_iv,check_ciphertext'
+const KEY_COLUMNS = 'dek'
 
 /**
  * Turns a failed request into a SyncError the screens can explain. The client returns most
@@ -38,6 +38,8 @@ async function run<T>(request: PromiseLike<{ data: T; error: unknown; status: nu
 
 /** The cloud for one signed-in user. */
 export function neonRemote(userId: string): Remote {
+  /** The account key online, or null. */
+  const getKey = async () => (await run(neon.from('sync_keys').select(KEY_COLUMNS).eq('user_id', userId).maybeSingle())) as CloudKey | null
   return {
     async push(rows) {
       if (!rows.length) return
@@ -48,11 +50,13 @@ export function neonRemote(userId: string): Remote {
       if (after) query = query.or(`updated_at.gt."${after.at}",and(updated_at.eq."${after.at}",id.gt."${after.id}")`)
       return (await run(query.order('updated_at').order('id').limit(limit))) as CloudRecord[]
     },
-    async getKey() {
-      return (await run(neon.from('sync_keys').select(KEY_COLUMNS).eq('user_id', userId).maybeSingle())) as CloudKey | null
-    },
-    async putKey(key) {
-      await run(neon.from('sync_keys').upsert({ ...key, user_id: userId }, { onConflict: 'user_id' }))
+    getKey,
+    async claimKey(key) {
+      // Insert only if missing: two devices syncing for the first time at once end up with one key.
+      await run(neon.from('sync_keys').upsert({ ...key, user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true }))
+      const now = await getKey()
+      if (!now) throw new SyncError('server', 'account key missing right after saving it')
+      return now
     },
     async deleteAll() {
       await run(neon.from('sync_records').delete().eq('user_id', userId))

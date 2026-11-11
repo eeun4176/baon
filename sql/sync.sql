@@ -1,7 +1,8 @@
--- sync.sql — Cloud copies for "Sync across devices" (src/sync/).
+-- sync.sql — Online copies for "Sync across devices" (src/sync/), always on for signed-in students.
 -- Run once in Neon's SQL Editor, AFTER turning on the Data API for this database.
--- The server only stores scrambled records it can't read (the key never leaves the
--- student's devices), and Row Level Security lets each user reach only their own rows.
+-- (Had the older opt-in sync? Run upgrade-auto-sync.sql first.)
+-- Records are stored scrambled; the account key is stored next to them so any device the
+-- student signs in on can open them. Row Level Security lets each user reach only their own rows.
 -- Safe to run again: everything is "if not exists" / replaced.
 
 -- One row per record. iv + ciphertext are base64 of exactly what the phone stores.
@@ -28,16 +29,11 @@ drop trigger if exists sync_records_touch on public.sync_records;
 create trigger sync_records_touch before insert or update on public.sync_records
   for each row execute function public.sync_touch();
 
--- The account's key, locked with the student's recovery code (never readable by the server),
--- plus a small "key check" a device uses to tell whether it already has this key.
+-- The account's key (base64 of 32 bytes): the first device to sync saves it, the others use it.
 create table if not exists public.sync_keys (
-  user_id          text primary key default (auth.user_id()),
-  salt             text not null check (length(salt) <= 64),
-  iv               text not null check (length(iv) <= 64),
-  ciphertext       text not null check (length(ciphertext) <= 200),
-  check_iv         text not null check (length(check_iv) <= 64),
-  check_ciphertext text not null check (length(check_ciphertext) <= 200),
-  updated_at       timestamptz not null default clock_timestamp()
+  user_id    text primary key default (auth.user_id()),
+  dek        text not null check (length(dek) <= 64),
+  updated_at timestamptz not null default clock_timestamp()
 );
 
 -- Each signed-in user can read and change only their own rows.

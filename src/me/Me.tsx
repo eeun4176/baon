@@ -241,7 +241,7 @@ function SecurityTab() {
           <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
           <span>
             <span className="block font-black">My phone mode · on</span>
-            <span className="block font-semibold text-muted">Your records are scrambled (encrypted) so only baon on this phone can read them. Keep your phone’s screen lock on — it protects baon too.</span>
+            <span className="block font-semibold text-muted">Your records are scrambled (encrypted) on this phone and online. Keep your phone’s screen lock on — it protects baon too.</span>
           </span>
         </li>
         <StorageItem />

@@ -37,14 +37,14 @@ export interface VaultMeta {
   schemaVersion: number
   recovery?: Sealed & { salt: Uint8Array<ArrayBuffer> } // DEK wrapped by the Recovery Kit code (backup/backup.ts)
   lastBackupAt?: string // ISO time of the last export (or of the backup this phone was restored from)
-  sync?: SyncMeta // present = "Sync across devices" is on for this device (sync/sync.ts)
+  sync?: SyncMeta // sync bookkeeping (sync/sync.ts); missing until this device first syncs
 }
 
 /** Sync bookkeeping for this device. */
 export interface SyncMeta {
   cursor?: { at: string; id: string } // last server change this device has seen
-  keySalt?: string // salt of the locked key last uploaded or adopted (spots a new recovery code)
   lastSyncedAt?: string // ISO time of the last successful sync
+  merging?: boolean // this device's own records are being merged into the account (sync.ts)
 }
 
 /** A record changed on this device that the cloud hasn't received yet. `n` changes on every save. */

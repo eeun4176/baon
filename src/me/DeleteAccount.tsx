@@ -1,7 +1,7 @@
 /*
  * DeleteAccount.tsx — "Delete account" on Me → Security (RA 10173 right to erasure).
  * Type DELETE, then:
- *   1. delete the synced online copies (if any), then try to delete the online sign-in account
+ *   1. delete the synced online copy, then try to delete the online sign-in account
  *      (only works if Neon Auth allows it and the
  *      sign-in is recent — so it may fail, and we say so),
  *   2. sign out and delete everything baon saved on this phone (always),
@@ -30,13 +30,11 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
     setBusy(true)
     try {
       const auth = await import('../auth/auth.ts').catch(() => null) // offline and never loaded: skip online steps
-      // Online copies first (needs the sign-in). If that fails while sync is on, keep the sign-in
-      // account too, so the copies can still be removed later.
-      const { syncState } = await import('../sync/sync.ts')
-      const syncOn = (await syncState(vault.userId)).on
+      // Online copy first (needs the sign-in). If that fails, keep the sign-in account too,
+      // so the copy can still be removed later.
       const cloudOk = auth
-        ? await import('../sync/neonRemote.ts').then(({ neonRemote }) => neonRemote(vault.userId).deleteAll()).then(() => true, () => !syncOn)
-        : !syncOn
+        ? await import('../sync/neonRemote.ts').then(({ neonRemote }) => neonRemote(vault.userId).deleteAll()).then(() => true, () => false)
+        : false
       const online = cloudOk && ((await auth?.deleteSignInAccount()) ?? false)
       if (!online) await auth?.signOut().catch(() => {})
       vault.lock()

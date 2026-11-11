@@ -2,7 +2,7 @@
  * Onboarding.tsx — Runs the 5 first-time screens in order (plan §4.1):
  *   Welcome → Sign in → Whose phone? → Your baon → Your money now → Home
  * or, from "Whose phone?", Restore a backup → Home (records come from the file),
- * or, if the account already syncs from another device, Welcome back → recovery code → Home.
+ * or, if the account already has records online (another device), Welcome back → records download → Home.
  * Google sign-in leaves the page and comes back; on return we detect the session
  * and continue at "Whose phone?" so nothing has to be re-typed.
  */
@@ -46,7 +46,7 @@ export function Onboarding({ onDone }: { onDone: (vault: Vault, name: string) =>
       .catch(() => {}) // offline: stay on Welcome; Sign in explains what to do
   }, [])
 
-  // Signed in and this account already syncs from another device: offer to bring those records here.
+  // Signed in and this account already has records online (another device): bring them here.
   useEffect(() => {
     if (!user) return
     Promise.all([import('../sync/sync.ts'), import('../sync/neonRemote.ts')])

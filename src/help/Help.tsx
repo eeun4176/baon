@@ -16,23 +16,23 @@ import { Card, Icon, Page, PageHeader, type IconName } from '../ui/kit.tsx'
 const PRIVACY: { icon: IconName; title: string; text: ReactNode }[] = [
   {
     icon: 'shield',
-    title: 'Your records stay on this phone, encrypted',
-    text: 'Amounts, notes, wallets, plans and your streak are scrambled (encrypted) so only baon on this phone can read them. baon works without internet and only sends them online if you turn on sync — as scrambled copies we can’t read.',
+    title: 'Your records are scrambled',
+    text: 'Amounts, notes, wallets, plans and your streak are scrambled (encrypted) on this phone. A scrambled copy is kept online with your account, so your records follow you to every device where you sign in. baon still works without internet.',
   },
   {
     icon: 'user',
     title: 'What we receive',
-    text: 'Your email, name and Google photo so you can sign in. If you turn on sync, also scrambled copies of your records — we can’t read them, and signing in never unlocks them by itself.',
+    text: 'Your email, name and Google photo so you can sign in, and the scrambled copy of your records. We don’t look at your records, and we never sell or share them.',
   },
   {
     icon: 'cloud',
     title: 'Backups are files you keep',
-    text: 'A backup is an encrypted file you save yourself — on Google Drive, email or a computer. It opens only with your recovery code. baon doesn’t upload it anywhere.',
+    text: 'A backup is an extra encrypted file you save yourself — on Google Drive, email or a computer. It opens only with your recovery code. baon doesn’t upload it anywhere.',
   },
   {
     icon: 'phone',
     title: 'What it can’t protect',
-    text: 'Anyone who can unlock your phone and open baon can see your records, so keep your screen lock on. Someone who digs into your phone’s browser data could see how many entries you have, but not what’s in them. If you lose your phone and your recovery code, nobody can bring your records back — not even us.',
+    text: 'Anyone who can unlock your phone and open baon can see your records, so keep your screen lock on. Anyone who gets into your Google or email account could sign in to baon as you, so keep that account safe too.',
   },
 ]
 
@@ -42,8 +42,8 @@ const FAQ: [string, ReactNode][] = [
   ['What is the free pass?', 'Once a week (Monday to Sunday), a class day you forgot to log is covered automatically, so your streak keeps going.'],
   ['No classes for a while?', 'On Plan → Class days, set a break (one day, or until a date). Your budget then counts every day and your streak is frozen until classes are back.'],
   ['Does baon work without internet?', 'Yes. After the first sign-in, everything works offline. Only signing in and syncing your Google photo need internet.'],
-  ['Can I use baon on more than one device?', 'Yes. Turn on Sync across devices on Me → Backup. On your other device, sign in and enter your recovery code.'],
-  ['What if my phone breaks or gets reset?', <>Restore from your latest backup on the new phone: sign in, then tap “Restore a backup”. Keep backups fresh from <Link to="/backup" className="font-extrabold text-blue hover:underline">Backup</Link>.</>],
+  ['Can I use baon on more than one device?', 'Yes. Just sign in with the same account on your other device — your records sync by themselves.'],
+  ['What if my phone breaks or gets reset?', 'Sign in on the new phone with the same account and your records come back. Changes made while offline sync once you’re back online.'],
   ['I lost my recovery code.', 'On Backup, tap “Lost it? Make a new code”, then export a new backup. Backups made before still need the old code.'],
   ['How do I install baon?', 'Android (Chrome): menu ⋮ → Install app. iPhone (Safari): Share → Add to Home Screen. On a computer: the install icon in the address bar.'],
 ]

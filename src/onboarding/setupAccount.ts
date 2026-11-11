@@ -37,5 +37,6 @@ export async function setupAccount(input: {
   const vault = await createVault(input.userId, input.name)
   for (const wallet of wallets) await saveWallet(vault, wallet)
   await saveAllowance(vault, allowance)
+  await vault.put('settings', 'account-name', { name: input.name }) // so other devices show the same name
   return vault
 }

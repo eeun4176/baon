@@ -40,10 +40,10 @@ export interface Vault {
   list(type: string): Promise<unknown[]>
   /** Deletes one record. */
   remove(id: string): Promise<void>
-  /** Encrypts a value as a record without saving it (sync's key check). */
-  seal(type: string, id: string, data: unknown): Promise<StoredRecord>
   /** True if a stored-format record (e.g. one downloaded by sync) opens with this account's key. */
   canOpen(row: StoredRecord): Promise<boolean>
+  /** Uses another account key from now on (sync, after it re-encrypted every record with it). */
+  replaceKey(dek: CryptoKey): void
   /** Forgets the key and closes the database. Used on lock and account switch. */
   lock(): void
 }
@@ -141,8 +141,9 @@ function unlocked(userId: string, db: AccountDb, dek: CryptoKey): Vault {
       })
       savedListeners.forEach((l) => l())
     },
-    async seal(type, id, data) {
-      return { id, type, v: SCHEMA_VERSION, ...(await encryptJson(requireKey(), recordAad(userId, id, type, SCHEMA_VERSION), data)) }
+    replaceKey(dek) {
+      requireKey()
+      key = dek
     },
     async canOpen(row) {
       try {
