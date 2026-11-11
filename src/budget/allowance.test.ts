@@ -3,7 +3,7 @@
  * Run: npm test
  */
 import { describe, expect, it } from 'vitest'
-import { classDaysText, type Allowance } from './allowance.ts'
+import { advanceNextDate, classDaysText, type Allowance } from './allowance.ts'
 
 /** Allowance with the given class days. */
 const with_ = (classWeekdays: number[], countClassDays = true): Allowance =>
@@ -18,4 +18,18 @@ describe('classDaysText', () => {
     expect(classDaysText(with_([1], false))).toBe('Every day')
   })
   it('says none when no day is picked', () => expect(classDaysText(with_([]))).toBe('None'))
+})
+
+describe('advanceNextDate', () => {
+  const weekly = { ...with_([1, 2, 3, 4, 5, 6]), nextDate: '2026-11-15' }
+  it('moves to the next cycle after "Yes, it arrived"', () => {
+    expect(advanceNextDate(weekly, '2026-11-15')).toBe('2026-11-22')
+    expect(advanceNextDate({ ...weekly, frequency: 'monthly' }, '2026-11-15')).toBe('2026-12-15')
+  })
+  it('skips whole cycles when answered late', () => {
+    expect(advanceNextDate(weekly, '2026-11-24')).toBe('2026-11-29')
+  })
+  it('asks for a date when the allowance is irregular', () => {
+    expect(advanceNextDate({ ...weekly, frequency: 'irregular' }, '2026-11-15')).toBeNull()
+  })
 })

@@ -50,6 +50,17 @@ export function nextAllowanceDate(current: string, frequency: Allowance['frequen
   }
 }
 
+/**
+ * After "Yes, it arrived": the next expected date after today. Skips whole cycles if the
+ * student answers late (e.g. a weekly baon confirmed 9 days after it was due).
+ * Null for irregular allowances — the student picks the "make it last until" date.
+ */
+export function advanceNextDate(allowance: Allowance, today: string): string | null {
+  let next = nextAllowanceDate(allowance.nextDate, allowance.frequency)
+  while (next !== null && next <= today) next = nextAllowanceDate(next, allowance.frequency)
+  return next
+}
+
 /** The break that covers `day`, if any. */
 export function breakOn(day: string, allowance: Allowance): { from: string; to: string } | undefined {
   return allowance.breaks?.find((b) => b.from <= day && day <= b.to)
