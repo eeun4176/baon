@@ -2,6 +2,7 @@
  * BackupPanel.tsx — Backup screens (Me → Backup and the /backup page, plan §7.4):
  *   Export a backup   first time: Recovery Kit (code → Copy / Download → type group 3 to confirm),
  *                     then downloads baon-backup-<date>.json (encrypted; opens only with the code)
+ *   Lost it?          make a new code (old backups keep needing the old one), then a fresh export
  *   Restore           pick the file + type the code; replaces this phone's records
  * RestoreForm is also used by onboarding ("Have a backup? Restore it").
  */
@@ -32,7 +33,7 @@ function download(blob: Blob, filename: string) {
 export function BackupPanel() {
   const { vault, name, showToast } = useSession()
   const [status, setStatus] = useState<{ hasCode: boolean; lastBackupAt?: string } | null>(null)
-  const [dialog, setDialog] = useState<'kit' | 'restore' | null>(null)
+  const [dialog, setDialog] = useState<'kit' | 'newKit' | 'restore' | null>(null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
@@ -67,10 +68,16 @@ export function BackupPanel() {
           <Icon name="cloud" className="size-5" /> Restore from a file
         </button>
       </div>
-      {status?.hasCode && <p className="mt-3 text-sm font-semibold text-muted">Every backup opens with the same recovery code you saved.</p>}
+      {status?.hasCode && (
+        <p className="mt-3 text-sm font-semibold text-muted">
+          Every backup opens with the recovery code you saved.{' '}
+          <button type="button" onClick={() => setDialog('newKit')} className="min-h-11 font-extrabold text-blue hover:underline">Lost it? Make a new code</button>
+        </p>
+      )}
 
-      {dialog === 'kit' && (
+      {(dialog === 'kit' || dialog === 'newKit') && (
         <RecoveryKitDialog
+          replacing={dialog === 'newKit'}
           onClose={() => setDialog(null)}
           onSaved={() => {
             setDialog(null)
@@ -88,8 +95,8 @@ export function BackupPanel() {
   )
 }
 
-/** First export only: shows a new Recovery Kit code and checks the student saved it. */
-function RecoveryKitDialog({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+/** Shows a new Recovery Kit code (first export, or replacing a lost one) and checks the student saved it. */
+function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: boolean; onClose: () => void; onSaved: () => void }) {
   const { vault, name } = useSession()
   const [code] = useState(newRecoveryCode)
   const [step, setStep] = useState<'show' | 'confirm'>('show')
@@ -130,9 +137,14 @@ function RecoveryKitDialog({ onClose, onSaved }: { onClose: () => void; onSaved:
   }
 
   return (
-    <Modal title="Your Recovery Kit" onClose={onClose}>
+    <Modal title={replacing ? 'Your new recovery code' : 'Your Recovery Kit'} onClose={onClose}>
       {step === 'show' ? (
         <>
+          {replacing && (
+            <p className="mb-3 rounded-2xl bg-blue-tint p-3 font-bold text-blue">
+              Backups from now on open with this new code. Backups you already made still need the old one, so we’ll export a fresh backup right after.
+            </p>
+          )}
           <p className="font-semibold text-muted">Your backup opens only with this code. Save it somewhere other than this phone — a photo, a notebook, or your email.</p>
           <ol className="mt-4 grid grid-cols-4 gap-2 rounded-2xl bg-page p-3" aria-label="Recovery code">
             {groups.map((g, i) => (

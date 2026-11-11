@@ -25,6 +25,7 @@ import { WeekRow } from '../streak/WeekRow.tsx'
 import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
 import { randomGreeting } from './greetings.ts'
 import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
+import { BackupReminder } from '../backup/BackupReminder.tsx'
 import { OneTapAdd } from './OneTapAdd.tsx'
 import { useToday, type Today } from './useToday.ts'
 
@@ -228,6 +229,7 @@ export function Home() {
           )}
         </Card>
 
+        <BackupReminder className="lg:col-span-12" />
         <div className="hidden md:block lg:col-span-12"><Wallets /></div>
 
         <Card className="hidden animate-rise md:block lg:col-span-7">

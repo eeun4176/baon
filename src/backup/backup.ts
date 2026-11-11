@@ -67,6 +67,18 @@ const BackupFileSchema = z.object({
 })
 export type BackupFile = z.infer<typeof BackupFileSchema>
 
+const DAY = 86_400_000
+
+/**
+ * Whether Home should nudge for a backup (plan §9 "backup reminder"): never backed up once
+ * there are 3+ entries, or the last backup is 7+ days old and entries were added after it.
+ */
+export function backupDue(lastBackupAt: string | undefined, entryTimes: string[], now = Date.now()): 'never' | 'old' | null {
+  if (!lastBackupAt) return entryTimes.length >= 3 ? 'never' : null
+  const last = Date.parse(lastBackupAt)
+  return now - last >= 7 * DAY && entryTimes.some((t) => Date.parse(t) > last) ? 'old' : null
+}
+
 /** Whether this account has a Recovery Kit yet, and when it was last exported. */
 export async function backupStatus(userId: string): Promise<{ hasCode: boolean; lastBackupAt?: string }> {
   const db = openAccountDb(userId)
