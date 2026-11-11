@@ -42,8 +42,8 @@ function dateLabel(day: string, today: string): string {
   return shortDate.format(new Date(`${day}T00:00:00Z`))
 }
 
-/** Add/edit dialog. `editId` pre-fills an existing entry; `onClose` removes "?add" from the URL. */
-export function QuickAdd({ editId, onClose }: { editId: string | null; onClose: () => void }) {
+/** Add/edit dialog. `editId` pre-fills an existing entry; `startMode` ("?mode=transfer") picks the tab; `onClose` removes "?add" from the URL. */
+export function QuickAdd({ editId, startMode, onClose }: { editId: string | null; startMode?: string | null; onClose: () => void }) {
   const { wallets, transactions, addTransaction, removeTransaction, showToast } = useSession()
   const today = manilaDate()
   const editing = transactions.find((t) => t.id === editId)
@@ -52,7 +52,10 @@ export function QuickAdd({ editId, onClose }: { editId: string | null; onClose: 
   const savings = wallets.find((w) => w.type === 'savings')
   const categories = byMostUsed(transactions)
 
-  const [mode, setMode] = useState<Mode>(() => (editing && editing.kind !== 'refund' && editing.kind !== 'withdraw' ? editing.kind : 'expense'))
+  const [mode, setMode] = useState<Mode>(() => {
+    if (editing) return editing.kind !== 'refund' && editing.kind !== 'withdraw' ? editing.kind : 'expense'
+    return MODES.find(([m]) => m === startMode)?.[0] ?? 'expense'
+  })
   const [amount, setAmount] = useState(() => (editing ? centavosToText(editing.amountCentavos) : ''))
   const [categoryId, setCategoryId] = useState(() => editing?.categoryId ?? categories[0].id)
   const [showMore, setShowMore] = useState(() => !!editing?.categoryId && !categories.slice(0, 5).some((c) => c.id === editing.categoryId))

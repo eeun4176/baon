@@ -9,6 +9,7 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { History } from './history/History.tsx'
 import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
+import { Me } from './me/Me.tsx'
 import { Onboarding } from './onboarding/Onboarding.tsx'
 import { Plan } from './plan/Plan.tsx'
 import { Streak } from './streak/Streak.tsx'
@@ -74,7 +75,7 @@ function SignedOut({ name, onContinue }: { name: string; onContinue: () => void 
 }
 
 /** Signed-in routes. */
-function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; onSignOut: () => void }) {
+function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; onSignOut: (name: string) => void }) {
   return (
     <SessionProvider vault={vault} name={name} onSignOut={onSignOut}>
       <BrowserRouter>
@@ -85,7 +86,7 @@ function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; o
             <Route path="history" element={<History />} />
             <Route path="plan" element={<Plan />} />
             <Route path="streak" element={<Streak />} />
-            <Route path="me" element={<ComingSoon title="Me" text="Your profile, wallets and settings — coming next." />} />
+            <Route path="me" element={<Me />} />
             <Route path="backup" element={<ComingSoon title="Backup" text="Export an encrypted copy of your records so a broken phone doesn’t lose them — coming next." />} />
             <Route path="help" element={<ComingSoon title="Help & privacy" text="How baon keeps your records private, and answers to common questions — coming next." />} />
           </Route>
@@ -117,10 +118,10 @@ export default function App() {
         <SignedInApp
           vault={vault}
           name={name}
-          onSignOut={() => {
+          onSignOut={(current) => {
             signedOutFlag(vault.userId)
             window.history.replaceState(null, '', '/') // next sign-in starts on Home
-            setState({ kind: 'signedOut', userId: vault.userId, name })
+            setState({ kind: 'signedOut', userId: vault.userId, name: current }) // the name may have changed on Me
           }}
         />
       )

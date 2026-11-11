@@ -5,16 +5,16 @@
  */
 import * as z from 'zod/mini'
 import type { Vault } from '../vault/vault.ts'
-import { checkTransaction, TransactionSchema, WalletSchema, type Transaction, type Wallet } from './ledger.ts'
+import { checkTransaction, sortWallets, TransactionSchema, WalletSchema, type Transaction, type Wallet } from './ledger.ts'
 
 /** Validates and saves a wallet (insert or update). */
 export async function saveWallet(vault: Vault, wallet: Wallet): Promise<void> {
   await vault.put('wallet', wallet.id, WalletSchema.parse(wallet))
 }
 
-/** Loads and validates every wallet. */
+/** Loads and validates every wallet (Cash first, savings last). */
 export async function loadWallets(vault: Vault): Promise<Wallet[]> {
-  return z.array(WalletSchema).parse(await vault.list('wallet'))
+  return sortWallets(z.array(WalletSchema).parse(await vault.list('wallet')))
 }
 
 /**

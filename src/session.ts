@@ -7,6 +7,7 @@
 import { createContext, useContext } from 'react'
 import type { Presets } from './add/presets.ts'
 import type { Allowance } from './budget/allowance.ts'
+import type { Profile } from './me/profile.ts'
 import type { Transaction, Wallet } from './ledger/ledger.ts'
 import type { SchoolExpense } from './plan/school.ts'
 import type { DaySnapshot } from './streak/streak.ts'
@@ -28,6 +29,7 @@ export interface Session {
   schoolExpenses: SchoolExpense[]
   snapshots: DaySnapshot[] // each day's budget, for the streak
   presets: Presets // one-tap buttons on Home
+  profile: Profile // school, Senior high / College
   /** Validates, encrypts and saves a transaction; throws a friendly message if a rule is broken. */
   addTransaction(tx: Transaction): Promise<void>
   /** Deletes a transaction (Undo, delete in History). */
@@ -42,6 +44,12 @@ export interface Session {
   saveSnapshot(snap: DaySnapshot): Promise<void>
   /** Saves the one-tap buttons (order = button order). */
   savePresets(presets: Presets): Promise<void>
+  /** Changes the display name (already checked with checkName). */
+  rename(name: string): Promise<void>
+  /** Saves school / level. */
+  saveProfile(profile: Profile): Promise<void>
+  /** Adds or updates a wallet (rename, archive). */
+  saveWallet(wallet: Wallet): Promise<void>
   toast: Toast | null
   showToast(toast: Toast): void
   dismissToast(): void

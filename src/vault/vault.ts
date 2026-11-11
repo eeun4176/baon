@@ -71,6 +71,11 @@ export function listDeviceAccounts() {
   return deviceDb.accounts.toArray()
 }
 
+/** Changes the display name shown for this account on this device (Me → Profile). */
+export async function renameAccount(userId: string, label: string): Promise<void> {
+  await deviceDb.accounts.update(userId, { label })
+}
+
 /** Builds the Vault object around an unlocked DEK. */
 function unlocked(userId: string, db: AccountDb, dek: CryptoKey): Vault {
   let key: CryptoKey | null = dek

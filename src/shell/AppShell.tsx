@@ -71,7 +71,7 @@ function SideLink({ to, label, icon, collapsed }: { to: string; label: string; i
         }`
       }
     >
-      <Icon name={icon} className="size-5" />
+      <Icon name={icon} className="size-5 shrink-0" />
       <span className={fade(collapsed)}>{label}</span>
     </NavLink>
   )
@@ -205,7 +205,7 @@ export function AppShell() {
         </Link>
       </nav>
 
-      {addOpen && <QuickAdd key={params.get('edit') ?? 'new'} editId={params.get('edit')} onClose={addDialog.close} />}
+      {addOpen && <QuickAdd key={params.get('edit') ?? 'new'} editId={params.get('edit')} startMode={params.get('mode')} onClose={addDialog.close} />}
     </div>
   )
 }
