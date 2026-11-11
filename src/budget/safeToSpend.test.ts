@@ -77,6 +77,14 @@ describe('safe-to-spend: everyday cases', () => {
     expect(run({ now: at('2026-11-14') }).dailyBudget).toBe(72000)
   })
 
+  it('6b. "Not yet" on allowance day: what\'s left is split until the day it\'s expected', () => {
+    const waiting = (days: string) => run({ now: at('2026-11-15'), allowance: { countClassDays: false, nextDate: days, lateFrom: '2026-11-15' } })
+    expect(waiting('2026-11-16').dailyBudget).toBe(72000) // tomorrow: all ₱720 today
+    expect(waiting('2026-11-18').dailyBudget).toBe(24000) // in 3 days: ₱720 ÷ 3
+    expect(waiting('2026-11-22').dailyBudget).toBe(10200) // in a week: ₱720 ÷ 7, rounded down to whole pesos
+    expect(waiting('2026-11-18').allowanceDue).toBe(false) // asks again on the 18th, not today
+  })
+
   it('7. logging an expense lowers "left for today", not today\'s budget', () => {
     const r = run({ now: at('2026-11-10'), txs: [tx('expense', 15, '2026-11-10')] })
     expect([r.dailyBudget, r.spentToday, r.leftToday]).toEqual([14400, 1500, 12900])

@@ -63,7 +63,7 @@ export function AllowanceDialog({ onClose }: { onClose: () => void }) {
     const before = allowance
     setBusy(true)
     try {
-      await updateAllowance({ ...allowance, amountCentavos: centavos, frequency, nextDate })
+      await updateAllowance({ ...allowance, amountCentavos: centavos, frequency, nextDate, lateFrom: undefined })
     } catch {
       setBusy(false)
       return setError('Couldn’t save. Try again.')

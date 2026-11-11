@@ -35,8 +35,8 @@ const dueDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'sho
 const breakDay = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 const dateLine = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
-/** The big "Safe to spend today" card. */
-function Hero({ t }: { t: Today }) {
+/** The big "Safe to spend today" card. `onCheckIn`: "It came" while waiting after "Not yet". */
+function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   const { open } = useAddDialog()
   const { transactions, snapshots, saveSnapshot, showToast } = useSession()
   const r = t.result
@@ -68,6 +68,11 @@ function Hero({ t }: { t: Today }) {
         {t.allowance.countClassDays && !t.breakUntil ? 'class ' : ''}
         {r.budgetDays === 1 ? 'day' : 'days'}
       </p>
+      {t.allowance.lateFrom && onCheckIn && (
+        <button type="button" onClick={onCheckIn} className="mt-2 min-h-11 font-extrabold text-blue hover:underline">
+          Waiting for your baon · It came
+        </button>
+      )}
 
       {/* Desktop: how much of this allowance is left (design p18) */}
       {allowance > 0 && (
@@ -168,6 +173,7 @@ export function Home() {
   const streak = useStreak()
   const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid').slice(0, 3)
   const [pick] = useState(Math.random) // same greeting all visit; the name updates if it syncs
+  const [checkingIn, setCheckingIn] = useState(false) // "It came" while waiting after "Not yet"
   const greeting = randomGreeting(name, pick)
   const today = t.result.today
   const recent = [...transactions].reverse().slice(0, 5)
@@ -202,7 +208,13 @@ export function Home() {
 
       <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-12 lg:gap-5">
         {/* Allowance day: ask first — the new daily budget starts once the baon is in (design p13) */}
-        <div className="lg:col-span-7">{t.result.allowanceDue ? <AllowanceCheckIn t={t} /> : <Hero t={t} />}</div>
+        <div className="lg:col-span-7">
+          {t.result.allowanceDue || (checkingIn && t.allowance.lateFrom) ? (
+            <AllowanceCheckIn t={t} onCancel={t.result.allowanceDue ? undefined : () => setCheckingIn(false)} />
+          ) : (
+            <Hero t={t} onCheckIn={() => setCheckingIn(true)} />
+          )}
+        </div>
         <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} streak={streak} /></div>
 
         <StorageWarning className="lg:col-span-12" />

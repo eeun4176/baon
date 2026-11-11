@@ -2,7 +2,9 @@
  * AllowanceCheckIn.tsx — "Did your baon arrive?" (design p13, plan §4.3). Shown on Home
  * instead of the safe-to-spend hero once the next allowance date is reached:
  *   Yes, ₱1,500   logs the allowance as income and moves the next date one cycle ahead
- *   Not yet       expects it tomorrow (today's budget covers just today) and asks again then
+ *   Not yet       "When do you think it'll come?" Tomorrow / In 3 days / In a week: what's left is
+ *                 split over those days and Baon asks again then (Home has "My baon came" meanwhile).
+ *                 The usual day is kept (lateFrom), so a late baon doesn't shift the schedule.
  *   It was a different amount → pick amount, wallet and the next date
  * Plus "Left from last week ₱95" — the new daily budget starts once the baon is in.
  * Every answer can be undone.
@@ -10,7 +12,7 @@
 import { useState, type FormEvent } from 'react'
 import { acceptTyped, centavosToText } from '../add/keypad.ts'
 import { advanceNextDate, FREQUENCIES } from '../budget/allowance.ts'
-import { addDays } from '../budget/days.ts'
+import { addDays, weekday } from '../budget/days.ts'
 import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { BigMoney, Card } from '../ui/kit.tsx'
@@ -22,10 +24,23 @@ const label = 'block font-extrabold text-muted'
 // "Left from last week ₱95" (design p13), worded for each allowance frequency.
 const LEFT_FROM = { daily: 'yesterday', weekly: 'last week', biweekly: 'the last 2 weeks', monthly: 'last month', irregular: 'your last baon' } as const
 
-/** "Did your baon arrive?" card + "Left from last week". */
-export function AllowanceCheckIn({ t }: { t: Today }) {
+const WAIT = [['Tomorrow', 1], ['In 3 days', 3], ['In a week', 7]] as const
+const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'UTC', month: 'short', day: 'numeric' })
+
+/** "Sat, Nov 14" for a Manila day. */
+function dayText(day: string): string {
+  return `${DAY_NAMES[weekday(day)]}, ${shortDate.format(new Date(`${day}T00:00:00Z`))}`
+}
+
+/**
+ * "Did your baon arrive?" card + "Left from last week". `onCancel`: opened early from Home
+ * ("My baon came") — then "Not yet" just goes back.
+ */
+export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => void }) {
   const { allowance, wallets, transactions, addTransaction, removeTransaction, updateAllowance, showToast } = useSession()
   const [asking, setAsking] = useState(false)
+  const [waiting, setWaiting] = useState(false)
   const [busy, setBusy] = useState(false)
   const today = t.result.today
   const usual = allowance.amountCentavos
@@ -42,7 +57,7 @@ export function AllowanceCheckIn({ t }: { t: Today }) {
     const id = crypto.randomUUID()
     await addTransaction({ id, kind: 'income', amountCentavos, walletId, occurredAt: new Date().toISOString(), note: 'Allowance' })
     try {
-      await updateAllowance({ ...allowance, nextDate })
+      await updateAllowance({ ...allowance, nextDate, lateFrom: undefined })
     } catch (e) {
       await removeTransaction(id) // never leave the money added without moving the date
       throw e
@@ -69,13 +84,15 @@ export function AllowanceCheckIn({ t }: { t: Today }) {
     }
   }
 
-  /** "Not yet" — expect it tomorrow and ask again then. */
-  async function notYet() {
+  /** "Not yet" → expected in `days`: what's left covers the days until then; asks again that day. */
+  async function wait(days: number) {
     const before = allowance
+    const nextDate = addDays(today, days)
     setBusy(true)
     try {
-      await updateAllowance({ ...allowance, nextDate: addDays(today, 1) })
-      showToast({ message: 'No problem — we’ll ask again tomorrow', undo: () => updateAllowance(before) })
+      await updateAllowance({ ...allowance, nextDate, lateFrom: allowance.lateFrom ?? allowance.nextDate })
+      setWaiting(false)
+      showToast({ message: days === 1 ? 'We’ll ask tomorrow' : `We’ll ask on ${DAY_NAMES[weekday(nextDate)]}`, undo: () => updateAllowance(before) })
     } catch {
       showToast({ message: 'Couldn’t save. Try again.' })
     } finally {
@@ -96,7 +113,7 @@ export function AllowanceCheckIn({ t }: { t: Today }) {
           <button type="button" disabled={busy} onClick={yes} className="min-h-14 rounded-full bg-blue px-3 text-lg font-black whitespace-nowrap text-white disabled:opacity-60">
             {usual ? `Yes, ${formatPeso(usual)}` : 'Yes'}
           </button>
-          <button type="button" disabled={busy} onClick={notYet} className="min-h-14 rounded-full bg-pebble px-3 text-lg font-black hover:bg-pebble-2 disabled:opacity-60">
+          <button type="button" disabled={busy} onClick={onCancel ?? (() => setWaiting(true))} className="min-h-14 rounded-full bg-pebble px-3 text-lg font-black hover:bg-pebble-2 disabled:opacity-60">
             Not yet
           </button>
         </div>
@@ -111,6 +128,18 @@ export function AllowanceCheckIn({ t }: { t: Today }) {
         <p className="mx-auto mt-2 max-w-xs font-semibold text-muted lg:mx-0">Your new daily budget starts once your baon is in.</p>
       </Card>
 
+      {waiting && (
+        <Modal title="When do you think it’ll come?" onClose={() => setWaiting(false)}>
+          <p className="font-semibold text-muted">We’ll split what’s left over those days, so it lasts while you wait.</p>
+          <div className="mt-5 grid gap-2.5">
+            {WAIT.map(([text, days]) => (
+              <button key={days} type="button" disabled={busy} onClick={() => wait(days)} className="flex min-h-13 items-center justify-between rounded-full bg-pebble px-5 text-lg font-black hover:bg-pebble-2 disabled:opacity-60">
+                {text} <span className="text-base font-bold text-muted">{dayText(addDays(today, days))}</span>
+              </button>
+            ))}
+          </div>
+        </Modal>
+      )}
       {asking && <ReceivedDialog today={today} defaultWallet={defaultWallet} suggestedNext={next} onReceive={receive} onClose={() => setAsking(false)} />}
     </div>
   )

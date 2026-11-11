@@ -29,6 +29,9 @@ describe('advanceNextDate', () => {
   it('skips whole cycles when answered late', () => {
     expect(advanceNextDate(weekly, '2026-11-24')).toBe('2026-11-29')
   })
+  it('a late baon ("Not yet", came Wed) keeps the usual Sunday', () => {
+    expect(advanceNextDate({ ...weekly, nextDate: '2026-11-18', lateFrom: '2026-11-15' }, '2026-11-18')).toBe('2026-11-22')
+  })
   it('asks for a date when the allowance is irregular', () => {
     expect(advanceNextDate({ ...weekly, frequency: 'irregular' }, '2026-11-15')).toBeNull()
   })

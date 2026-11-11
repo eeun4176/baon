@@ -16,6 +16,9 @@ export const AllowanceSchema = z.object({
   nextDate: z.string().check(z.regex(DAY)),
   countClassDays: z.boolean(),
   classWeekdays: z.array(z.int().check(z.minimum(0), z.maximum(6))), // 0 = Sunday … 6 = Saturday
+  // After "Not yet": the day it was due on schedule. While waiting, nextDate is the day the student
+  // expects it; the next cycle still counts from this day, so a late baon doesn't shift the usual day.
+  lateFrom: z.optional(z.string().check(z.regex(DAY))),
   // "No classes" breaks (typhoon day … sembreak), inclusive Manila days. During a break the
   // budget counts every day (students still eat) and the streak is frozen.
   breaks: z.optional(z.array(z.object({ from: z.string().check(z.regex(DAY)), to: z.string().check(z.regex(DAY)) }))),
@@ -56,7 +59,7 @@ export function nextAllowanceDate(current: string, frequency: Allowance['frequen
  * Null for irregular allowances — the student picks the "make it last until" date.
  */
 export function advanceNextDate(allowance: Allowance, today: string): string | null {
-  let next = nextAllowanceDate(allowance.nextDate, allowance.frequency)
+  let next = nextAllowanceDate(allowance.lateFrom ?? allowance.nextDate, allowance.frequency)
   while (next !== null && next <= today) next = nextAllowanceDate(next, allowance.frequency)
   return next
 }
