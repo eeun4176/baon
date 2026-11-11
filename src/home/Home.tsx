@@ -24,6 +24,7 @@ import { useStreak } from '../streak/useStreak.ts'
 import { WeekRow } from '../streak/WeekRow.tsx'
 import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
 import { randomGreeting } from './greetings.ts'
+import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
 import { OneTapAdd } from './OneTapAdd.tsx'
 import { useToday, type Today } from './useToday.ts'
 
@@ -87,7 +88,6 @@ function Hero({ t }: { t: Today }) {
           {t.breakUntil === r.today ? 'No classes today' : `No classes until ${breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))}`} · budget counts every day, streak paused
         </p>
       )}
-      {r.allowanceDue && <p className="mt-4 rounded-2xl bg-blue-tint p-3 font-extrabold text-blue">Allowance day — did your baon arrive?</p>}
       {r.setAsidesExceedMoney && <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">Your set-asides are more than your money right now. Want to review them?</p>}
 
       <div className="mt-6 grid grid-cols-2 gap-2.5 lg:flex">
@@ -198,7 +198,8 @@ export function Home() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-12 lg:gap-5">
-        <div className="lg:col-span-7"><Hero t={t} /></div>
+        {/* Allowance day: ask first — the new daily budget starts once the baon is in (design p13) */}
+        <div className="lg:col-span-7">{t.result.allowanceDue ? <AllowanceCheckIn t={t} /> : <Hero t={t} />}</div>
         <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} streak={streak} /></div>
 
         <div className="lg:col-span-6"><OneTapAdd /></div>
