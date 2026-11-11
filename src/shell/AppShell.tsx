@@ -5,6 +5,8 @@
  * Tablet/desktop (≥ 768px): sidebar — logo + tagline, Add expense, Home · History · Plan ·
  *   Streak · Me, then Backup · Help & privacy, storage used and the profile at the bottom.
  *   Collapses to icons; starts collapsed on tablets, expanded on laptops; remembered per device.
+ *   Smooth toggle: icons keep the same spot in both states and text never wraps — labels
+ *   just fade and are clipped while the width animates (no jumping or re-wrapping).
  * Also hosts the Add dialog (opened by "?add=1" in the URL) and the Undo toast.
  */
 import { useEffect, useState } from 'react'
@@ -53,7 +55,10 @@ function useStorageUsed(): string | null {
   return used
 }
 
-/** One sidebar link (icon + label, or icon only when collapsed). */
+/** Label fade used by every sidebar text while the width animates. */
+const fade = (collapsed: boolean) => `transition-opacity duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 delay-75'}`
+
+/** One sidebar link: icon at a fixed spot + label that fades (still read by screen readers when collapsed). */
 function SideLink({ to, label, icon, collapsed }: { to: string; label: string; icon: IconName; collapsed: boolean }) {
   return (
     <NavLink
@@ -61,13 +66,13 @@ function SideLink({ to, label, icon, collapsed }: { to: string; label: string; i
       end
       title={collapsed ? label : undefined}
       className={({ isActive }) =>
-        `flex min-h-12 items-center gap-3 rounded-2xl font-extrabold ${collapsed ? 'justify-center' : 'px-4'} ${
+        `flex min-h-12 items-center gap-3 overflow-hidden rounded-2xl pl-[0.875rem] font-extrabold whitespace-nowrap ${
           isActive ? 'bg-blue-tint text-blue' : 'text-ink/80 hover:bg-page hover:text-ink'
         }`
       }
     >
       <Icon name={icon} className="size-5" />
-      <span className={collapsed ? 'sr-only' : ''}>{label}</span>
+      <span className={fade(collapsed)}>{label}</span>
     </NavLink>
   )
 }
@@ -98,46 +103,51 @@ export function AppShell() {
       {/* ── Sidebar: tablet & desktop (design p18) ───────────────────── */}
       <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) md:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
         <nav aria-label="Main" className="flex h-full flex-col rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
-          {collapsed ? (
-            // Collapsed: the logo itself expands the sidebar (no separate toggle button).
-            <button
-              type="button"
-              onClick={toggle}
-              aria-expanded={false}
-              aria-label="Expand sidebar"
-              title="Expand sidebar"
-              className="mx-auto mt-1 mb-4 rounded-xl ring-blue/40 hover:ring-4"
-            >
-              <img src={logoIcon} alt="" className="size-11" />
-            </button>
-          ) : (
-            <div className="flex items-center gap-2.5 px-1 pt-1 pb-4">
-              <img src={logoIcon} alt="" className="size-11 shrink-0" />
-              <div className="min-w-0 flex-1 animate-fade">
-                <p className="text-2xl leading-none font-black tracking-tight">baon</p>
-                <p className="text-xs leading-tight font-bold text-muted">Your daily sakto baon</p>
-              </div>
+          <div className="mb-4 flex items-center gap-2.5 overflow-hidden pt-1">
+            {collapsed ? (
+              // Collapsed: the logo itself expands the sidebar (no separate toggle button).
+              <button
+                type="button"
+                onClick={toggle}
+                aria-expanded={false}
+                aria-label="Expand sidebar"
+                title="Expand sidebar"
+                className="ml-[0.125rem] shrink-0 rounded-xl ring-blue/40 hover:ring-2"
+              >
+                <img src={logoIcon} alt="" className="size-11" />
+              </button>
+            ) : (
+              <img src={logoIcon} alt="" className="ml-[0.125rem] size-11 shrink-0" />
+            )}
+            <div className={`shrink-0 whitespace-nowrap ${fade(collapsed)}`} aria-hidden={collapsed}>
+              <p className="text-2xl leading-none font-black tracking-tight">baon</p>
+              <p className="text-xs leading-tight font-bold text-muted">Your daily sakto baon</p>
+            </div>
+            {!collapsed && (
               <button
                 type="button"
                 onClick={toggle}
                 aria-expanded={true}
                 aria-label="Collapse sidebar"
                 title="Collapse sidebar"
-                className="grid size-10 shrink-0 place-items-center rounded-xl text-muted hover:bg-page hover:text-ink"
+                className="ml-auto grid size-10 shrink-0 animate-fade place-items-center rounded-xl text-muted hover:bg-page hover:text-ink"
               >
                 <Icon name="sidebar" className="size-5" />
               </button>
-            </div>
-          )}
+            )}
+          </div>
 
           <Link
             to="?add=1"
             state={{ modal: true }}
             title={collapsed ? 'Add expense' : undefined}
-            className={`mb-4 flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-blue font-black text-white shadow-[0_4px_10px_-4px_rgba(30,94,255,0.5)] hover:bg-[#1a52e0] ${collapsed ? 'mx-auto size-12' : 'px-5'}`}
+            className="mb-4 flex h-12 items-center justify-center overflow-hidden rounded-2xl bg-blue font-black whitespace-nowrap text-white shadow-[0_4px_10px_-4px_rgba(30,94,255,0.5)] hover:bg-[#1a52e0]"
           >
-            <Icon name="plus" className="size-5" />
-            <span className={collapsed ? 'sr-only' : ''}>Add expense</span>
+            <Icon name="plus" className="size-5 shrink-0" />
+            {/* the label's width animates too, so the + glides to the center instead of jumping */}
+            <span className={`overflow-hidden transition-[max-width,margin,opacity] duration-300 ease-(--ease-soft) ${collapsed ? 'max-w-0 opacity-0' : 'ml-2 max-w-40 opacity-100'}`}>
+              Add expense
+            </span>
           </Link>
 
           <ul className="space-y-1">
@@ -150,7 +160,7 @@ export function AppShell() {
 
           <div className="mt-auto space-y-3 pt-4">
             {storage && !collapsed && (
-              <p className="flex animate-fade items-center gap-2 rounded-2xl border border-pebble px-3 py-2.5 text-sm font-bold text-muted">
+              <p className="flex animate-fade items-center gap-2 overflow-hidden rounded-2xl border border-pebble px-3 py-2.5 text-sm font-bold whitespace-nowrap text-muted">
                 <Icon name="drive" className="size-4 shrink-0" />
                 {storage} · saved on this device
               </p>

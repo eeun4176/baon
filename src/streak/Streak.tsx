@@ -1,10 +1,11 @@
 /*
  * Streak.tsx — Streak & spending map (design p21; phones get the same cards stacked).
- *   Dark hero: 🔥 current streak + this week's ✓ row. Tiles: best streak, free pass,
+ *   Dark hero: flame + current streak + this week's ✓ row. Tiles: best streak, free pass,
  *   on-budget days in the last 6 months. Spending map: one square per day (darker blue =
  *   more of that day's budget used, ink = over). "How streaks work" explains the rules.
  * Phones show the last 15 weeks of the map, larger screens 26 weeks (about 6 months).
  */
+import flame from '../assets/streak-flame.png'
 import { useToday } from '../home/useToday.ts'
 import { addDays, weekday } from '../budget/days.ts'
 import { Card, Icon, Page, PageHeader, type IconName } from '../ui/kit.tsx'
@@ -62,7 +63,7 @@ export function Streak() {
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
         {/* Hero */}
         <section className="flex animate-rise flex-col gap-6 rounded-[28px] bg-hero p-6 text-white sm:flex-row sm:items-center md:p-8 lg:col-span-8" aria-labelledby="streak-now">
-          <span className="text-[5.5rem] leading-none" aria-hidden="true">🔥</span>
+          <img src={flame} alt="" className="size-24 shrink-0 animate-pop md:size-28" />
           <div className="min-w-0 flex-1">
             <h2 id="streak-now" className="text-[clamp(3rem,14vw,4.5rem)] leading-none font-black">
               <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? 'day' : 'days'}

@@ -91,14 +91,15 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
         aria-controls="profile-menu"
         aria-haspopup="true"
         title={collapsed ? `${name} — theme & sign out` : undefined}
-        className={`flex w-full items-center gap-3 rounded-2xl p-1.5 text-left hover:bg-page ${collapsed ? 'justify-center' : ''} ${open ? 'bg-page' : ''}`}
+        className={`flex w-full items-center gap-3 overflow-hidden rounded-2xl p-1 text-left hover:bg-page ${open ? 'bg-page' : ''}`}
       >
         <span className="grid size-10 shrink-0 place-items-center rounded-full bg-blue-tint font-black text-blue" aria-hidden="true">
           {firstName(name).charAt(0).toUpperCase()}
         </span>
-        <span className={collapsed ? 'sr-only' : 'min-w-0'}>
+        {/* stays in place and fades (no re-wrapping while the sidebar animates) */}
+        <span className={`min-w-0 transition-opacity duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 delay-75'}`}>
           <span className="block truncate font-black">{name}</span>
-          <span className="block text-sm font-semibold text-muted">My phone · works offline</span>
+          <span className="block truncate text-sm font-semibold text-muted">My phone · works offline</span>
         </span>
       </button>
     </div>
