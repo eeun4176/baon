@@ -53,7 +53,8 @@ describe('streak', () => {
 
   it('today with nothing logged yet is pending, not a break', () => {
     const r = run('2026-11-09', week1)
-    expect([r.days.get('2026-11-09')!.status, r.current]).toEqual(['pending', 5])
+    expect([r.days.get('2026-11-09')!.status, r.current, r.pending]).toEqual(['pending', 5, true])
+    expect(run('2026-11-06', week1).pending).toBe(false) // logged today
   })
 
   it('"No spending today" counts as logged', () => {

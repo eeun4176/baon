@@ -39,6 +39,7 @@ export interface Streak {
   current: number
   best: number
   passLeft: boolean // free pass still unused this Mon–Sun week
+  pending: boolean // today is a class day with nothing logged yet (the flame stays gray until it is)
   days: Map<string, Day> // every day from the first record to today
 }
 
@@ -82,7 +83,7 @@ export function streakSummary(input: { today: string; snapshots: DaySnapshot[]; 
     if (status === 'on' || status === 'over') best = Math.max(best, ++current)
     days.set(d, { status, spent, budget: snap?.dailyBudgetCentavos })
   }
-  return { current, best, passLeft: !passUsed.has(mondayOf(today)), days }
+  return { current, best, passLeft: !passUsed.has(mondayOf(today)), pending: days.get(today)?.status === 'pending', days }
 }
 
 /** Spending-map shade 0–3 (0 = gray) or 'over', by share of that day's budget used. */

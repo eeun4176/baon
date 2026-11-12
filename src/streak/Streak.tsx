@@ -6,7 +6,7 @@
  * Phones show the last 15 weeks of the map, larger screens 26 weeks (about 6 months).
  */
 import { useState } from 'react'
-import flame from '../assets/streak-flame.png'
+import { streakFlame } from './flame.ts'
 import { useToday } from '../home/useToday.ts'
 import { useSession } from '../session.ts'
 import { addDays, weekday } from '../budget/days.ts'
@@ -92,7 +92,7 @@ export function Streak() {
         {/* Hero: flame + number on top, this week's row spread across the full card below */}
         <section className="flex animate-rise flex-col justify-between gap-5 rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8 lg:col-span-8" aria-labelledby="streak-now">
           <div className="flex items-center gap-4 md:gap-6">
-            <img src={flame} alt="" className="size-16 shrink-0 animate-pop sm:size-20 md:size-24" />
+            <img src={streakFlame(n, streak.pending)} alt="" className="size-16 shrink-0 animate-pop sm:size-20 md:size-24" />
             <div className="min-w-0">
               <h2 id="streak-now" className="text-[clamp(2.75rem,12vw,4.5rem)] leading-none font-black">
                 <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? tr('day') : tr('days')}

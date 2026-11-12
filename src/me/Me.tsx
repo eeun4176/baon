@@ -9,7 +9,7 @@
  */
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import flame from '../assets/streak-flame.png'
+import { streakFlame } from '../streak/flame.ts'
 import { classDaysText, FREQUENCY_TEXT } from '../budget/allowance.ts'
 import { weekday } from '../budget/days.ts'
 import { promptInstall, useCanInstall } from '../install.ts'
@@ -40,8 +40,9 @@ const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg fon
 const label = 'block font-extrabold text-muted'
 
 /** Small rounded chip in the header (streak, level, device mode). */
-function Chip({ children, blue = false }: { children: ReactNode; blue?: boolean }) {
-  return <span className={`inline-flex min-h-8 items-center gap-1.5 rounded-full px-3 text-sm font-black ${blue ? 'bg-blue-tint text-blue' : 'bg-page'}`}>{children}</span>
+function Chip({ children, gold = false }: { children: ReactNode; gold?: boolean }) {
+  // gold: a 100+ day streak, a dark chip so its violet flame stands out
+  return <span className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-black ${gold ? 'bg-hero text-white' : 'bg-page'}`}>{children}</span>
 }
 
 /**
@@ -293,22 +294,24 @@ export function Me() {
       <PageHeader title={tr('Me')} sub={tr('Your account, money settings and data.')} />
 
       {/* Header card */}
-      <Card className="relative z-20 flex animate-rise flex-col items-center gap-3 text-center sm:flex-row sm:gap-5 sm:text-left">{/* above the cards below, so the photo menu isn’t covered */}
+      {/* Phones: photo left, name + chips beside it, the button full width below. Wider screens: one row. */}
+      <Card className="relative z-20 grid animate-rise grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-4 sm:flex sm:gap-5">{/* above the cards below, so the photo menu isn’t covered */}
         <PhotoAvatar />
-        <div className="w-full min-w-0 sm:flex-1">
-          <p className="flex items-center justify-center gap-2 sm:justify-start">
+        <div className="min-w-0 sm:flex-1">
+          <p className="flex items-center gap-2">
             <span className="min-w-0 truncate text-2xl font-black md:text-3xl">{name}</span>
             {/* Phone mode: icon only, its name shows on hover and to screen readers */}
             <span role="img" title={vault.shared() ? tr('Shared phone mode') : tr('My phone mode')} aria-label={vault.shared() ? tr('Shared phone mode') : tr('My phone mode')} className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-tint text-blue">
               <Icon name={vault.shared() ? 'users' : 'phone'} className="size-4" />
             </span>
           </p>
-          <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
-            <Chip><img src={flame} alt="" className="size-4" /> {streak.current}<span className="sr-only">{tr('-day streak')}</span></Chip>
-            {(level || profile.school) && <Chip>{[level, profile.school].filter(Boolean).join(' · ')}</Chip>}
+          {/* One line under the name: streak chip, then level · school as plain text (cut with … if long; the full text is in Profile below) */}
+          <div className="mt-2 flex items-center gap-2.5">
+            <Chip gold={streak.current >= 100}><img src={streakFlame(streak.current, streak.pending)} alt="" className="size-4" /> {streak.current}<span className="sr-only">{tr('-day streak')}</span></Chip>
+            {(level || profile.school) && <span className="min-w-0 truncate text-sm font-bold text-muted">{[level, profile.school].filter(Boolean).join(' · ')}</span>}
           </div>
         </div>
-        <button type="button" onClick={signOut} className="mt-1 flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:mt-0 sm:w-auto">
+        <button type="button" onClick={signOut} className="col-span-2 flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:w-auto">
           <Icon name={vault.shared() ? 'lock' : 'logout'} className="size-5" /> {vault.shared() ? tr('Lock Baon') : tr('Sign out')}</button>
       </Card>
 

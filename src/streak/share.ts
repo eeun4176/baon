@@ -6,7 +6,7 @@
  * student picks somewhere to share it. The story frame (storyCanvas, toPng) and sharePicture
  * are reused by History → Share (history/shareSpending.ts).
  */
-import flameUrl from '../assets/streak-flame.png'
+import { streakFlame } from './flame.ts'
 import logoUrl from '../assets/logo-icon.png'
 import { tr } from '../i18n/i18n.ts'
 
@@ -84,7 +84,7 @@ export function toPng(canvas: HTMLCanvasElement): Promise<Blob> {
 
 /** Draws the streak picture. `week`: this week's Su–Sa, true = logged; `todayIndex` 0–6. */
 export async function streakImage(days: number, week: boolean[], todayIndex: number): Promise<Blob> {
-  const [{ canvas, c, ink }, flame] = await Promise.all([storyCanvas(760), image(flameUrl)])
+  const [{ canvas, c, ink }, flame] = await Promise.all([storyCanvas(760), image(streakFlame(days))])
 
   // Flame + number
   c.drawImage(flame, W / 2 - 190, 520, 380, 380)

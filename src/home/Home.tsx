@@ -9,7 +9,7 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
-import flame from '../assets/streak-flame.png'
+import { streakFlame } from '../streak/flame.ts'
 import { manilaDate, weekday } from '../budget/days.ts'
 import { SpentPerDay } from '../history/Charts.tsx'
 import { filterEntries, spentPerDay } from '../history/history.ts'
@@ -119,7 +119,7 @@ function StreakCard({ today, streak }: { today: string; streak: Streak }) {
   return (
     <section className="flex h-full animate-rise flex-col rounded-[28px] bg-hero p-6 text-white" aria-labelledby="streak-title">
       <div className="flex items-center gap-3">
-        <img src={flame} alt="" className="size-11 shrink-0" />
+        <img src={streakFlame(n, streak.pending)} alt="" className="size-11 shrink-0" />
         <div>
           <h2 id="streak-title" className="text-2xl font-black">{n ? tr('{0} {1} in a row', n, n === 1 ? tr('day') : tr('days')) : tr('Your streak')}</h2>
           <p className="font-semibold text-white/70">{n ? tr('Keep logging — you’re doing great.') : tr('Log today to start it.')}</p>
@@ -261,7 +261,7 @@ export function Home() {
       <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
         <img src={logoIcon} alt="" className="size-10" />
         {tr('Baon')}<Link to="/streak" aria-label={tr('{0}-day streak', streak.current)} className="ml-auto flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black tracking-normal">
-          <img src={flame} alt="" className="size-6" /> {streak.current}
+          <img src={streakFlame(streak.current, streak.pending)} alt="" className="size-6" /> {streak.current}
         </Link>
       </header>
 
