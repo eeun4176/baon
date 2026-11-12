@@ -211,7 +211,7 @@ export function PayDialog({ item, onClose }: { item: SchoolExpense; onClose: () 
     <Modal title={tr('Pay {0}', item.title)} onClose={onClose}>
       <form onSubmit={pay} noValidate>
         <p className="mb-4 font-semibold text-muted">
-          {tr('This logs the expense and frees the {0} you set aside. Change the amount if it cost more or less.', formatPeso(item.estimatedCentavos))}</p>
+          {tr('Logs the expense and frees the {0} you set aside.', formatPeso(item.estimatedCentavos))}</p>
         <AmountInput value={amount} onChange={(v) => { setAmount(v); setError('') }} autoFocus />
         {spending.length > 1 && (
           <div className="mt-4">

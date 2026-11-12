@@ -1,10 +1,10 @@
 /*
  * Home.tsx — Today at a glance.
  * Phone (design p6): logo, date line, greeting, Su–Sa week row, the safe-to-spend
- *   hero with "Add expense" / "How it's counted", and One-tap add.
- * Desktop (design p18): greeting row with search; hero (with "₱720 of ₱1,500 left" bar)
- *   beside a dark streak card; One-tap add + Set aside for school; Wallets;
- *   Spent per day + Recent.
+ *   hero with "Add expense" / "How it's counted", One-tap add, then today's entries.
+ * Desktop (design p18): greeting row with search; hero (with "₱720 of ₱1,500 left" bar) beside a dark
+ *   streak card (week row, best streak, free pass); One-tap add + Set aside for school; Wallets;
+ *   Spent per day + Today.
  */
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -113,11 +113,11 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   )
 }
 
-/** Desktop dark streak card (design p18): streak, this week's ✓ row, link to the map. */
+/** Desktop dark streak card (design p18): streak, this week's ✓ row, best streak + free pass, link to the map. */
 function StreakCard({ today, streak }: { today: string; streak: Streak }) {
   const n = streak.current
   return (
-    <section className="flex h-full animate-rise flex-col rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white" aria-labelledby="streak-title">
+    <section className="flex h-full animate-rise flex-col rounded-[28px] bg-hero p-6 text-white" aria-labelledby="streak-title">
       <div className="flex items-center gap-3">
         <img src={flame} alt="" className="size-11 shrink-0" />
         <div>
@@ -125,13 +125,48 @@ function StreakCard({ today, streak }: { today: string; streak: Streak }) {
           <p className="font-semibold text-white/70">{n ? tr('Keep logging — you’re doing great.') : tr('Log today to start it.')}</p>
         </div>
       </div>
-      <div className="mt-6">
+      <div className="mt-5">
         <WeekRow today={today} streak={streak} dark />
       </div>
-      <Link to="/streak" className="mt-auto inline-flex items-center gap-1 pt-6 font-extrabold text-[#8fb0ff] hover:text-white">
+      {/* The stretchy part: when the hero beside this card grows, these tiles grow with it, so no gap opens */}
+      <dl className="mt-4 grid flex-1 grid-cols-2 gap-3">
+        <div className="flex flex-col justify-center rounded-2xl bg-white/10 px-4 py-3">
+          <dt className="text-sm font-extrabold text-white/70">{tr('Best streak')}</dt>
+          <dd className="text-xl font-black">{streak.best} {streak.best === 1 ? tr('day') : tr('days')}</dd>
+        </div>
+        <div className="flex flex-col justify-center rounded-2xl bg-white/10 px-4 py-3">
+          <dt className="text-sm font-extrabold text-white/70">{tr('Free pass')}</dt>
+          <dd className="text-xl font-black">{streak.passLeft ? 1 : 0} <span className="text-sm font-extrabold text-white/70">{streak.passLeft ? tr('left this week') : tr('used this week')}</span></dd>
+        </div>
+      </dl>
+      <Link to="/streak" className="mt-4 inline-flex items-center gap-1 font-extrabold text-[#8fb0ff] hover:text-white">
         {tr('See spending map')}{' '}<Icon name="chevron-right" className="size-4" />
       </Link>
     </section>
+  )
+}
+
+/** Today's entries, newest first, so the day is easy to follow without opening History. */
+function TodayCard({ today, spent, className = '' }: { today: string; spent: number; className?: string }) {
+  const { transactions, wallets } = useSession()
+  const list = transactions.filter((tx) => manilaDate(tx.occurredAt) === today).reverse()
+  return (
+    <Card className={`flex animate-rise flex-col ${className}`}>
+      <div className="mb-1 flex items-baseline justify-between gap-3">
+        <h2 className="text-xl font-black">{tr('Today')}</h2>
+        {list.length > 0 && <p className="text-sm font-extrabold text-muted">{tr('{0} spent', formatPeso(spent))}</p>}
+      </div>
+      {list.length ? (
+        <ul className="-mx-2 divide-y divide-page">
+          {list.slice(0, 5).map((tx, i) => <TxRow key={tx.id} tx={tx} wallets={wallets} index={i} />)}
+        </ul>
+      ) : (
+        <p className="my-auto py-2 font-semibold text-muted">{tr('Nothing logged today yet.')}</p>
+      )}
+      {list.length > 5 && (
+        <Link to="/history" className="mt-1 inline-flex min-h-11 items-center font-extrabold text-blue hover:underline">{tr('See all {0} in History', list.length)}</Link>
+      )}
+    </Card>
   )
 }
 
@@ -142,7 +177,7 @@ function Wallets() {
   const spending = wallets.filter((w) => w.type === 'spending' && !w.archived)
   const total = spending.reduce((s, w) => s + all.get(w.id)!, 0)
   return (
-    <Card className="animate-rise">
+    <Card className="h-full animate-rise">
       <h2 className="text-xl font-black">{tr('Wallets')}</h2>
       <p key={total} className="mt-1 animate-pop text-4xl font-black">{formatPeso(total)}</p>
       <ul className="mt-3 divide-y divide-page">
@@ -163,7 +198,7 @@ function Wallets() {
 
 /** Home screen. */
 export function Home() {
-  const { name, transactions, wallets, schoolExpenses } = useSession()
+  const { name, transactions, schoolExpenses } = useSession()
   const t = useToday()
   const streak = useStreak()
   const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid').slice(0, 3)
@@ -171,7 +206,6 @@ export function Home() {
   const [checkingIn, setCheckingIn] = useState(false) // "It came" while waiting after "Not yet"
   const greeting = randomGreeting(name, pick)
   const today = t.result.today
-  const recent = [...transactions].reverse().slice(0, 5)
 
   return (
     <Page>
@@ -213,7 +247,9 @@ export function Home() {
         <StorageWarning className="lg:col-span-12" />
         <LimitsCard className="lg:col-span-12" />
         <div className="lg:col-span-6"><OneTapAdd /></div>
-        <Card className="hidden animate-rise md:block lg:col-span-6">
+        {/* Phones: right under One-tap add. Desktop: last, beside Spent per day. */}
+        <TodayCard today={today} spent={t.result.spentToday} className="lg:order-1 lg:col-span-5" />
+        <Card className="hidden animate-rise md:flex md:flex-col lg:col-span-6">
           <div className="flex items-baseline justify-between">
             <h2 className="text-xl font-black">{tr('Set aside for school')}</h2>
             <Link to="/plan" className="font-extrabold text-blue">{tr('See all')}</Link>
@@ -234,29 +270,24 @@ export function Home() {
               ))}
             </ul>
           ) : (
-            <p className="mt-3 font-semibold text-muted">{tr('Nothing set aside yet. Plan printing, projects and org fees so your daily budget stays honest.')}</p>
+            <>
+              <p className="mt-3 font-semibold text-muted">{tr('Nothing set aside yet. Plan printing, projects or org fees ahead.')}</p>
+              {/* The button sits at the bottom, so a taller One-tap add beside this card never leaves it looking cut short */}
+              <Link to="/plan" className="mt-auto flex min-h-11 items-center justify-center gap-2 self-stretch rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">
+                <Icon name="plus" className="size-5" /> {tr('Plan an expense')}</Link>
+            </>
           )}
         </Card>
 
         <BackupReminder className="lg:col-span-12" />
         <div className="hidden md:block lg:col-span-12"><Wallets /></div>
 
-        <Card className="hidden animate-rise md:block lg:col-span-7">
+        <Card className="hidden animate-rise md:flex md:flex-col lg:col-span-7">{/* the bars stretch when Today beside it is taller */}
           <div className="mb-1 flex items-baseline justify-between">
             <h2 className="text-xl font-black">{tr('Spent per day')}</h2>
             <Link to="/history" className="font-extrabold text-blue">{tr('Open history')}</Link>
           </div>
           <SpentPerDay days={spentPerDay(transactions, today)} today={today} budget={t.result.dailyBudget} />
-        </Card>
-        <Card className="hidden animate-rise md:block lg:col-span-5">
-          <h2 className="mb-2 text-xl font-black">{tr('Recent')}</h2>
-          {recent.length ? (
-            <ul className="-mx-2 divide-y divide-page">
-              {recent.map((tx, i) => <TxRow key={tx.id} tx={tx} wallets={wallets} withDay index={i} />)}
-            </ul>
-          ) : (
-            <p className="font-semibold text-muted">{tr('Nothing logged yet — your latest entries show up here.')}</p>
-          )}
         </Card>
       </div>
     </Page>

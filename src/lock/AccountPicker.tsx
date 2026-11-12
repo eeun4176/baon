@@ -46,7 +46,7 @@ export function AccountPicker({ accounts, onPick, onAdd, onRemoved }: { accounts
           <Icon name="plus" className="size-5" /> {tr('Add another account')}</button>
         {someOpen && (
           <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">
-            {tr('Anyone using this phone can open an account that opens right away. To lock yours, turn on shared phone mode in Me → Security.')}</p>
+            {tr('Accounts that open right away aren’t locked. Lock yours in Me → Security.')}</p>
         )}
       </div>
       {removing && <RemoveAccountDialog account={removing} onClose={() => setRemoving(null)} onRemoved={() => { setRemoving(null); onRemoved() }} />}

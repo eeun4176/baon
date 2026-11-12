@@ -16,18 +16,18 @@ export function SpentPerDay({ days, today, budget }: { days: { day: string; spen
   // Averages round down to whole pesos, like the daily budget.
   const average = Math.floor(days.reduce((s, d) => s + d.spent, 0) / days.length / 100) * 100
   return (
-    <figure>
+    <figure className="flex flex-1 flex-col">{/* in a taller card (Home, desktop) the bars take the extra height */}
       <figcaption className="mb-4 text-sm font-semibold text-muted">
         {tr('{0} on average · budget line at {1}', formatPeso(average), formatPeso(budget))}
       </figcaption>
-      <div aria-hidden="true">
+      <div aria-hidden="true" className="flex flex-1 flex-col">
         <div className="grid grid-cols-7 gap-2 text-center">
           {days.map((d) => (
             <span key={d.day} className={`text-xs font-extrabold ${d.day === today ? 'text-blue' : 'text-muted'}`}>{formatPeso(d.spent)}</span>
           ))}
         </div>
         {/* Bars area: the dashed budget line is positioned inside it, so it lines up exactly. */}
-        <div className="relative mt-1.5 grid h-32 grid-cols-7 items-end gap-2">
+        <div className="relative mt-1.5 grid min-h-32 flex-1 grid-cols-7 items-end gap-2">
           {days.map((d, i) => (
             <span key={d.day} className="mx-auto flex h-full w-full max-w-12 items-end overflow-hidden rounded-xl bg-page">
               <span

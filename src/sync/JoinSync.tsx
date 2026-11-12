@@ -36,7 +36,7 @@ export function JoinSync({ user, onDone, onSkip }: { user: SignedInUser; onDone:
   return (
     <Screen footer={<Button disabled={!error} onClick={() => { setError(''); join() }}>{error ? tr('Try again') : tr('Bringing your records…')}</Button>}>
       <StepHeader step={2} />
-      <Title sub={tr('Your records are on your other device. We’re bringing them here — this takes a few seconds.')}>{tr('Welcome back, {0}', user.name.split(' ')[0])}</Title>
+      <Title sub={tr('Bringing your records here. This takes a few seconds.')}>{tr('Welcome back, {0}', user.name.split(' ')[0])}</Title>
       {error && (
         <>
           <p role="alert" className="mt-4 rounded-2xl bg-card p-3 text-center font-bold">{error}</p>

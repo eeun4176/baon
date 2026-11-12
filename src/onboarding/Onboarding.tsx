@@ -139,7 +139,7 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
     pass: (
       <Screen>
         <StepHeader step={2} onBack={() => go('phone')} />
-        <Title sub={tr('Baon will ask for it every time it opens, so others using this phone can’t see your records.')}>{tr('Make a passphrase')}</Title>
+        <Title sub={tr('Baon asks for it every time it opens, so others can’t see your records.')}>{tr('Make a passphrase')}</Title>
         <NewPassphrase submitLabel={tr('Continue')} onSave={async (p) => { setPassphrase(p); go(afterPass === 'baon' && hasCloud ? 'join' : afterPass) }} />
       </Screen>
     ),

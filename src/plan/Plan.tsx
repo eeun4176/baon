@@ -132,13 +132,13 @@ function ClassDaysEditor() {
         <p className="text-sm font-bold text-muted">{tr('Count only class days')}</p>
         <Switch label={tr('Count only class days')} checked={allowance.countClassDays} onChange={(countClassDays) => save({ countClassDays })} />
       </div>
-      <BreakControl />
+      <BreakControl />{/* one line (or the "on break" note); the form itself is a pop-up */}
     </>
   )
 }
 
 /**
- * "No classes" break (typhoon day … sembreak): from today until a chosen day.
+ * "No classes" break (typhoon day … sembreak): from today until a chosen day. Asked in a pop-up, so the page doesn't shift.
  * While on break the budget counts every day and the streak is frozen.
  */
 function BreakControl() {
@@ -176,31 +176,27 @@ function BreakControl() {
 
   if (current) {
     return (
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blue-tint p-4">
-        <p className="font-bold text-blue">{tr('{0} · budget counts every day, streak paused', untilText(current.to))}</p>
-        <button type="button" onClick={end} className="min-h-11 rounded-full bg-card px-5 font-black">{tr('Classes are back')}</button>
+      <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-blue-tint py-2 pr-2 pl-4">{/* one row, about as tall as the link it replaces */}
+        <p className="min-w-0 text-sm font-bold text-blue">{tr('{0} · streak paused', untilText(current.to))}</p>
+        <button type="button" onClick={end} className="min-h-11 shrink-0 rounded-full bg-card px-4 text-sm font-black">{tr('Classes are back')}</button>
       </div>
-    )
-  }
-  if (!asking) {
-    return (
-      <button type="button" onClick={() => setAsking(true)} className="mt-3 min-h-11 font-extrabold text-blue hover:underline">
-        {tr('No classes for a while? Set a break')}</button>
     )
   }
   return (
-    <div className="mt-4 rounded-2xl bg-page p-4">
-      <p className="font-black">{tr('No classes')}</p>
-      <p className="text-sm font-semibold text-muted">{tr('For suspensions, holidays or sembreak. Your budget counts every day and your streak is paused.')}</p>
-      <div className="mt-3 flex flex-wrap items-end gap-2">
-        <button type="button" onClick={() => start(today)} className="min-h-11 rounded-full bg-card px-4 font-black hover:bg-pebble">{tr('Just today')}</button>
-        <label className="text-sm font-extrabold text-muted">
-          {tr('Until')}<input type="date" min={today} value={until} onChange={(e) => setUntil(e.target.value)} className="mt-1 block min-h-11 rounded-full bg-card px-4 font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40" />
-        </label>
-        <button type="button" disabled={!until || until < today} onClick={() => start(until)} className="min-h-11 rounded-full bg-blue px-5 font-black text-white disabled:opacity-60">{tr('Save break')}</button>
-        <button type="button" onClick={() => setAsking(false)} className="min-h-11 px-2 font-extrabold text-muted">{tr('Cancel')}</button>
-      </div>
-    </div>
+    <>
+      <button type="button" onClick={() => setAsking(true)} className="mt-3 min-h-11 font-extrabold text-blue hover:underline">
+        {tr('No classes for a while? Set a break')}</button>
+      {asking && (
+        <Modal title={tr('No classes')} onClose={() => setAsking(false)}>
+          <p className="font-semibold text-muted">{tr('For suspensions, holidays or sembreak. Your streak is paused.')}</p>
+          <button type="button" onClick={() => start(today)} className="mt-4 min-h-12 w-full rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">{tr('Just today')}</button>
+          <label className="mt-4 block font-extrabold text-muted">
+            {tr('Until')}<input type="date" min={today} value={until} onChange={(e) => setUntil(e.target.value)} className="mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40" />
+          </label>
+          <button type="button" disabled={!until || until < today} onClick={() => start(until)} className="mt-4 min-h-12 w-full rounded-full bg-blue px-5 font-black text-white disabled:opacity-60">{tr('Save break')}</button>
+        </Modal>
+      )}
+    </>
   )
 }
 
@@ -239,13 +235,12 @@ export function Plan() {
       />
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
-        {/* Left (desktop): hero with Category limits right under it, so neither column is half empty */}
-        <div className="flex flex-col gap-5 lg:col-span-7">{/* gap, not space-y: the hidden desktop card must not leave a margin */}
-        <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8" aria-labelledby="set-aside-title">
-          <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">{tr('Set aside for school')}</h2>
-          <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(2.75rem,15vw,4.25rem)]" /></p>
+        {/* Desktop (design p20): hero beside Class days + Category limits; it takes their height, content centered */}
+        <section className="flex animate-rise flex-col justify-center rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8 lg:col-span-7" aria-labelledby="set-aside-title">
+            <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">{tr('Set aside for school')}</h2>
+            <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(2.75rem,15vw,4.25rem)]" /></p>
           <p className="mt-3 max-w-md font-semibold text-white/75">
-            {tr('This stays in your wallets, but it isn’t counted in your daily budget until you mark it paid.')}</p>
+            {tr('Still in your wallets, but not counted in your daily budget.')}</p>
           {schoolExpenses.length > 0 && (
             <ul className="mt-5 hidden flex-wrap gap-2 text-sm font-black md:flex">
               <li className="rounded-full bg-white/12 px-3.5 py-1.5">{tr('{0} set aside', counts.setAside)}</li>
@@ -254,22 +249,9 @@ export function Plan() {
             </ul>
           )}
         </section>
-          {/* Desktop: Category limits, styled like the Class days card */}
-          <Card className="hidden animate-rise lg:block">
-            <div className="mb-3 flex items-baseline justify-between gap-3">
-              <h2 className="text-xl font-black">{tr('Category limits')}</h2>
-              <p className="text-sm font-bold text-muted">{tr('Optional')}</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
-              <p className="min-w-0 flex-1 font-semibold text-muted">{limitCount ? tr('{0} {1} a cap this allowance cycle.', limitCount, limitCount === 1 ? tr('category has') : tr('categories have')) : tr('Cap a category until your next baon, like snacks under ₱200.')}</p>
-              <button type="button" onClick={openLimits} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">{limitCount ? tr('Edit') : tr('Set up')}</button>
-            </div>
-          </Card>
-        </div>
 
-        {/* Phone/tablet: two small tiles. Desktop: the Class days card beside the hero */}
-        <div className="order-3 grid grid-cols-2 gap-3 lg:order-none lg:col-span-5 lg:grid-cols-1 lg:gap-5">
+        {/* Phone/tablet: two small tiles. Desktop: Class days above a one-row Category limits card */}
+        <div className="order-3 grid grid-cols-2 gap-3 lg:order-none lg:col-span-5 lg:flex lg:flex-col lg:gap-5">
           {/* Phone/tablet tiles share one shape (icon · title · note · value at the bottom) so they line up */}
           <button type="button" onClick={() => setOpen({ kind: 'days' })} className={tile}>
             <span className={tileIcon}><Icon name="calendar" className="size-5" /></span>
@@ -291,6 +273,15 @@ export function Plan() {
             <span className="block text-sm font-semibold text-muted">{limitCount ? tr('This allowance cycle') : tr('Optional')}</span>
             <span className="mt-auto block pt-3 text-xl leading-tight font-black text-blue">{limitCount ? `${limitCount} set` : tr('Set up')}</span>
           </button>
+          {/* Desktop: Category limits, styled like the Class days card */}
+          <Card className="hidden animate-rise lg:flex lg:flex-1 lg:items-center lg:gap-4">{/* takes any extra height, content centered */}
+            <span className={tileIcon}><Icon name="pie" className="size-5" /></span>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-lg font-black">{tr('Category limits')}</h2>
+              <p className="text-sm font-semibold text-muted">{limitCount ? tr('{0} {1} a cap this allowance cycle.', limitCount, limitCount === 1 ? tr('category has') : tr('categories have')) : tr('Cap a category until your next baon, like snacks under ₱200.')}</p>
+            </div>
+            <button type="button" onClick={openLimits} className="min-h-11 shrink-0 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">{limitCount ? tr('Edit') : tr('Set up')}</button>
+          </Card>
         </div>
 
         {/* School expenses */}
@@ -312,7 +303,7 @@ export function Plan() {
           ) : (
             <div className="py-6">
               <p className="font-semibold text-muted">
-                {tr('Nothing planned yet. Add printing, projects or org fees before they’re due, so your daily budget doesn’t count money that’s already spoken for.')}</p>
+                {tr('Nothing planned yet. Add printing, projects or org fees before they’re due.')}</p>
               <div className="mt-4 flex flex-wrap gap-2 md:hidden">
                 {QUICK.map((t) => (
                   <button key={t.id} type="button" onClick={() => setOpen({ kind: 'item', template: t.id })} className="min-h-11 rounded-full bg-page px-4 font-extrabold">

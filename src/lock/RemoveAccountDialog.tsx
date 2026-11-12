@@ -40,7 +40,7 @@ export function RemoveAccountDialog({ account, onClose, onRemoved }: { account: 
       setError(err instanceof WrongPassphrase
         ? tr('That passphrase isn’t right. Try again.')
         : (err as { problem?: string }).problem
-          ? tr('Some of {0}’s entries aren’t saved online yet. Open Baon as {0} while connected to the internet, sign in if asked, then try again.', name)
+          ? tr('Some of {0}’s entries aren’t saved online yet. Open Baon as {0} while online, then try again.', name)
           : tr('Couldn’t remove. Try again.'))
       setBusy(false)
     }
@@ -49,7 +49,7 @@ export function RemoveAccountDialog({ account, onClose, onRemoved }: { account: 
   return (
     <Modal title={tr('Remove {0} from this phone?', name)} onClose={() => !busy && onClose()}>
       <form onSubmit={remove} noValidate>
-        <p className="font-semibold text-muted">{tr('{0}’s records are removed from this phone only. They stay in {0}’s account — signing in on any phone brings them back.', name)}</p>
+        <p className="font-semibold text-muted">{tr('Removed from this phone only. {0}’s records stay in their account.', name)}</p>
         {shared && (
           <label className={`${label} mt-4`}>
             {tr('{0}’s passphrase', name)}<input type="password" autoComplete="current-password" autoFocus value={passphrase} onChange={(e) => { setPassphrase(e.target.value); setError('') }} className={field} />

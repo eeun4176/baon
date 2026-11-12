@@ -112,13 +112,12 @@ export function History() {
         title={tr('History')}
         sub={tr('Everything you logged, newest first.')}
         actions={
-          <>
-            <Segmented options={[['list', tr('List')], ['charts', tr('Charts')]] as const} value={view} onChange={setView} label={tr('View')} className="lg:hidden" />
+          <div className="flex w-full items-center gap-2 sm:w-auto">
+            <Segmented options={[['list', tr('List')], ['charts', tr('Charts')]] as const} value={view} onChange={setView} label={tr('View')} className="flex-1 sm:flex-none lg:hidden" />
             <Search value={query} onChange={setQuery} className="hidden w-72 lg:flex" />
-            <button type="button" onClick={() => setSharing(true)} aria-label={tr('Share your spending')} className="grid size-11 shrink-0 place-items-center rounded-full bg-blue text-white">
-              <Icon name="share" className="size-5" />
-            </button>
-          </>
+            <button type="button" onClick={() => setSharing(true)} aria-label={tr('Share your spending')} className="flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-blue px-5 font-black text-white lg:min-h-12">
+              <Icon name="share" className="size-5" /> {tr('Share')}</button>
+          </div>
         }
       />
 

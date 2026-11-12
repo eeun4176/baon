@@ -83,7 +83,7 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
           <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue">
             <Icon name="shield" />
           </span>
-          <p className="font-semibold">{tr('Your records are scrambled on your phone, and a scrambled copy syncs with your account so your other devices get them.')}</p>
+          <p className="font-semibold">{tr('Your records are scrambled on your phone and synced to your account.')}</p>
         </Card>
         <p className="mt-3 text-center text-sm font-semibold text-muted">
           {tr('By continuing, you agree to the')}{' '}<button type="button" onClick={() => setPolicy('terms')} className={policyLink}>{tr('Terms')}</button>,{' '}
@@ -99,7 +99,7 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
 
       {!online && (
         <p role="status" className="mb-4 rounded-2xl bg-pebble p-4 font-bold">
-          {tr('You’re offline. Connect to Wi‑Fi or data once to set up — after that, Baon works offline.')}</p>
+          {tr('You’re offline. Connect once to set up — after that, Baon works offline.')}</p>
       )}
 
       <Card className="space-y-3">

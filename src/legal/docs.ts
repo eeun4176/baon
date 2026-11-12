@@ -3,7 +3,7 @@
  * (shown as a pop-up by Legal.tsx). Short, plain words, no technical terms or company names.
  * Keep it true to what the app does; update LAST_UPDATED whenever data handling changes.
  */
-export const LAST_UPDATED = 'November 11, 2026'
+export const LAST_UPDATED = 'November 12, 2026'
 
 export type DocId = 'privacy' | 'terms' | 'storage'
 
@@ -19,7 +19,7 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
       ['Backups', 'Backups are extra files you save yourself. They open only with your recovery code.'],
       ['Your rights', 'You can see, correct, copy or delete your data anytime: edit your name on Me → Profile, save a copy on Backup, or use Delete account on Me → Security.'],
       ['Under 18?', 'Use Baon with a parent’s or guardian’s permission.'],
-      ['Keep in mind', 'Anyone who can unlock your phone can open Baon, so keep your screen lock on. Lost your phone? Sign in on a new one and your records come back.'],
+      ['Keep in mind', 'Anyone who can open Baon on your phone can see your records, so keep your screen lock on. Sharing a phone? Turn on Shared phone mode (Me → Security) and Baon asks for a passphrase only you know; your Google or email sign-in can still open your records, so sign out of Google on that phone too. On a phone that isn’t yours, use Remove from this phone when you’re done. Lost your phone? Sign in on a new one and your records come back.'],
     ],
   },
   terms: {
@@ -41,7 +41,8 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
     sections: [
       ['What it saves', 'Your records (scrambled), the names of accounts on this phone, your display choices, reminder settings, a note that you’re signed in, and Baon’s own app files so it works without internet.'],
       ['Why', 'So Baon opens fast, works without internet, and your records stay with you.'],
-      ['Clearing it', 'Delete account on Me → Security removes everything Baon saved on this phone and online. Clearing Baon’s data in your browser settings removes it from this phone only — sign in again and your records come back.'],
+      ['More than one account', 'A phone can hold more than one Baon account. Each has its own scrambled records and its own key; one account can’t read another’s.'],
+      ['Clearing it', 'Remove from this phone (Me → Security) deletes your records from this phone only; they stay in your account. Delete account on Me → Security removes everything Baon saved on this phone and online. Clearing Baon’s data in your browser settings removes it from this phone only — sign in again and your records come back.'],
     ],
   },
 }

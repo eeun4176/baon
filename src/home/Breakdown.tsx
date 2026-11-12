@@ -87,7 +87,7 @@ export function Breakdown() {
         )}
         <MoneyTiles t={t} />
         <p className="px-4 pt-6 text-center font-semibold text-muted">
-          {tr('Savings aren’t counted. Spend a bit more today and tomorrow’s budget adjusts on its own.')}</p>
+          {tr('Savings aren’t counted. Spend more today and tomorrow’s budget adjusts.')}</p>
       </div>
     </Page>
   )

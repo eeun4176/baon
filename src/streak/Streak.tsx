@@ -25,10 +25,10 @@ const shortDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'shor
 const LEVEL_CLASS = { 0: 'bg-map-0', 1: 'bg-map-1', 2: 'bg-map-2', 3: 'bg-map-3', over: 'bg-map-over' } as const
 
 const RULES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'check', title: tr('Log every class day'), text: tr('A class day counts when you log what you spent, or tap “No spending today”. ₱0 days earn nothing extra — never skip meals.') },
-  { icon: 'flame', title: tr('Went over? It still counts'), text: tr('Logging honestly is what matters. Over-budget days show dark on your map, and tomorrow’s budget adjusts.') },
-  { icon: 'ticket', title: tr('One free pass a week'), text: tr('Forgot to log a day? Your free pass covers it automatically, once every Monday–Sunday.') },
-  { icon: 'calendar', title: tr('No class? It’s frozen'), text: tr('Weekends without class and breaks like sembreak or suspensions never break your streak.') },
+  { icon: 'check', title: tr('Log every class day'), text: tr('Log what you spent, or tap “No spending today”. Never skip meals for it.') },
+  { icon: 'flame', title: tr('Went over? It still counts'), text: tr('Logging is what matters. Tomorrow’s budget adjusts.') },
+  { icon: 'ticket', title: tr('One free pass a week'), text: tr('Forgot a day? Your free pass covers it, once a week.') },
+  { icon: 'calendar', title: tr('No class? It’s frozen'), text: tr('Days without class never break your streak.') },
 ]
 
 /** Small white stat tile (Best streak, Free pass, On-budget days). */
@@ -125,7 +125,7 @@ export function Streak() {
         <Card className="animate-rise lg:col-span-12">
           <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
             <h2 className="text-xl font-black">{tr('Spending map')}</h2>
-            <p className="text-sm font-semibold text-muted">{tr('Each square is a day · darker blue = more of that day’s budget used')}</p>
+            <p className="text-sm font-semibold text-muted">{tr('Darker blue = more of that day’s budget used')}</p>
           </div>
           <p className="sr-only">{tr('{0} on-budget days and {1} over-budget days in the last 6 months.', onDays, overDays)}</p>
           <div

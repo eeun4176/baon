@@ -65,7 +65,7 @@ export function ShareSpendingDialog({ onClose }: { onClose: () => void }) {
           <img src={picture.url} alt={tr('Picture of your spending')} className="size-full object-contain" />
         ) : null}
       </div>
-      <p className="mt-3 text-sm font-semibold text-muted">{tr('The picture shows your amounts and notes. Share only what you’re okay with others seeing.')}</p>
+      <p className="mt-3 text-sm font-semibold text-muted">{tr('The picture shows your amounts and notes.')}</p>
       <button type="button" disabled={!ready || busy} onClick={share} className="mt-4 flex min-h-13 w-full items-center justify-center gap-2 rounded-full bg-blue px-5 text-lg font-black text-white disabled:opacity-60">
         <Icon name="share" className="size-5" /> {tr('Share')}</button>
     </Modal>

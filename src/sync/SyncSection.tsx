@@ -60,7 +60,7 @@ export function SyncSection() {
   return (
     <section aria-labelledby="sync-title">
       <h2 id="sync-title" className="text-xl font-black">{tr('Sync across devices')}</h2>
-      <p className="mt-1 font-semibold text-muted">{tr('Your records follow you to every phone, tablet or computer where you sign in to Baon.')}</p>
+      <p className="mt-1 font-semibold text-muted">{tr('Your records follow you to every device you sign in on.')}</p>
       <p role="status" className="mt-3 rounded-2xl bg-page p-3 font-bold">{line}</p>
       <div className="mt-3">
         {status.problem === 'deleted' ? null : status.problem === 'signin' ? (

@@ -65,14 +65,14 @@ function fit(c: CanvasRenderingContext2D, text: string, max: number): string {
 
 /** Draws the spending picture (1080×1920). */
 export async function spendingImage(s: SpendingSummary, label: string): Promise<Blob> {
-  const { canvas, c } = await storyCanvas(700)
-  c.fillStyle = 'rgba(255,255,255,0.7)'
+  const { canvas, c, ink, dark } = await storyCanvas(700)
+  c.fillStyle = ink(0.7)
   c.font = '800 52px Nunito, sans-serif'
   c.fillText(label, W / 2, 540)
-  c.fillStyle = '#fff'
+  c.fillStyle = ink(1)
   c.font = '900 200px Nunito, sans-serif'
   c.fillText(fit(c, formatPeso(s.total), W - 160), W / 2, 760)
-  c.fillStyle = 'rgba(255,255,255,0.7)'
+  c.fillStyle = ink(0.7)
   c.font = '800 48px Nunito, sans-serif'
   c.fillText(s.count === 1 ? tr('spent · 1 item') : tr('spent · {0} items', s.count), W / 2, 850)
 
@@ -82,14 +82,14 @@ export async function spendingImage(s: SpendingSummary, label: string): Promise<
   const top = 940
   const rowH = 84
   const cardH = 40 + shown.length * rowH + (more ? 70 : 0)
-  c.fillStyle = 'rgba(255,255,255,0.08)'
+  c.fillStyle = ink(0.08)
   c.beginPath()
   c.roundRect(90, top, W - 180, cardH, 40)
   c.fill()
   shown.forEach((item, i) => {
     const y = top + 20 + i * rowH + 60
     c.font = '900 46px Nunito, sans-serif'
-    c.fillStyle = '#fff'
+    c.fillStyle = ink(1)
     c.textAlign = 'right'
     const amount = formatPeso(item.amount)
     c.fillText(amount, W - 140, y)
@@ -101,22 +101,22 @@ export async function spendingImage(s: SpendingSummary, label: string): Promise<
     const title = fit(c, item.title, W - 280 - amountW - 40 - timesW)
     c.fillText(title, 140, y)
     if (times) {
-      c.fillStyle = 'rgba(140,170,255,0.95)' // light blue, readable on the dark card
+      c.fillStyle = dark ? 'rgba(140,170,255,0.95)' : '#1e5eff' // blue that reads on the card in either theme
       c.fillText(times, 140 + c.measureText(title).width, y)
     }
     if (i < shown.length - 1) {
-      c.fillStyle = 'rgba(255,255,255,0.08)'
+      c.fillStyle = ink(0.08)
       c.fillRect(140, y + 28, W - 280, 2)
     }
   })
   c.textAlign = 'center'
   if (more) {
-    c.fillStyle = 'rgba(255,255,255,0.6)'
+    c.fillStyle = ink(0.6)
     c.font = '800 40px Nunito, sans-serif'
     c.fillText(tr('…and {0} more', more), W / 2, top + 20 + shown.length * rowH + 50)
   }
 
-  c.fillStyle = 'rgba(255,255,255,0.6)'
+  c.fillStyle = ink(0.6)
   c.font = '800 40px Nunito, sans-serif'
   c.fillText(tr('Tracked with Baon'), W / 2, Math.min(H - 220, Math.max(top + cardH + 110, 1700)))
   return toPng(canvas)

@@ -146,7 +146,7 @@ export function PresetEditor({ onClose, startNew = false }: { onClose: () => voi
 
   return (
     <Modal title={title} onClose={onClose}>
-      <p className="font-semibold text-muted">{tr('One tap on Home logs the expense right away. Up to {0} buttons; the first ones show first.', MAX_PRESETS)}</p>
+      <p className="font-semibold text-muted">{tr('One tap logs the expense. Up to {0} buttons.', MAX_PRESETS)}</p>
       {draft.length ? (
         <ul className="mt-4 divide-y divide-page rounded-3xl bg-page/60">
           {draft.map((p, i) => (

@@ -1,7 +1,7 @@
 /*
  * Me.tsx — Your account, money settings and data (design p11 phone, p22 desktop).
  *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / device mode chips,
- *           Sign out (Lock in Shared phone mode).
+ *           Sign out (Lock in Shared phone mode). Phones: centered stack; wider screens: one row.
  *   Tabs: Profile (name, school, Senior high / College) · Security (device mode, lock/DeviceModeItems.tsx) ·
  *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, install, Help & privacy link — phones have no sidebar).
  *   Side cards: "Your baon" (allowance, Edit) and Wallets (add, rename, remove, Move money).
@@ -92,7 +92,7 @@ function PhotoAvatar() {
 
   return (
     <div ref={box} className="relative shrink-0">
-      <Avatar className="size-16 text-3xl md:size-20" />
+      <Avatar className="size-20 text-3xl" />
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -105,7 +105,7 @@ function PhotoAvatar() {
         <Icon name="pencil" className="size-3 md:size-3.5" />
       </button>
       {open && (
-        <div id="photo-menu" className="absolute top-full left-0 z-30 mt-3 w-60 animate-rise rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
+        <div id="photo-menu" className="absolute top-full left-1/2 z-30 mt-3 -ml-30 w-60 animate-rise sm:left-0 sm:ml-0 rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
           <label className={`${item} focus-within:ring-2 focus-within:ring-blue/40`}>
             <Icon name="pencil" className="size-5" /> {profile.photo ? tr('Change photo') : tr('Upload a photo')}
             <input type="file" accept="image/*" className="sr-only" onChange={(e) => { upload(e.target.files?.[0]); e.target.value = '' }} />
@@ -160,7 +160,6 @@ function ProfileTab() {
   return (
     <form onSubmit={save} noValidate>
       <h2 className="text-xl font-black">{tr('Profile')}</h2>
-      <p className="font-semibold text-muted">{tr('Only your name and email are kept with your account.')}</p>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className={label}>
           {tr('Display name')}<input value={draftName} maxLength={40} onChange={(e) => { setDraftName(e.target.value); setError('') }} className={field} />
@@ -171,7 +170,7 @@ function ProfileTab() {
         </label>
       </div>
       <p className={`${label} mt-4`}>{tr('I’m in')}</p>
-      <div className="mt-1.5 grid max-w-md grid-cols-2 gap-1 rounded-full bg-page p-1" role="radiogroup" aria-label={tr('I’m in')}>
+      <div className="mt-1.5 grid grid-cols-2 gap-1 rounded-full bg-page p-1" role="radiogroup" aria-label={tr('I’m in')}>
         {LEVELS.map(([id, text]) => (
           <button
             key={id}
@@ -186,12 +185,8 @@ function ProfileTab() {
         ))}
       </div>
       {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 font-bold">{error}</p>}
-      <button type="submit" disabled={!changed || busy} className="mt-5 min-h-12 rounded-full bg-blue px-6 font-black text-white disabled:opacity-40">
+      <button type="submit" disabled={!changed || busy} className="mt-5 min-h-12 w-full rounded-full bg-blue px-6 font-black text-white disabled:opacity-40 sm:w-auto">
         {tr('Save profile')}</button>
-      <div className="mt-6 border-t border-page pt-4">
-        <p className="font-black">{tr('Sign-in account')}</p>
-        <p className="text-sm font-semibold text-muted">{tr('Google or email code — used to sign in only. It never unlocks your records by itself.')}</p>
-      </div>
     </form>
   )
 }
@@ -218,7 +213,7 @@ function StorageItem() {
         <span className="block font-semibold text-muted">
           {storage.persisted
             ? tr('The browser won’t delete Baon’s records to free up space.{0}', used)
-            : tr('If your phone runs low on space, the browser may delete Baon’s data. Installing Baon on your home screen helps.{0}', used)}
+            : tr('If your phone runs low on space, the browser may clear Baon’s data. Installing Baon helps.{0}', used)}
           {isStorageLow(storage) && tr(' Your phone is almost full.')}
         </span>
         {!storage.persisted && (
@@ -243,7 +238,7 @@ function SecurityTab() {
       <RemoveFromPhone />
       <div className="mt-6 border-t border-pebble pt-5">
         <h3 className="font-black">{tr('Delete account')}</h3>
-        <p className="mt-1 font-semibold text-muted">{tr('Deletes your sign-in account, your synced copies online and everything Baon saved on this phone. Make a backup first if you might come back.')}</p>
+        <p className="mt-1 font-semibold text-muted">{tr('Deletes your account and your records, online and on this phone. This can’t be undone.')}</p>
         <button type="button" onClick={() => setDeleting(true)} className="mt-3 flex min-h-12 items-center gap-2 rounded-full bg-red px-5 font-black text-white hover:brightness-110">
           <Icon name="trash" className="size-5" /> {tr('Delete account')}</button>
       </div>
@@ -298,17 +293,17 @@ export function Me() {
       <PageHeader title={tr('Me')} sub={tr('Your account, money settings and data.')} />
 
       {/* Header card */}
-      <Card className="relative z-20 flex animate-rise flex-wrap items-center gap-4 md:gap-5">{/* above the cards below, so the photo menu isn’t covered */}
+      <Card className="relative z-20 flex animate-rise flex-col items-center gap-3 text-center sm:flex-row sm:gap-5 sm:text-left">{/* above the cards below, so the photo menu isn’t covered */}
         <PhotoAvatar />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xl font-black sm:text-2xl md:text-3xl">{name}</p>
-          <div className="mt-2 flex flex-wrap gap-2">
+        <div className="w-full min-w-0 sm:flex-1">
+          <p className="truncate text-2xl font-black md:text-3xl">{name}</p>
+          <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
             <Chip><img src={flame} alt="" className="size-4" /> {streak.current}{tr('-day streak')}</Chip>
             {(level || profile.school) && <Chip>{[level, profile.school].filter(Boolean).join(' · ')}</Chip>}
             <Chip blue>{vault.shared() ? tr('Shared phone mode') : tr('My phone mode')}</Chip>
           </div>
         </div>
-        <button type="button" onClick={signOut} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:w-auto">
+        <button type="button" onClick={signOut} className="mt-1 flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:mt-0 sm:w-auto">
           <Icon name={vault.shared() ? 'lock' : 'logout'} className="size-5" /> {vault.shared() ? tr('Lock Baon') : tr('Sign out')}</button>
       </Card>
 

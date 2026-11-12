@@ -84,7 +84,7 @@ export function LimitsDialog({ onClose }: { onClose: () => void }) {
     <Modal title={tr('Category limits')} onClose={onClose}>
       <form onSubmit={save} noValidate>
         <p className="font-semibold text-muted">
-          {tr('A cap for this allowance cycle{0}. It starts over when your next baon comes in. Leave a box empty for no limit.', start ? tr(' (since {0})', since.format(new Date(`${start}T00:00:00Z`))) : '')}</p>
+          {tr('A cap until your next baon{0}. Leave a box empty for no limit.', start ? tr(' (since {0})', since.format(new Date(`${start}T00:00:00Z`))) : '')}</p>
         <ul className="mt-3 divide-y divide-page">
           {rows.map((c) => (
             <li key={c.id} className="flex items-center gap-3 py-2.5">
@@ -120,7 +120,7 @@ export function LimitsDialog({ onClose }: { onClose: () => void }) {
 
         <div className="mt-3 rounded-2xl bg-page p-3">
           <label htmlFor="own-name" className="block font-black">{tr('Add your own category')}</label>
-          <p className="text-sm font-semibold text-muted">{tr('For things you buy often, like milk tea. It shows up when you log an expense too.')}</p>
+          <p className="text-sm font-semibold text-muted">{tr('For things you buy often, like milk tea.')}</p>
           <div className="mt-2 flex gap-2">
             <input
               id="own-name"

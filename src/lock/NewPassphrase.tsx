@@ -36,8 +36,8 @@ export function NewPassphrase({ submitLabel, onSave }: { submitLabel: string; on
       <label className={`${label} mt-4`}>
         {tr('Type it again')}<input type="password" autoComplete="new-password" value={again} onChange={(e) => { setAgain(e.target.value); setError('') }} className={field} />
       </label>
-      <p className="mt-3 text-sm font-semibold text-muted">{tr('At least {0} characters. A short sentence is easy to remember, like “jeep ako every morning”.', MIN_PASSPHRASE)}</p>
-      <p className="mt-3 rounded-2xl bg-pebble p-3 font-bold">{tr('Baon can’t show it to you later. If you forget it, you’ll need your recovery code or to sign in again.')}</p>
+      <p className="mt-3 text-sm font-semibold text-muted">{tr('At least {0} characters, like “jeep ako every morning”.', MIN_PASSPHRASE)}</p>
+      <p className="mt-3 rounded-2xl bg-pebble p-3 font-bold">{tr('Forgot it? You’ll need your recovery code, or to sign in again.')}</p>
       {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
       <button type="submit" disabled={busy} className={`${primary} mt-5`}>{busy ? tr('Saving…') : submitLabel}</button>
     </form>
