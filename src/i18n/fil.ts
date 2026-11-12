@@ -820,4 +820,17 @@ export const FIL: Record<string, string> = {
 
   // added with the UI clean-up
   "Plan an expense": "Mag-plan ng gastos",
+
+  // added with the UI clean-up
+  "Spent today": "Nagastos ngayon",
+  "Spent yesterday": "Nagastos kahapon",
+  "Spent this month": "Nagastos this month",
+  "Nothing logged in these days.": "Walang na-log sa mga araw na ’to.",
+  "Pick All to see everything.": "Piliin ang All para makita lahat.",
+  "Show": "Ipakita",
+
+  // added with the UI clean-up
+
+  // added with the UI clean-up
+  "All categories": "Lahat ng category",
 }

@@ -2,17 +2,17 @@
  * Home.tsx — Today at a glance.
  * Phone (design p6): logo, date line, greeting, Su–Sa week row, the safe-to-spend
  *   hero with "Add expense" / "How it's counted", One-tap add, then today's entries.
- * Desktop (design p18): greeting row with search; hero (with "₱720 of ₱1,500 left" bar) beside a dark
+ * Desktop (design p18): greeting row with a search box (matches show under it; Enter opens History); hero (with "₱720 of ₱1,500 left" bar) beside a dark
  *   streak card (week row, best streak, free pass); One-tap add + Set aside for school; Wallets;
  *   Spent per day + Today.
  */
 import { useState } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
 import flame from '../assets/streak-flame.png'
 import { manilaDate, weekday } from '../budget/days.ts'
 import { SpentPerDay } from '../history/Charts.tsx'
-import { spentPerDay } from '../history/history.ts'
+import { filterEntries, spentPerDay } from '../history/history.ts'
 import { TxRow } from '../history/TxRow.tsx'
 import { balances } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
@@ -146,6 +146,54 @@ function StreakCard({ today, streak }: { today: string; streak: Streak }) {
   )
 }
 
+/** Desktop search box: matching entries appear right under it as you type; Enter opens them all in History. */
+function HomeSearch() {
+  const { transactions, wallets } = useSession()
+  const navigate = useNavigate()
+  const [query, setQuery] = useState('')
+  const q = query.trim()
+  const matches = q ? filterEntries(transactions, wallets, q, null).reverse() : [] // newest first
+  return (
+    <form
+      role="search"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (q) navigate(`/history?q=${encodeURIComponent(q)}`)
+      }}
+      className="relative z-20 hidden w-72 lg:block"
+    >
+      <label className="flex min-h-11 items-center gap-2.5 rounded-full bg-card px-4 focus-within:ring-2 focus-within:ring-blue/40">
+        <Icon name="search" className="size-5 shrink-0 text-muted" />
+        <span className="sr-only">{tr('Search entries')}</span>
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => e.key === 'Escape' && setQuery('')}
+          placeholder={tr('Search entries')}
+          className="min-w-0 flex-1 bg-transparent font-bold outline-none placeholder:text-muted"
+        />
+      </label>
+      {q && (
+        <div className="absolute top-full right-0 mt-2 w-96 animate-rise rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
+          {matches.length ? (
+            <>
+              <ul className="divide-y divide-page">
+                {matches.slice(0, 5).map((tx, i) => <TxRow key={tx.id} tx={tx} wallets={wallets} withDay index={i} />)}
+              </ul>
+              {matches.length > 5 && (
+                <button type="submit" className="mt-1 min-h-11 w-full rounded-xl font-extrabold text-blue hover:bg-page">{tr('See all {0} in History', matches.length)}</button>
+              )}
+            </>
+          ) : (
+            <p className="p-3 font-semibold text-muted">{tr('Nothing matches that search.')}</p>
+          )}
+        </div>
+      )}
+    </form>
+  )
+}
+
 /** Today's entries, newest first, so the day is easy to follow without opening History. */
 function TodayCard({ today, spent, className = '' }: { today: string; spent: number; className?: string }) {
   const { transactions, wallets } = useSession()
@@ -222,8 +270,7 @@ export function Home() {
           <p className="text-sm font-extrabold tracking-[0.12em] text-muted uppercase">{dateLine.format(new Date())}</p>
           <h1 className="mt-1 truncate text-[clamp(1.375rem,6.4vw,2rem)] leading-tight font-black lg:text-[2rem]" title={greeting}>{greeting}</h1>
         </div>
-        <Link to="/history" className="hidden min-h-11 w-64 items-center gap-2.5 rounded-full bg-card px-4 font-bold text-muted hover:text-ink lg:flex">
-          <Icon name="search" className="size-5" /> {tr('Search entries')}</Link>
+        <HomeSearch />
       </div>
 
       {/* Phone/tablet: week row above the hero (design p6) */}

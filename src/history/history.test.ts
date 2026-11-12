@@ -4,7 +4,7 @@
  */
 import { describe as group, expect, it } from 'vitest'
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
-import { describe, filterEntries, groupByDay, spentByCategory, spentPerDay, spentThisWeek } from './history.ts'
+import { describe, filterEntries, groupByDay, rangeDays, spentBetween, spentByCategory, spentPerDay, spentThisWeek } from './history.ts'
 
 const wallets: Wallet[] = [
   { id: 'cash', name: 'Cash', type: 'spending', openingCentavos: 0, archived: false },
@@ -76,5 +76,18 @@ group('charts', () => {
   it('a refund lowers that day\'s spending; transfers never count', () => {
     const r = [...week, tx('refund', 30, '2026-11-10T19:00', { linkedId: 't6' })]
     expect(spentPerDay(r, '2026-11-10').at(-1)!.spent).toBe(13000)
+  })
+
+  it('filters: today, yesterday, this week (from Sunday), this month (from the 1st)', () => {
+    const today = '2026-11-10' // a Tuesday
+    expect(rangeDays('today', today)).toEqual({ from: today, to: today })
+    expect(rangeDays('yesterday', today)).toEqual({ from: '2026-11-09', to: '2026-11-09' })
+    expect(rangeDays('week', today)).toEqual({ from: '2026-11-08', to: today })
+    expect(rangeDays('month', today)).toEqual({ from: '2026-11-01', to: today })
+    // The week's total is the same number the "Spent since Sunday" card shows.
+    const w = rangeDays('week', today)
+    expect(spentBetween(week, w.from, w.to)).toEqual({ total: 42000, perDay: 14000 })
+    const y = rangeDays('yesterday', today)
+    expect(spentBetween(week, y.from, y.to).total).toBe(spentPerDay(week, '2026-11-09', 1)[0].spent)
   })
 })

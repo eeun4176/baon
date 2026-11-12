@@ -5,9 +5,12 @@
  *   left and a summary column on the right ("Spent since Sunday", By category, export).
  * Tap any entry to edit or delete it. Share (header) makes a picture of today's / this week's /
  * this month's spending for a story (ShareSpendingDialog).
+ * Filter row above the list: "Show" chips (All · Today · Yesterday · This week · This month) on the
+ * left, a category dropdown at the right edge. The Spent total and By category follow the chips
+ * (All keeps this week's numbers). Opens with ?q= from Home's search.
  */
-import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
 import { addDays, manilaDate } from '../budget/days.ts'
 import { useToday } from '../home/useToday.ts'
 import { formatPeso } from '../ledger/money.ts'
@@ -16,9 +19,13 @@ import { useAddDialog } from '../shell/useAddDialog.ts'
 import { Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
 import { CategoryBars, SpentPerDay } from './Charts.tsx'
 import { ShareSpendingDialog } from './ShareSpendingDialog.tsx'
-import { filterEntries, groupByDay, spentByCategory, spentPerDay, spentThisWeek } from './history.ts'
+import { filterEntries, groupByDay, rangeDays, spentBetween, spentByCategory, spentPerDay, type Range } from './history.ts'
 import { TxRow } from './TxRow.tsx'
 import { LOCALE, tr } from '../i18n/i18n.ts'
+
+const RANGES: [Range, string][] = [['all', tr('All')], ['today', tr('Today')], ['yesterday', tr('Yesterday')], ['week', tr('This week')], ['month', tr('This month')]]
+// The total's title for each filter ("All" shows this week's numbers).
+const SPENT_TITLE: Record<Range, string> = { all: tr('Spent since Sunday'), week: tr('Spent since Sunday'), today: tr('Spent today'), yesterday: tr('Spent yesterday'), month: tr('Spent this month') }
 
 const longDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 
@@ -47,6 +54,64 @@ function Search({ value, onChange, className = '' }: { value: string; onChange: 
   )
 }
 
+/**
+ * Category dropdown (Baon's own menu, not the browser's): "All categories" plus every category the
+ * student has entries in, their own ones included. Closes on a pick, a click elsewhere or Esc.
+ */
+function CategoryFilter({ value, options, onChange }: { value: string | null; options: { categoryId: string; label: string }[]; onChange: (id: string | null) => void }) {
+  const [open, setOpen] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  const current = options.find((o) => o.categoryId === value)
+
+  useEffect(() => {
+    if (!open) return
+    const onDown = (e: PointerEvent) => !box.current?.contains(e.target as Node) && setOpen(false)
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && setOpen(false)
+    document.addEventListener('pointerdown', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [open])
+
+  /** One row of the menu; the picked one is bold with a check. */
+  const item = (id: string | null, text: string) => (
+    <li key={id ?? 'all'} role="option" aria-selected={value === id}>
+      <button
+        type="button"
+        onClick={() => { onChange(id); setOpen(false) }}
+        className={`flex min-h-11 w-full items-center gap-2 rounded-xl px-3 text-left hover:bg-page ${value === id ? 'font-black' : 'font-bold'}`}
+      >
+        <span className="min-w-0 flex-1 truncate">{text}</span>
+        {value === id && <Icon name="check" className="size-5 shrink-0 text-blue" />}
+      </button>
+    </li>
+  )
+
+  return (
+    <div ref={box} className="relative mb-1 shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={tr('Filter by category')}
+        className={`flex min-h-11 max-w-36 items-center gap-1.5 rounded-full pr-3.5 pl-4 font-extrabold sm:max-w-56 ${current ? 'bg-ink text-card' : 'bg-card hover:bg-pebble'}`}
+      >
+        <span className="min-w-0 truncate">{current ? current.label : tr('Category')}</span>
+        <Icon name="chevron-down" className={`size-4 shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <ul role="listbox" aria-label={tr('Filter by category')} className="absolute top-full right-0 z-30 mt-2 max-h-80 w-56 animate-rise overflow-y-auto rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
+          {item(null, tr('All categories'))}
+          {options.map((o) => item(o.categoryId, o.label))}
+        </ul>
+      )}
+    </div>
+  )
+}
+
 /** History screen. */
 export function History() {
   const { transactions, wallets, snapshots } = useSession()
@@ -55,22 +120,29 @@ export function History() {
   const { open } = useAddDialog()
   const today = manilaDate()
   const [view, setView] = useState<'list' | 'charts'>('list')
-  const [query, setQuery] = useState('')
+  const [params] = useSearchParams()
+  const [query, setQuery] = useState(() => params.get('q') ?? '') // Home's search opens History with its text
+  const [range, setRange] = useState<Range>('all')
   const [categoryId, setCategoryId] = useState<string | null>(null)
   const [sharing, setSharing] = useState(false)
 
-  const days = useMemo(() => groupByDay(filterEntries(transactions, wallets, query, categoryId)), [transactions, wallets, query, categoryId])
-  const week = useMemo(() => spentThisWeek(transactions, today), [transactions, today])
-  const categories = useMemo(() => spentByCategory(transactions, week.since, today), [transactions, week.since, today])
+  const days = useMemo(() => {
+    const { from, to } = rangeDays(range, today)
+    return groupByDay(filterEntries(transactions, wallets, query, categoryId)).filter((d) => d.day >= from && d.day <= to)
+  }, [transactions, wallets, query, categoryId, range, today])
+  // The numbers beside the list cover the chosen days; "All" keeps this week's.
+  const shown = useMemo(() => rangeDays(range === 'all' ? 'week' : range, today), [range, today])
+  const spent = useMemo(() => spentBetween(transactions, shown.from, shown.to), [transactions, shown])
+  const categories = useMemo(() => spentByCategory(transactions, shown.from, shown.to), [transactions, shown])
   const perDay = useMemo(() => spentPerDay(transactions, today), [transactions, today])
-  // Chips: categories the student has actually used, most-spent first.
-  const chips = useMemo(() => spentByCategory(transactions, '0000-01-01', today).slice(0, 6), [transactions, today])
+  // Dropdown: categories the student has actually used, most-spent first.
+  const used = useMemo(() => spentByCategory(transactions, '0000-01-01', today), [transactions, today])
 
   const list =
     days.length === 0 ? (
       <Card className="animate-rise py-10 text-center">
-        <p className="text-lg font-black">{transactions.length ? tr('Nothing matches that search.') : tr('Nothing logged yet.')}</p>
-        <p className="mt-1 font-semibold text-muted">{transactions.length ? tr('Try another word or category.') : tr('Your expenses show up here, newest first.')}</p>
+        <p className="text-lg font-black">{!transactions.length ? tr('Nothing logged yet.') : query || categoryId ? tr('Nothing matches that search.') : tr('Nothing logged in these days.')}</p>
+        <p className="mt-1 font-semibold text-muted">{!transactions.length ? tr('Your expenses show up here, newest first.') : query || categoryId ? tr('Try another word or category.') : tr('Pick All to see everything.')}</p>
         {!transactions.length && (
           <button type="button" onClick={() => open()} className="mt-5 inline-flex min-h-12 items-center gap-2 rounded-full bg-blue px-6 font-black text-white">
             <Icon name="plus" className="size-5" /> {tr('Add your first expense')}</button>
@@ -95,15 +167,39 @@ export function History() {
   const summary = (
     <>
       <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white">
-        <p className="font-extrabold text-white/70">{tr('Spent since Sunday')}</p>
-        <p key={week.total} className="mt-1 animate-pop text-5xl font-black">{formatPeso(week.total)}</p>
-        <p className="mt-1 font-semibold text-white/70">{tr('{0} a day on average', formatPeso(week.perDay))}</p>
+        <p className="font-extrabold text-white/70">{SPENT_TITLE[range]}</p>
+        <p key={spent.total} className="mt-1 animate-pop text-5xl font-black">{formatPeso(spent.total)}</p>
+        {shown.from !== shown.to && <p className="mt-1 font-semibold text-white/70">{tr('{0} a day on average', formatPeso(spent.perDay))}</p>}
       </section>
       <Card className="animate-rise">
         <h2 className="mb-4 text-xl font-black">{tr('By category')}</h2>
         <CategoryBars rows={categories} />
       </Card>
     </>
+  )
+
+  // Which days (chips, left) and which category (dropdown, at the list's right edge)
+  const filters = (
+    <div className="mb-3 flex items-center gap-2">
+      <div className="flex min-w-0 flex-1 gap-2 overflow-x-auto pb-1" role="radiogroup" aria-label={tr('Show')}>
+        {RANGES.map(([id, text]) => (
+          <button
+            key={id}
+            type="button"
+            role="radio"
+            aria-checked={range === id}
+            onClick={(e) => {
+              setRange(id)
+              e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest' }) // phones: keep the picked chip in view
+            }}
+            className={`min-h-11 shrink-0 rounded-full px-4 font-extrabold whitespace-nowrap ${range === id ? 'bg-ink text-card' : 'bg-card hover:bg-pebble'}`}
+          >
+            {text}
+          </button>
+        ))}
+      </div>
+      <CategoryFilter value={categoryId} options={used} onChange={setCategoryId} />
+    </div>
   )
 
   return (
@@ -123,6 +219,7 @@ export function History() {
 
       {/* Phone/tablet: List or Charts */}
       <div className="lg:hidden">
+        {filters}
         {view === 'list' ? (
           <>
             <Search value={query} onChange={setQuery} className="mb-3" />
@@ -139,24 +236,13 @@ export function History() {
         )}
       </div>
 
-      {/* Desktop: chips + list | summary column */}
+      {/* Desktop: filters + list | summary column */}
       <div className="hidden lg:block">
-        <div className="mb-4 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('Filter by category')}>
-          {[{ categoryId: null, label: tr('All') }, ...chips].map((c) => (
-            <button
-              key={c.categoryId ?? 'all'}
-              type="button"
-              role="radio"
-              aria-checked={categoryId === c.categoryId}
-              onClick={() => setCategoryId(c.categoryId)}
-              className={`min-h-11 rounded-full px-5 font-extrabold ${categoryId === c.categoryId ? 'bg-ink text-card' : 'bg-card hover:bg-pebble'}`}
-            >
-              {c.label}
-            </button>
-          ))}
-        </div>
         <div className="grid grid-cols-[minmax(0,1fr)_20rem] items-start gap-5">
-          {list}
+          <div className="min-w-0">
+            {filters}
+            {list}
+          </div>
           <aside className="sticky top-6 space-y-4">
             {summary}
             <Link to="/backup" className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-card font-black hover:bg-pebble">

@@ -5,7 +5,7 @@
  * Days are Manila days; "spending" = expenses minus refunds (moves/saves aren't spending).
  */
 import { categoryLabel } from '../add/categories.ts'
-import { addDays, manilaDate, weekday } from '../budget/days.ts'
+import { addDays, daysBetween, manilaDate, weekday } from '../budget/days.ts'
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
 
@@ -80,6 +80,32 @@ export function spentByCategory(txs: Transaction[], from: string, to: string): {
     .filter(([, spent]) => spent > 0)
     .map(([categoryId, spent]) => ({ categoryId, label: categoryLabel(categoryId), spent }))
     .sort((a, b) => b.spent - a.spent)
+}
+
+/** History's "show" filter. */
+export type Range = 'all' | 'today' | 'yesterday' | 'week' | 'month'
+
+/** First and last day (inclusive) a filter covers. "all" = everything. Weeks start on Sunday, months on the 1st. */
+export function rangeDays(range: Range, today: string): { from: string; to: string } {
+  switch (range) {
+    case 'all':
+      return { from: '0000-01-01', to: '9999-12-31' }
+    case 'today':
+      return { from: today, to: today }
+    case 'yesterday':
+      return { from: addDays(today, -1), to: addDays(today, -1) }
+    case 'week':
+      return { from: addDays(today, -weekday(today)), to: today }
+    case 'month':
+      return { from: `${today.slice(0, 8)}01`, to: today }
+  }
+}
+
+/** Total spent from `from` to `to` (inclusive) and the average per day, in whole pesos. */
+export function spentBetween(txs: Transaction[], from: string, to: string): { total: number; perDay: number } {
+  const days = spentPerDay(txs, to, daysBetween(from, to) + 1)
+  const total = days.reduce((s, d) => s + d.spent, 0)
+  return { total, perDay: Math.floor(total / days.length / 100) * 100 }
 }
 
 /** "Spent since Sunday" card: total this week (Sun–today) and the average per day so far. */
