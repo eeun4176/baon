@@ -1,75 +1,64 @@
-# React + TypeScript + Vite
+<p align="center">
+  <img src="public/pwa-192x192.png" alt="Baon logo" width="96" height="96">
+</p>
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+<h1 align="center">Baon</h1>
 
-Currently, two official plugins are available:
+An offline-first budget app for students. Baon tells you how much is safe to spend today, based on your allowance (baon), the money you have now, and the days left until your next allowance.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+**Live app:** https://baon-ph.vercel.app
 
-## React Compiler
+## What it does
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Safe to spend today.** One number on Home, worked out from your wallets, what you set aside for school, and the days left.
+- **Quick logging.** One-tap buttons for the things you buy most, like a jeep fare or lunch.
+- **Wallets.** Cash, e-wallets, banks and savings, with moves between them.
+- **Plan.** Set money aside for school expenses, set category limits, and mark class days and breaks.
+- **History.** Search and filter your entries by day and category, with spending charts you can share.
+- **Streak.** Log every class day to keep your streak going; the flame changes as it grows.
+- **Works offline.** After the first sign-in, everything works without internet and installs like an app.
+- **Syncs across devices.** Sign in with Google or an email code and your records follow you.
+- **Private.** Records are encrypted on your device. Shared phone mode adds a passphrase, and several students can use one phone without seeing each other's records.
+- **English and Filipino**, with light and dark themes.
 
-## Expanding the ESLint configuration
+## Built with
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+React, TypeScript, Vite, Tailwind CSS, Dexie (IndexedDB), the Web Crypto API, Neon (sign-in and database) and Vercel. See [docs/technologies.md](docs/technologies.md) for what each one is for.
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## Run it locally
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+You need Node.js 22 or newer.
 
 ```
+npm install
+npm run dev
+```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+The app opens on `https://localhost:5173`. Your browser will warn about the local certificate the first time; that is expected.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Sign-in and sync need two values in a `.env.local` file (never committed). Copy `.env.example` to `.env.local` and fill in:
 
 ```
+VITE_NEON_AUTH_URL=
+VITE_NEON_DATA_API_URL=
+```
+
+Other commands:
+
+```
+npm test         # unit tests
+npm run lint     # code checks
+npm run build    # type-check and production build
+```
+
+## Docs
+
+| Doc | What it covers |
+|---|---|
+| [Architecture](docs/architecture.md) | Where data lives, how it is locked, how sync works, and what each folder is for |
+| [Design system](docs/design-system.md) | Colors, type, shapes, motion, shared components and writing rules |
+| [Technologies](docs/technologies.md) | Every tool Baon uses and why |
+
+## Contact
+
+Questions or problems: cabalquintojohnian@gmail.com
