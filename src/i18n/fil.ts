@@ -182,6 +182,7 @@ export const FIL: Record<string, string> = {
   "Your privacy, in plain words": "Privacy mo, sa simpleng salita",
   "Baon is built around the Data Privacy Act of 2012 (RA 10173): it collects only what sign-in needs, and you can delete your data anytime. If you’re under 18, read this with a parent or guardian.": "Ginawa ang Baon ayon sa Data Privacy Act of 2012 (RA 10173): kinukuha lang nito ang kailangan para makapag-sign in, at puwede mong i-delete ang data mo kahit kailan. Kung below 18 ka, basahin ’to kasama ang magulang o guardian.",
   "Policies": "Policies",
+  "Questions or problems? Email us:": "May tanong o problema? I-email kami:",
   "Common questions": "Madalas itanong",
 
   // history
@@ -519,7 +520,6 @@ export const FIL: Record<string, string> = {
   "No new password to make. We only use this to know it’s you.": "Walang bagong password na gagawin. Ginagamit lang namin ’to para malaman na ikaw ’yan.",
   "Sign in to get started": "Mag-sign in para makapagsimula",
   "You’re offline. Connect once to set up — after that, Baon works offline.": "Offline ka. Mag-connect nang isang beses para mag-set up — after n’on, gagana na ang Baon kahit offline.",
-  "G": "G",
   "Continue with Google": "Ituloy gamit ang Google",
   "Use email instead": "Email na lang ang gamitin",
   "With email, we’ll send you a 6‑digit code.": "Sa email, magse-send kami ng 6‑digit code.",

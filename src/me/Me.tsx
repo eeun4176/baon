@@ -296,11 +296,16 @@ export function Me() {
       <Card className="relative z-20 flex animate-rise flex-col items-center gap-3 text-center sm:flex-row sm:gap-5 sm:text-left">{/* above the cards below, so the photo menu isn’t covered */}
         <PhotoAvatar />
         <div className="w-full min-w-0 sm:flex-1">
-          <p className="truncate text-2xl font-black md:text-3xl">{name}</p>
+          <p className="flex items-center justify-center gap-2 sm:justify-start">
+            <span className="min-w-0 truncate text-2xl font-black md:text-3xl">{name}</span>
+            {/* Phone mode: icon only, its name shows on hover and to screen readers */}
+            <span role="img" title={vault.shared() ? tr('Shared phone mode') : tr('My phone mode')} aria-label={vault.shared() ? tr('Shared phone mode') : tr('My phone mode')} className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-tint text-blue">
+              <Icon name={vault.shared() ? 'users' : 'phone'} className="size-4" />
+            </span>
+          </p>
           <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
-            <Chip><img src={flame} alt="" className="size-4" /> {streak.current}{tr('-day streak')}</Chip>
+            <Chip><img src={flame} alt="" className="size-4" /> {streak.current}<span className="sr-only">{tr('-day streak')}</span></Chip>
             {(level || profile.school) && <Chip>{[level, profile.school].filter(Boolean).join(' · ')}</Chip>}
-            <Chip blue>{vault.shared() ? tr('Shared phone mode') : tr('My phone mode')}</Chip>
           </div>
         </div>
         <button type="button" onClick={signOut} className="mt-1 flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:mt-0 sm:w-auto">

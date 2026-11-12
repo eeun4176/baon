@@ -4,6 +4,7 @@
  * Keep it true to what the app does; update LAST_UPDATED whenever data handling changes.
  */
 export const LAST_UPDATED = 'November 12, 2026'
+export const CONTACT_EMAIL = 'cabalquintojohnian@gmail.com' // shown in the policies and on Help
 
 export type DocId = 'privacy' | 'terms' | 'storage'
 
@@ -20,6 +21,7 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
       ['Your rights', 'You can see, correct, copy or delete your data anytime: edit your name on Me → Profile, save a copy on Backup, or use Delete account on Me → Security.'],
       ['Under 18?', 'Use Baon with a parent’s or guardian’s permission.'],
       ['Keep in mind', 'Anyone who can open Baon on your phone can see your records, so keep your screen lock on. Sharing a phone? Turn on Shared phone mode (Me → Security) and Baon asks for a passphrase only you know; your Google or email sign-in can still open your records, so sign out of Google on that phone too. On a phone that isn’t yours, use Remove from this phone when you’re done. Lost your phone? Sign in on a new one and your records come back.'],
+      ['Contact us', `Questions about your data or this policy? Email ${CONTACT_EMAIL}.`],
     ],
   },
   terms: {
@@ -33,6 +35,7 @@ export const DOCS: Record<DocId, { title: string; intro: string; sections: [stri
       ['No guarantees', 'Baon is provided as it is and may change or stop. We aren’t responsible for lost records or for money decisions made using it.'],
       ['Leaving', 'You can delete your account anytime on Me → Security.'],
       ['Changes', 'If these terms change, the date at the top changes too. These terms follow the laws of the Philippines.'],
+      ['Contact us', `Questions about these terms? Email ${CONTACT_EMAIL}.`],
     ],
   },
   storage: {

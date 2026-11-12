@@ -9,7 +9,7 @@
  */
 import { useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
-import { DOCS, type DocId } from '../legal/docs.ts'
+import { CONTACT_EMAIL, DOCS, type DocId } from '../legal/docs.ts'
 import { PolicyDialog } from '../legal/Legal.tsx'
 import { Card, Icon, Page, PageHeader, type IconName } from '../ui/kit.tsx'
 import { tr } from '../i18n/i18n.ts'
@@ -89,6 +89,10 @@ export function Help() {
                 </li>
               ))}
             </ul>
+            <p className="mt-4 font-semibold text-muted">
+              {tr('Questions or problems? Email us:')}{' '}
+              <a href={`mailto:${CONTACT_EMAIL}`} className="font-black break-all text-blue underline">{CONTACT_EMAIL}</a>
+            </p>
           </Card>
 
           <Card className="animate-rise">
