@@ -25,16 +25,19 @@ export function ShareSpendingDialog({ onClose }: { onClose: () => void }) {
   // Redraw the preview when the period (or the entries) change
   useEffect(() => {
     if (empty) return
-    let url = ''
     let stale = false
-    spendingImage(summary, periodLabel(period, summary.from, today)).then((png) => {
-      if (stale) return
-      url = URL.createObjectURL(png)
-      setPicture({ period, png, url })
-    }, () => {})
+    // A data: address, not blob:. Baon's saved copy of the page keeps the security rules it was saved
+    // with, and those allow data: pictures only; a blob: preview shows as a broken image.
+    spendingImage(summary, periodLabel(period, summary.from, today))
+      .then((png) => new Promise<{ png: Blob; url: string }>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve({ png, url: String(reader.result) })
+        reader.onerror = reject
+        reader.readAsDataURL(png)
+      }))
+      .then(({ png, url }) => !stale && setPicture({ period, png, url }), () => {})
     return () => {
       stale = true
-      if (url) URL.revokeObjectURL(url)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- summary is derived from these
   }, [period, transactions, today, empty])
