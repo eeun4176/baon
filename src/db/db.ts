@@ -33,7 +33,8 @@ export interface VaultMeta {
   key: 'vault'
   deviceMode: DeviceMode
   wrappedDek: Sealed
-  deviceKey: CryptoKey // non-extractable; IndexedDB can store it without exposing its bytes
+  deviceKey?: CryptoKey // My phone mode: non-extractable; IndexedDB can store it without exposing its bytes
+  passphrase?: { salt: Uint8Array<ArrayBuffer>; rounds: number } // Shared phone mode: the DEK is wrapped by a key made from the passphrase (never stored)
   schemaVersion: number
   recovery?: Sealed & { salt: Uint8Array<ArrayBuffer> } // DEK wrapped by the Recovery Kit code (backup/backup.ts)
   lastBackupAt?: string // ISO time of the last export (or of the backup this phone was restored from)

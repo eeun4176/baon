@@ -13,7 +13,7 @@ import { tr } from '../i18n/i18n.ts'
 
 /** Profile row + its pop-up menu. `collapsed` shows just the avatar. */
 export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
-  const { name, signOut } = useSession()
+  const { name, signOut, vault } = useSession()
   const canInstall = useCanInstall()
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
@@ -49,8 +49,8 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
 
           <hr className="my-1.5 border-pebble" />
           <button type="button" className={item} onClick={signOut}>
-            <Icon name="logout" className="size-5" /> {tr('Sign out')}</button>
-          <p className="px-3 pt-1 pb-1.5 text-sm font-semibold text-muted">{tr('Signing out keeps your records encrypted on this device.')}</p>
+            <Icon name={vault.shared() ? 'lock' : 'logout'} className="size-5" /> {vault.shared() ? tr('Lock Baon') : tr('Sign out')}</button>
+          <p className="px-3 pt-1 pb-1.5 text-sm font-semibold text-muted">{vault.shared() ? tr('Opens again only with your passphrase.') : tr('Signing out keeps your records encrypted on this device.')}</p>
         </div>
       )}
 

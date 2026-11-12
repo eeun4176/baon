@@ -6,7 +6,8 @@
  * - Each account has one random DEK (data encryption key, AES-256-GCM).
  *   Every record is encrypted with it.
  * - On the phone the DEK is never stored as-is. It is "wrapped" (encrypted) by another key:
- *   the device key in My phone mode, or the Recovery Kit code inside backups.
+ *   the device key in My phone mode, the student's passphrase in Shared phone mode,
+ *   or the Recovery Kit code inside backups.
  *   Sync keeps a plain copy with the account online, so any signed-in device can open
  *   the records (sync/sync.ts).
  * - Each record is bound to its owner and identity through AAD (extra data the
@@ -42,6 +43,16 @@ export function generateDek(): Promise<CryptoKey> {
  */
 export function generateDeviceKey(): Promise<CryptoKey> {
   return crypto.subtle.generateKey(AES, false, ['wrapKey', 'unwrapKey'])
+}
+
+// PBKDF2 is the only slow password hash built into browsers; 600,000 rounds (OWASP 2023) makes
+// every wrong guess slow. shortcut: no Argon2 without a library; revisit if Web Crypto gets one.
+export const PASSPHRASE_ROUNDS = 600_000
+
+/** Shared-phone-mode wrapping key from the passphrase (+ a random salt saved next to it). Non-extractable. */
+export async function passphraseKey(passphrase: string, salt: Uint8Array<ArrayBuffer>, rounds = PASSPHRASE_ROUNDS): Promise<CryptoKey> {
+  const base = await crypto.subtle.importKey('raw', encoder.encode(passphrase.normalize('NFC')), 'PBKDF2', false, ['deriveKey'])
+  return crypto.subtle.deriveKey({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: rounds }, base, AES, false, ['wrapKey', 'unwrapKey'])
 }
 
 /** Encrypts (wraps) the DEK with a wrapping key so it can be stored safely. */

@@ -11,6 +11,7 @@ import { manilaDate } from '../budget/days.ts'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
+import type { Vault } from '../vault/vault.ts'
 import { backupStatus, makeBackup, newRecoveryCode, readBackupFile, restoreBackup, saveRecoveryCode } from './backup.ts'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
@@ -86,7 +87,7 @@ export function BackupPanel() {
       {dialog === 'restore' && (
         <Modal title={tr('Restore from a file')} onClose={() => setDialog(null)}>
           <p className="mb-4 rounded-2xl bg-pebble p-3 font-bold">{tr('This replaces everything on this phone with the backup’s records. Anything added after that backup will be gone.')}</p>
-          <RestoreForm userId={vault.userId} fallbackName={name} onRestored={() => { vault.lock(); location.reload() }} />{/* lock: the old key must not write into the restored records */}
+          <RestoreForm userId={vault.userId} fallbackName={name} current={vault} onRestored={() => { vault.lock(); location.reload() }} />{/* lock: the old key must not write into the restored records */}
         </Modal>
       )}
     </div>
@@ -126,7 +127,7 @@ export function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: 
     if (clean !== groups[2]) return setError(tr('That isn’t group 3. Look at your saved code and try again.'))
     setBusy(true)
     try {
-      await saveRecoveryCode(vault.userId, code)
+      await saveRecoveryCode(vault, code)
       onSaved()
     } catch {
       setBusy(false)
@@ -175,7 +176,7 @@ export function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: 
 }
 
 /** Pick a backup file + type the recovery code. Calls onRestored with the restored display name. */
-export function RestoreForm({ userId, fallbackName, onRestored }: { userId: string; fallbackName: string; onRestored: (name: string) => void }) {
+export function RestoreForm({ userId, fallbackName, current, onRestored }: { userId: string; fallbackName: string; current?: Vault; onRestored: (name: string) => void }) {
   const [file, setFile] = useState<File | null>(null)
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -189,7 +190,7 @@ export function RestoreForm({ userId, fallbackName, onRestored }: { userId: stri
     setBusy(true)
     setError('')
     try {
-      onRestored(await restoreBackup(await readBackupFile(file), code, userId, fallbackName))
+      onRestored(await restoreBackup(await readBackupFile(file), code, userId, fallbackName, current))
     } catch (err) {
       setError(err instanceof Error ? err.message : tr('Couldn’t restore. Try again.'))
       setBusy(false)

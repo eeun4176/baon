@@ -61,7 +61,7 @@ export interface Session {
   toast: Toast | null
   showToast(toast: Toast): void
   dismissToast(): void
-  /** Ends the online session (if reachable), locks the vault and leaves the app. Records stay on the device. */
+  /** Ends the online session (if reachable), locks the vault and leaves the app. Records stay on the device. Shared phone mode: just locks ("Lock"). */
   signOut(): void
   /** Re-reads every record (after sync brought changes from another device). */
   reload(): void

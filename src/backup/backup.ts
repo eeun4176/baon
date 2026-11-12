@@ -83,6 +83,23 @@ export function backupDue(lastBackupAt: string | undefined, entryTimes: string[]
   return now - last >= 7 * DAY && entryTimes.some((t) => Date.parse(t) > last) ? 'old' : null
 }
 
+/** Forgot the passphrase: the account key (extractable) from the Recovery Kit saved on this phone. Throws a friendly message. */
+export async function keyFromRecoveryCode(userId: string, code: string): Promise<CryptoKey> {
+  const db = openAccountDb(userId)
+  try {
+    const recovery = (await db.meta.get('vault'))?.recovery
+    if (!recovery) throw new Error(tr('No recovery code was made on this phone. Sign in again instead.'))
+    const key = await recoveryKey(code, recovery.salt) // throws its own message for a mistyped code
+    try {
+      return await unwrapDek(recovery, key, true)
+    } catch {
+      throw new Error(tr('That recovery code isn’t right. Check it and try again.'))
+    }
+  } finally {
+    db.close()
+  }
+}
+
 /** Whether this account has a Recovery Kit yet, and when it was last exported. */
 export async function backupStatus(userId: string): Promise<{ hasCode: boolean; lastBackupAt?: string }> {
   const db = openAccountDb(userId)
@@ -95,12 +112,12 @@ export async function backupStatus(userId: string): Promise<{ hasCode: boolean; 
 }
 
 /** Creates the Recovery Kit: wraps a copy of the DEK with the code (call once the student has saved it). */
-export async function saveRecoveryCode(userId: string, code: string): Promise<void> {
-  const db = openAccountDb(userId)
+export async function saveRecoveryCode(vault: Vault, code: string): Promise<void> {
+  const db = openAccountDb(vault.userId)
   try {
     const meta = await db.meta.get('vault')
     if (!meta) throw new Error(tr('No vault for this account on this device'))
-    const dek = await unwrapDek(meta.wrappedDek, meta.deviceKey, true) // extractable only for this re-wrap
+    const dek = await unwrapDek(meta.wrappedDek, vault.wrappingKey(), true) // extractable only for this re-wrap
     const salt = crypto.getRandomValues(new Uint8Array(16))
     const wrapped = await wrapDek(dek, await recoveryKey(code, salt))
     await db.meta.update('vault', { recovery: { salt, ...wrapped } })
@@ -148,8 +165,10 @@ export async function readBackupFile(file: Blob): Promise<BackupFile> {
  * Replaces this account's records on this phone with the backup's. Everything is checked
  * first (right account, right code, every record opens), so a bad file or code changes nothing.
  * Returns the display name saved in the backup (or `fallbackName`).
+ * `current`: the open account (restoring from Me): in Shared phone mode the restored key stays
+ * locked by the same passphrase instead of silently switching to My phone mode.
  */
-export async function restoreBackup(file: BackupFile, code: string, userId: string, fallbackName: string): Promise<string> {
+export async function restoreBackup(file: BackupFile, code: string, userId: string, fallbackName: string, current?: Vault): Promise<string> {
   if (file.userId !== userId) throw new Error(tr('This backup belongs to a different account. Sign in with the account that made it.'))
   if (file.records.some((r) => r.v > SCHEMA_VERSION)) throw new Error(tr('This backup is from a newer version of Baon. Update the app, then try again.'))
 
@@ -173,18 +192,20 @@ export async function restoreBackup(file: BackupFile, code: string, userId: stri
     throw new Error(tr('This backup file is damaged and can’t be restored.'))
   }
 
-  const deviceKey = await generateDeviceKey()
-  const wrappedDek = await wrapDek(dek, deviceKey)
   const db = openAccountDb(userId)
   try {
+    const passphrase = current?.userId === userId && current.shared() ? (await db.meta.get('vault'))?.passphrase : undefined
+    const lock = passphrase
+      ? { deviceMode: 'shared' as const, wrappedDek: await wrapDek(dek, current!.wrappingKey()), passphrase }
+      : await generateDeviceKey().then(async (deviceKey) => ({ deviceMode: 'my-phone' as const, wrappedDek: await wrapDek(dek, deviceKey), deviceKey }))
     // One transaction: if storage fails midway, the phone keeps its old records.
     await db.transaction('rw', db.records, db.meta, async () => {
       await db.records.clear()
       await db.records.bulkAdd(rows)
-      await db.meta.put({ key: 'vault', deviceMode: 'my-phone', wrappedDek, deviceKey, schemaVersion: SCHEMA_VERSION, recovery, lastBackupAt: file.createdAt })
+      await db.meta.put({ key: 'vault', ...lock, schemaVersion: SCHEMA_VERSION, recovery, lastBackupAt: file.createdAt })
     })
     const existing = await deviceDb.accounts.get(userId)
-    await deviceDb.accounts.put({ userId, label: name, deviceMode: 'my-phone', enrolledAt: existing?.enrolledAt ?? new Date().toISOString() })
+    await deviceDb.accounts.put({ userId, label: name, deviceMode: lock.deviceMode, enrolledAt: existing?.enrolledAt ?? new Date().toISOString() })
   } catch {
     throw new Error(tr('Couldn’t save on this phone. Check that storage isn’t full, then try again.'))
   } finally {

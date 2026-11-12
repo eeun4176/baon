@@ -7,6 +7,9 @@
  * Decided 2026-11-11: the sign-in is the lock, so whoever runs the database could open them.
  *
  * How a sync runs (syncNow):
+ *   0. owner — the online sign-in must be this Baon's owner. A browser keeps one sign-in, so on a
+ *              phone with two accounts it may be the other student's: then nothing is sent or read
+ *              ("Sign in again"), so records can never go to the wrong account.
  *   1. key   — no key online yet: this is the first device, upload its key and every record.
  *              A device with a different key (set up on its own before syncing) switches to the
  *              account's key and merges: same record id → the online version; the rest is added.
@@ -60,6 +63,8 @@ export class SyncError extends Error {
 
 /** The cloud, as sync needs it (neonRemote.ts in the app, a fake in tests). Rows are always the signed-in user's. */
 export interface Remote {
+  /** Who is signed in online (null = nobody). Throws SyncError('offline') without a connection. */
+  signedInAs(): Promise<string | null>
   push(rows: WireRecord[]): Promise<void>
   /** Changes after `after` (by server time, then id), oldest first, at most `limit`. */
   pull(after: { at: string; id: string } | null, limit: number): Promise<CloudRecord[]>
@@ -136,10 +141,11 @@ async function adoptKey(db: AccountDb, vault: Vault, meta: VaultMeta, oldDek: Cr
       // damaged here already: nothing to carry over
     }
   }
-  const wrappedDek = await wrapDek(dek, meta.deviceKey)
+  const wrappedDek = await wrapDek(dek, vault.wrappingKey()) // keeps this phone's mode (device key or passphrase)
   const done = await db.transaction('rw', db.records, db.outbox, db.meta, async () => {
     const now = await db.records.toArray()
     if (now.length !== rows.length || now.some((r, i) => r.id !== rows[i].id || toB64(r.iv) !== toB64(rows[i].iv))) return false
+    if (toB64((await db.meta.get('vault'))!.wrappedDek.iv) !== toB64(meta.wrappedDek.iv)) return false // passphrase changed meanwhile
     await db.records.clear()
     await db.records.bulkPut(moved)
     await db.outbox.clear()
@@ -148,7 +154,7 @@ async function adoptKey(db: AccountDb, vault: Vault, meta: VaultMeta, oldDek: Cr
     return true
   })
   // shortcut: a save started in the few milliseconds before this line still uses the old key; fine for a one-time merge.
-  if (done) vault.replaceKey(await unwrapDek(wrappedDek, meta.deviceKey))
+  if (done) vault.replaceKey(await unwrapDek(wrappedDek, vault.wrappingKey()))
   return done
 }
 
@@ -192,13 +198,14 @@ async function applyRemote(db: AccountDb, vault: Vault, r: CloudRecord): Promise
 
 /** One full sync (key → push → pull). Returns how many local records changed (the screens reload when > 0). Throws SyncError. */
 export async function syncNow(vault: Vault, remote: Remote): Promise<{ changed: number }> {
+  if ((await remote.signedInAs()) !== vault.userId) throw new SyncError('signin') // 0. owner
   return withDb(vault.userId, async (db) => {
     const meta = await db.meta.get('vault')
     if (!meta) return { changed: 0 }
     let sync: SyncMeta = meta.sync ?? {}
 
     // 1. Key
-    const myDek = await unwrapDek(meta.wrappedDek, meta.deviceKey, true)
+    const myDek = await unwrapDek(meta.wrappedDek, vault.wrappingKey(), true)
     const mine = toB64(await exportDek(myDek))
     let cloud = await remote.getKey()
     if (!cloud) {
@@ -245,6 +252,21 @@ export async function syncNow(vault: Vault, remote: Remote): Promise<{ changed: 
     if (await applyAccountName(vault)) changed++ // renamed on another device
     return { changed }
   })
+}
+
+/**
+ * "Remove Baon from this phone": deletes this account's records here (they stay in the account).
+ * Uploads first if anything isn't online yet (or it never synced); already all saved → works offline.
+ * Throws SyncError if something couldn't be uploaded; then nothing is removed.
+ */
+export async function removeFromDevice(vault: Vault, remote: () => Promise<Remote>): Promise<void> {
+  const unsaved = () => withDb(vault.userId, async (db) => (await db.outbox.count()) > 0 || !(await db.meta.get('vault'))?.sync?.lastSyncedAt)
+  if (await unsaved()) {
+    await syncNow(vault, await remote())
+    if (await unsaved()) throw new SyncError('server', 'changes still waiting to upload')
+  }
+  vault.lock()
+  await deleteAccountFromDevice(vault.userId)
 }
 
 /**

@@ -20,7 +20,7 @@ async function exported(): Promise<{ vault: Vault; code: string; file: BackupFil
   await vault.put('transaction', 't1', { amountCentavos: 1500, note: 'Jeep' })
   await vault.put('day', 'day-2026-11-10', { date: '2026-11-10', dailyBudgetCentavos: 15000, isClassDay: true })
   const code = newRecoveryCode()
-  await saveRecoveryCode('user-a', code)
+  await saveRecoveryCode(vault, code)
   const file = await readBackupFile(await makeBackup(vault, 'Jas'))
   return { vault, code, file }
 }
@@ -85,7 +85,7 @@ describe('backup', () => {
   it('a new code opens new backups; old backups still need the old code', async () => {
     const { vault, code, file: old } = await exported()
     const fresh = newRecoveryCode()
-    await saveRecoveryCode('user-a', fresh)
+    await saveRecoveryCode(vault, fresh)
     const file = await readBackupFile(await makeBackup(vault, 'Jas'))
     vault.lock()
     await expect(restoreBackup(file, code, 'user-a', 'x')).rejects.toThrow('doesn’t open')

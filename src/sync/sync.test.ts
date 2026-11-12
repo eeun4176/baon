@@ -11,13 +11,19 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { deviceDb } from '../db/db.ts'
 import { backupStatus, newRecoveryCode, saveRecoveryCode } from '../backup/backup.ts'
 import { saveAllowance } from '../budget/allowance.ts'
-import { createVault, listDeviceAccounts, openVault, type Vault } from '../vault/vault.ts'
-import { joinSync, lastSyncedAt, syncNow, type CloudKey, type CloudRecord, type Remote, type WireRecord } from './sync.ts'
+import { createVault, listDeviceAccounts, openVault, PassphraseNeeded, type Vault } from '../vault/vault.ts'
+import { joinSync, lastSyncedAt, removeFromDevice, SyncError, syncNow, type CloudKey, type CloudRecord, type Remote, type WireRecord } from './sync.ts'
 
 /** In-memory cloud for one signed-in user; the clock only moves forward, like the server's. */
 class FakeCloud implements Remote {
   rows = new Map<string, CloudRecord>()
   key: CloudKey | null = null
+  user: string | null = 'u1' // who is signed in on this browser
+  offline = false
+  async signedInAs() {
+    if (this.offline) throw new SyncError('offline')
+    return this.user
+  }
   private tick = 0
   private stamp() {
     return new Date(Date.UTC(2026, 10, 11) + ++this.tick * 1000).toISOString()
@@ -67,6 +73,73 @@ async function phone(name: string, records: Record<string, unknown>): Promise<Va
 describe('sync', () => {
   // The device account list is one shared fake database here (each device has its own records database).
   beforeEach(() => deviceDb.accounts.clear())
+
+  it('two students on one phone: while the other one is signed in, nothing is sent or read', async () => {
+    device()()
+    const cloud = new FakeCloud()
+    cloud.user = 'u2' // the other student signed in last on this browser
+    const vault = await phone('Jasmine', { t1: { note: 'Jeep' } })
+    await expect(syncNow(vault, cloud)).rejects.toMatchObject({ problem: 'signin' })
+    expect(cloud.rows.size).toBe(0)
+    expect(cloud.key).toBeNull()
+    cloud.user = null // signed out
+    await expect(syncNow(vault, cloud)).rejects.toMatchObject({ problem: 'signin' })
+    cloud.user = 'u1'
+    await syncNow(vault, cloud)
+    expect(cloud.rows.has('t1')).toBe(true)
+    vault.lock()
+  })
+
+  it('remove from this phone: uploads first, then deletes here; offline it removes nothing', async () => {
+    device()()
+    const cloud = new FakeCloud()
+    const vault = await phone('Jasmine', { t1: { note: 'Jeep' } })
+    await syncNow(vault, cloud)
+    await vault.put('transaction', 't2', { note: 'Fishball' }) // not uploaded yet
+
+    cloud.offline = true
+    await expect(removeFromDevice(vault, async () => cloud)).rejects.toMatchObject({ problem: 'offline' })
+    expect(await vault.get('t2')).toEqual({ note: 'Fishball' }) // still here, still open
+
+    cloud.offline = false
+    await removeFromDevice(vault, async () => cloud)
+    expect(cloud.rows.has('t2')).toBe(true)
+    expect(await listDeviceAccounts()).toEqual([])
+    await expect(openVault('u1')).rejects.toThrow('No vault')
+  })
+
+  it('remove from this phone: everything already saved → works offline; never synced → refuses offline', async () => {
+    device()()
+    const cloud = new FakeCloud()
+    const saved = await phone('Jasmine', { t1: { note: 'Jeep' } })
+    await syncNow(saved, cloud)
+    await removeFromDevice(saved, () => Promise.reject(new SyncError('offline'))) // no cloud needed
+    expect(await listDeviceAccounts()).toEqual([])
+
+    const fresh = await phone('Jasmine', { t1: { note: 'Jeep' } }) // only on this phone
+    await expect(removeFromDevice(fresh, () => Promise.reject(new SyncError('offline')))).rejects.toMatchObject({ problem: 'offline' })
+    expect(await fresh.get('t1')).toEqual({ note: 'Jeep' })
+    fresh.lock()
+  })
+
+  it('a shared phone keeps its passphrase when sync switches it to the account key', async () => {
+    const [useA, useB] = [device(), device()]
+    const cloud = new FakeCloud()
+    useA()
+    await syncNow(await phone('Jas', { t1: { note: 'Jeep' } }), cloud)
+
+    useB()
+    await deviceDb.accounts.clear()
+    const b = await phone('Jas', { t9: { note: 'Snack' } })
+    await b.protect('jeep ako every morning')
+    await syncNow(b, cloud) // adopts the account key, merges
+    expect(await b.get('t1')).toEqual({ note: 'Jeep' })
+    b.lock()
+    await expect(openVault('u1')).rejects.toBeInstanceOf(PassphraseNeeded)
+    const again = await openVault('u1', 'jeep ako every morning')
+    expect(await again.get('t9')).toEqual({ note: 'Snack' })
+    again.lock()
+  })
 
   it('the first device uploads its key and only scrambled records; after the account is deleted it never re-uploads', async () => {
     device()()
@@ -196,7 +269,7 @@ describe('sync', () => {
     useB()
     await deviceDb.accounts.clear() // B's own account list (shared in this test)
     const b = await phone('Jas B', { t9: { note: 'Snack' }, cash: { name: 'Cash from B' } })
-    await saveRecoveryCode('u1', newRecoveryCode())
+    await saveRecoveryCode(b, newRecoveryCode())
     await syncNow(b, cloud)
     expect(await b.get('cash')).toEqual({ name: 'Cash from A' })
     expect(await b.get('t1')).toEqual({ note: 'Jeep' })

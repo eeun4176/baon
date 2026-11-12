@@ -41,6 +41,12 @@ export function neonRemote(userId: string): Remote {
   /** The account key online, or null. */
   const getKey = async () => (await run(neon.from('sync_keys').select(KEY_COLUMNS).eq('user_id', userId).maybeSingle())) as CloudKey | null
   return {
+    async signedInAs() {
+      if (!navigator.onLine) throw new SyncError('offline')
+      const { data, error } = await neon.auth.getSession().catch((e: unknown) => ({ data: null, error: e }))
+      if (error) throw problem(error)
+      return data?.user?.id ?? null
+    },
     async push(rows) {
       if (!rows.length) return
       await run(neon.from('sync_records').upsert(rows.map((r) => ({ ...r, user_id: userId })), { onConflict: 'user_id,id' }))

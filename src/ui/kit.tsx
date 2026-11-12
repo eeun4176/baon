@@ -10,7 +10,7 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
   ArrowRight, Book, Bus, Calendar, ChartPie, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
-  Ellipsis, Flame, HardDrive, History, House, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pencil, PiggyBank, Plus, Printer,
+  Ellipsis, Flame, HardDrive, History, House, Lock, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pencil, PiggyBank, Plus, Printer,
   Search, Share2, Shield, Tag, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
 import { formatPeso } from '../ledger/money.ts'
@@ -243,6 +243,7 @@ const ICONS = {
   ticket: Ticket,
   share: Share2,
   tag: Tag,
+  lock: Lock,
 } as const
 
 /** Icon name type, for components that take an icon as a prop. */

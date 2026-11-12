@@ -2,6 +2,8 @@
  * App.tsx — Root component. Decides what to show when baon opens:
  * - no account on this phone yet → Onboarding (needs internet once)
  * - account exists → open its encrypted vault and show the app (works offline)
+ * - Shared phone mode → the lock screen (passphrase) every time, and again after a minute away
+ * - more than one account on this phone → "Who's using Baon?" (each account: own records, own key)
  * Signed-in pages live inside AppShell (sidebar on desktop, bottom nav on phones).
  */
 import { useEffect, useState } from 'react'
@@ -22,19 +24,38 @@ import logoIcon from './assets/logo-icon.png'
 import { firstName } from './home/greetings.ts'
 import { HOME_TITLE } from './pageTitle.ts'
 import { Button, Card, Page, PageHeader, Screen } from './ui/kit.tsx'
-import { listDeviceAccounts, openVault, type Vault } from './vault/vault.ts'
+import { LockScreen } from './lock/LockScreen.tsx'
+import { AccountPicker } from './lock/AccountPicker.tsx'
+import type { DeviceAccount } from './db/db.ts'
+import { listDeviceAccounts, openVault, PassphraseNeeded, type Vault } from './vault/vault.ts'
 import { tr } from './i18n/i18n.ts'
 
 type State =
   | { kind: 'loading' }
-  | { kind: 'onboarding' }
+  | { kind: 'onboarding'; adding: boolean } // adding: another account on a phone that already has one
+  | { kind: 'picker'; accounts: DeviceAccount[] }
   | { kind: 'app'; vault: Vault; name: string }
   | { kind: 'signedOut'; userId: string; name: string }
+  | { kind: 'locked'; userId: string; name: string }
   | { kind: 'error' }
 
 // Remembers "signed out" on this device so a reload doesn't reopen the app by itself.
 // (UX only, not security: My phone mode is protected by the phone's own screen lock.)
 const SIGNED_OUT_KEY = 'baon.signedOut'
+const AUTO_LOCK_MS = 60_000 // Shared phone mode: away this long (another app, screen off) → locked again
+const ADDING_KEY = 'baon.adding' // "Add another account" in progress (survives Google's round trip, not a closed tab)
+
+/** Reads/writes the adding-an-account mark; blocked storage just means Google sends you to the picker. */
+function addingFlag(value?: boolean): boolean {
+  try {
+    if (value === undefined) return sessionStorage.getItem(ADDING_KEY) === '1'
+    if (value) sessionStorage.setItem(ADDING_KEY, '1')
+    else sessionStorage.removeItem(ADDING_KEY)
+  } catch {
+    // storage blocked
+  }
+  return false
+}
 
 /** Reads/writes the signed-out flag; storage errors just mean it isn't remembered. */
 function signedOutFlag(value?: string | null): string | null {
@@ -48,18 +69,37 @@ function signedOutFlag(value?: string | null): string | null {
   return null
 }
 
-/** Opens the first account on this device, if any. (Account picker comes with Shared mode.) */
+/** What opening Baon shows: Welcome, the one account, or the picker when there are several. */
 async function boot(): Promise<State> {
-  const [account] = await listDeviceAccounts()
-  if (!account) return { kind: 'onboarding' }
-  if (signedOutFlag() === account.userId) return { kind: 'signedOut', userId: account.userId, name: account.label }
-  return { kind: 'app', vault: await openVault(account.userId), name: account.label }
+  const accounts = await listDeviceAccounts()
+  if (!accounts.length || addingFlag()) return { kind: 'onboarding', adding: accounts.length > 0 }
+  if (accounts.length > 1) return { kind: 'picker', accounts }
+  return openAccount(accounts[0])
+}
+
+/** One account: its app (My phone mode), its lock screen (Shared), or "signed out" if it was. */
+async function openAccount(account: DeviceAccount, picked = false): Promise<State> {
+  if (picked) signedOutFlag(null)
+  else if (signedOutFlag() === account.userId && account.deviceMode !== 'shared') return { kind: 'signedOut', userId: account.userId, name: account.label }
+  try {
+    return { kind: 'app', vault: await openVault(account.userId), name: account.label }
+  } catch (e) {
+    if (e instanceof PassphraseNeeded) return { kind: 'locked', userId: account.userId, name: account.label }
+    throw e
+  }
 }
 
 /** "You're signed out" screen: records stay on the device; continue reopens the vault. */
-function SignedOut({ name, onContinue }: { name: string; onContinue: () => void }) {
+function SignedOut({ name, onContinue, onSwitch }: { name: string; onContinue: () => void; onSwitch: () => void }) {
   return (
-    <Screen footer={<Button onClick={onContinue}>{tr('Continue as {0}', firstName(name))}</Button>}>
+    <Screen
+      footer={
+        <>
+          <Button onClick={onContinue}>{tr('Continue as {0}', firstName(name))}</Button>
+          <button type="button" onClick={onSwitch} className="mt-2 min-h-11 w-full font-extrabold text-blue hover:underline">{tr('Use another account')}</button>
+        </>
+      }
+    >
       <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight">
         <img src={logoIcon} alt="" className="size-10" />
         {tr('Baon')}</header>
@@ -132,11 +172,57 @@ export default function App() {
     boot().then(setState, () => setState({ kind: 'error' }))
   }, [])
 
+  /** Shows a screen worked out asynchronously (open an account, start over). */
+  const show = (next: Promise<State>) => next.then(setState, () => setState({ kind: 'error' }))
+  /** "Use another account": the picker, which also offers Add another account. */
+  const pick = () => show(listDeviceAccounts().then((accounts): State => ({ kind: 'picker', accounts })))
+  /** An account was removed from the picker: the rest stay listed; none left → Welcome. */
+  const afterRemove = () => show(listDeviceAccounts().then((accounts): State => (accounts.length ? { kind: 'picker', accounts } : { kind: 'onboarding', adding: false })))
+  /** Add another account: from signed out, so the new sign-in is that person's (onboarding). */
+  const add = async () => {
+    addingFlag(true)
+    await import('./auth/auth.ts').then((auth) => auth.signOut()).catch(() => {})
+    setState({ kind: 'onboarding', adding: true })
+  }
+
+  // Shared phone mode: lock again after a minute away (checked when Baon comes back on screen).
+  const app = state.kind === 'app' ? state : null
+  useEffect(() => {
+    if (!app) return
+    let hiddenAt = 0
+    /** Notes when Baon left the screen; locks on return if it was away too long. */
+    const onChange = () => {
+      if (document.visibilityState === 'hidden') hiddenAt = Date.now()
+      else if (hiddenAt && Date.now() - hiddenAt >= AUTO_LOCK_MS && app.vault.shared()) {
+        app.vault.lock()
+        window.history.replaceState(null, '', '/')
+        setState({ kind: 'locked', userId: app.vault.userId, name: app.name })
+      }
+    }
+    document.addEventListener('visibilitychange', onChange)
+    return () => document.removeEventListener('visibilitychange', onChange)
+  }, [app])
+
   switch (state.kind) {
     case 'loading':
       return null // IndexedDB opens in milliseconds; avoids a flash of the wrong screen
     case 'onboarding':
-      return <Onboarding onDone={(vault, name) => setState({ kind: 'app', vault, name })} />
+      return (
+        <Onboarding
+          adding={state.adding}
+          onDone={(vault, name) => {
+            addingFlag(false)
+            setState({ kind: 'app', vault, name })
+          }}
+          onCancel={state.adding ? () => { addingFlag(false); show(boot()) } : undefined}
+          onExisting={(userId) => {
+            addingFlag(false) // already on this phone: open it instead of setting it up again
+            show(listDeviceAccounts().then((list) => openAccount(list.find((a) => a.userId === userId)!, true)))
+          }}
+        />
+      )
+    case 'picker':
+      return <AccountPicker accounts={state.accounts} onPick={(account) => show(openAccount(account, true))} onAdd={add} onRemoved={afterRemove} />
     case 'app': {
       const { vault, name } = state
       return (
@@ -144,8 +230,9 @@ export default function App() {
           vault={vault}
           name={name}
           onSignOut={(current) => {
-            signedOutFlag(vault.userId)
             window.history.replaceState(null, '', '/') // next sign-in starts on Home
+            if (vault.shared()) return setState({ kind: 'locked', userId: vault.userId, name: current })
+            signedOutFlag(vault.userId)
             setState({ kind: 'signedOut', userId: vault.userId, name: current }) // the name may have changed on Me
           }}
         />
@@ -160,8 +247,13 @@ export default function App() {
             signedOutFlag(null)
             openVault(userId).then((vault) => setState({ kind: 'app', vault, name }), () => setState({ kind: 'error' }))
           }}
+          onSwitch={pick}
         />
       )
+    }
+    case 'locked': {
+      const { userId, name } = state
+      return <LockScreen userId={userId} name={name} onUnlocked={(vault) => setState({ kind: 'app', vault, name })} onSwitch={pick} />
     }
     case 'error':
       return (

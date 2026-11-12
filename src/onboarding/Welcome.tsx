@@ -7,7 +7,7 @@ import { Button, Screen } from '../ui/kit.tsx'
 import { tr } from '../i18n/i18n.ts'
 
 /** First screen a new student sees. */
-export function Welcome({ onStart }: { onStart: () => void }) {
+export function Welcome({ onStart, onBack }: { onStart: () => void; onBack?: () => void }) {
   return (
     <Screen
       footer={
@@ -15,6 +15,9 @@ export function Welcome({ onStart }: { onStart: () => void }) {
           <Button onClick={onStart}>{tr('Get started')}</Button>
           <p className="mt-3 text-center text-[0.9375rem] font-semibold text-muted">
             {tr('Connect once to set up. After that, it works offline.')}</p>
+          {onBack && (
+            <button type="button" onClick={onBack} className="mt-2 min-h-11 w-full font-extrabold text-blue hover:underline">{tr('Back to accounts')}</button>
+          )}
         </>
       }
     >

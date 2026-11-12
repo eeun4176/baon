@@ -171,7 +171,8 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
 
   const signOut = useCallback(() => {
     // Best effort online sign-out (skipped when offline); the local lock happens either way.
-    import('../auth/auth.ts').then((auth) => auth.signOut()).catch(() => {})
+    // Shared phone mode only locks: the passphrase is the lock, and sync keeps its sign-in for next time.
+    if (!vault.shared()) import('../auth/auth.ts').then((auth) => auth.signOut()).catch(() => {})
     vault.lock()
     onSignOut(name)
   }, [vault, onSignOut, name])

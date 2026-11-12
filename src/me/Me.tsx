@@ -1,7 +1,8 @@
 /*
  * Me.tsx — Your account, money settings and data (design p11 phone, p22 desktop).
- *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / "My phone mode" chips, Sign out.
- *   Tabs: Profile (name, school, Senior high / College) · Security (device mode) ·
+ *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / device mode chips,
+ *           Sign out (Lock in Shared phone mode).
+ *   Tabs: Profile (name, school, Senior high / College) · Security (device mode, lock/DeviceModeItems.tsx) ·
  *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, install, Help & privacy link — phones have no sidebar).
  *   Side cards: "Your baon" (allowance, Edit) and Wallets (add, rename, remove, Move money).
  * Phones show the side cards first, then the tabs; theme and sign out live here on phones.
@@ -18,6 +19,8 @@ import { useSession } from '../session.ts'
 import { ThemePicker } from '../shell/ThemePicker.tsx'
 import { formatBytes, isStorageLow, keepStorage, useStorage } from '../storage.ts'
 import { BackupPanel } from '../backup/BackupPanel.tsx'
+import { DeviceModeItems } from '../lock/DeviceModeItems.tsx'
+import { RemoveFromPhone } from '../lock/RemoveFromPhone.tsx'
 import { SyncSection } from '../sync/SyncSection.tsx'
 import { useStreak } from '../streak/useStreak.ts'
 import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
@@ -226,30 +229,18 @@ function StorageItem() {
   )
 }
 
-/** Security tab: how this device protects the records (shared mode isn't built yet). */
+/** Security tab: how this device protects the records (My phone / Shared phone mode), storage, remove from this phone, delete. */
 function SecurityTab() {
   const [deleting, setDeleting] = useState(false)
   return (
     <div>
       <h2 className="text-xl font-black">{tr('Security')}</h2>
       <ul className="mt-4 space-y-3">
-        <li className="flex items-start gap-3 rounded-2xl bg-page p-3 sm:p-4">
-          <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
-          <span>
-            <span className="block font-black">{tr('My phone mode · on')}</span>
-            <span className="block font-semibold text-muted">{tr('Your records are scrambled (encrypted) on this phone and online. Keep your phone’s screen lock on — it protects Baon too.')}</span>
-          </span>
-        </li>
+        <DeviceModeItems />
         <StorageItem />
-        <li className="flex items-start gap-3 rounded-2xl bg-page p-3 opacity-70 sm:p-4">
-          <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
-          <span>
-            <span className="block font-black">{tr('Shared phone mode · coming soon')}</span>
-            <span className="block font-semibold text-muted">{tr('For a phone shared with family: a passphrase and recovery kit for each account. Until then, use Baon on your own phone only.')}</span>
-          </span>
-        </li>
       </ul>
 
+      <RemoveFromPhone />
       <div className="mt-6 border-t border-pebble pt-5">
         <h3 className="font-black">{tr('Delete account')}</h3>
         <p className="mt-1 font-semibold text-muted">{tr('Deletes your sign-in account, your synced copies online and everything Baon saved on this phone. Make a backup first if you might come back.')}</p>
@@ -292,7 +283,7 @@ const walletIcon = (w: Wallet) => (w.type === 'savings' ? 'piggy' : w.id === 'ca
 
 /** Me screen. */
 export function Me() {
-  const { name, profile, allowance, wallets, transactions, signOut } = useSession()
+  const { name, profile, allowance, wallets, transactions, signOut, vault } = useSession()
   const streak = useStreak()
   const [tab, setTab] = useState<Tab>('profile')
   const [dialog, setDialog] = useState<{ kind: 'allowance' } | { kind: 'wallet'; wallet?: Wallet } | null>(null)
@@ -314,11 +305,11 @@ export function Me() {
           <div className="mt-2 flex flex-wrap gap-2">
             <Chip><img src={flame} alt="" className="size-4" /> {streak.current}{tr('-day streak')}</Chip>
             {(level || profile.school) && <Chip>{[level, profile.school].filter(Boolean).join(' · ')}</Chip>}
-            <Chip blue>{tr('My phone mode')}</Chip>
+            <Chip blue>{vault.shared() ? tr('Shared phone mode') : tr('My phone mode')}</Chip>
           </div>
         </div>
         <button type="button" onClick={signOut} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:w-auto">
-          <Icon name="logout" className="size-5" /> {tr('Sign out')}</button>
+          <Icon name={vault.shared() ? 'lock' : 'logout'} className="size-5" /> {vault.shared() ? tr('Lock Baon') : tr('Sign out')}</button>
       </Card>
 
       <div className="mt-4 grid gap-4 lg:mt-5 lg:grid-cols-12 lg:gap-5">
