@@ -1,6 +1,6 @@
 /*
- * Onboarding.tsx — Runs the 5 first-time screens in order (plan §4.1):
- *   Welcome → Sign in → Whose phone? → Your baon → Your money now → Home
+ * Onboarding.tsx — Runs the first-time screens in order (design "Get started"):
+ *   Welcome (phones only) → Sign in → Whose phone? → Your baon → Your money now → Home
  * or, from "Whose phone?", Restore a backup → Home (records come from the file),
  * or, if the account already has records online (another device), Welcome back → records download → Home.
  * "Shared with family or classmates" adds Make a passphrase right after Whose phone?; the new account
@@ -17,12 +17,12 @@ import { NewPassphrase } from '../lock/NewPassphrase.tsx'
 import { manilaDate } from '../budget/days.ts'
 import { RestoreForm } from '../backup/BackupPanel.tsx'
 import { JoinSync } from '../sync/JoinSync.tsx'
-import { Screen, StepHeader, Title } from '../ui/kit.tsx'
 import { listDeviceAccounts, openVault, type Vault } from '../vault/vault.ts'
 import { initialBaon, initialMoney, toAllowance, toBalances, type BaonAnswers, type MoneyAnswers } from './answers.ts'
-import { BrandPanel } from './BrandPanel.tsx'
+import { BrandPanel, type StepNo } from './BrandPanel.tsx'
 import { setupAccount } from './setupAccount.ts'
 import { SignIn } from './SignIn.tsx'
+import { Step as StepFrame } from './Step.tsx'
 import { Welcome } from './Welcome.tsx'
 import { WhosePhone } from './WhosePhone.tsx'
 import { YourBaon } from './YourBaon.tsx'
@@ -31,6 +31,9 @@ import { tr } from '../i18n/i18n.ts'
 
 type Step = 'welcome' | 'signin' | 'phone' | 'pass' | 'baon' | 'money' | 'restore' | 'join'
 
+// Which of the 4 numbered steps each screen belongs to (the picture's caption follows it)
+const STEP_NO: Record<Step, StepNo> = { welcome: 1, signin: 1, phone: 2, pass: 2, restore: 2, join: 2, baon: 3, money: 4 }
+
 /** First-time setup. Calls onDone with the new, unlocked vault. */
 export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
   adding?: boolean
@@ -38,7 +41,8 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
   onCancel?: () => void
   onExisting: (userId: string) => void
 }) {
-  const [step, setStep] = useState<Step>('welcome')
+  const [wide] = useState(() => matchMedia('(min-width: 1024px)').matches) // desktop: the picture is beside the steps, so no Welcome screen
+  const [step, setStep] = useState<Step>(wide ? 'signin' : 'welcome')
   const [user, setUser] = useState<SignedInUser | null>(null)
   const [today] = useState(() => manilaDate())
   const [baon, setBaon] = useState<BaonAnswers>(() => initialBaon(today))
@@ -134,32 +138,29 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
 
   const screens: Record<Step, ReactNode> = {
     welcome: <Welcome onStart={() => go(user ? 'phone' : 'signin')} onBack={onCancel} />,
-    signin: <SignIn onBack={() => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />,
+    signin: <SignIn onBack={wide ? onCancel : () => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />,
     phone: <WhosePhone mode={mode} onMode={setMode} onContinue={() => afterPhone(hasCloud ? 'join' : 'baon')} onRestore={() => afterPhone('restore')} />,
     pass: (
-      <Screen>
-        <StepHeader step={2} onBack={() => go('phone')} />
-        <Title sub={tr('Baon asks for it every time it opens, so others can’t see your records.')}>{tr('Make a passphrase')}</Title>
+      <StepFrame n={2} onBack={() => go('phone')} title={tr('Make a passphrase')} sub={tr('Baon asks for it every time it opens.')}>
         <NewPassphrase submitLabel={tr('Continue')} onSave={async (p) => { setPassphrase(p); go(afterPass === 'baon' && hasCloud ? 'join' : afterPass) }} />
-      </Screen>
+      </StepFrame>
     ),
     join: user && <JoinSync user={user} onDone={done} onSkip={() => go('baon')} />,
     restore: user && (
-      <Screen>
-        <StepHeader step={2} onBack={() => go('phone')} />
-        <Title sub={tr('Pick your baon-backup file and type the recovery code you saved.')}>{tr('Restore your backup')}</Title>
+      <StepFrame n={2} onBack={() => go('phone')} title={tr('Restore your backup')} sub={tr('Pick your backup file and type your recovery code.')}>
         <RestoreForm userId={user.id} fallbackName={user.name} onRestored={(name) => openVault(user.id).then((vault) => done(vault, name), () => setError(tr('Restored, but couldn’t open it. Close Baon and open it again.')))} />
         {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
-      </Screen>
+      </StepFrame>
     ),
     baon: <YourBaon value={baon} onChange={setBaon} today={today} error={error} onBack={() => go('phone')} onContinue={continueFromBaon} />,
     money: <YourMoney value={money} onChange={setMoney} error={error} busy={busy} onBack={() => go('baon')} onFinish={finish} />,
   }
 
-  // Phone/tablet: just the step. Desktop (≥ 1024px): brand panel left, step centered right.
+  // Phone/tablet: just the step. Desktop (≥ 1024px): the picture left, the step centered right.
+  // `onboarding` (index.css) makes the page white and the fields gray, as in the design.
   return (
-    <div className="lg:grid lg:min-h-dvh lg:grid-cols-2">
-      <BrandPanel />
+    <div className="onboarding min-h-dvh bg-page lg:grid lg:grid-cols-2">
+      <BrandPanel step={STEP_NO[step]} />
       <div className="lg:flex lg:items-center">
         <div className="w-full">{screens[step]}</div>
       </div>

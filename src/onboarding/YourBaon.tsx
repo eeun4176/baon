@@ -4,7 +4,8 @@
  */
 import { FREQUENCIES } from '../budget/allowance.ts'
 import { addDays } from '../budget/days.ts'
-import { Button, Card, Chip, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
+import { Button, Card, Chip, MoneyField, Switch } from '../ui/kit.tsx'
+import { Step } from './Step.tsx'
 import { defaultNextDate, type BaonAnswers } from './answers.ts'
 import { tr } from '../i18n/i18n.ts'
 
@@ -28,7 +29,11 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
     set({ classWeekdays: value.classWeekdays.includes(d) ? value.classWeekdays.filter((x) => x !== d) : [...value.classWeekdays, d] })
 
   return (
-    <Screen
+    <Step
+      n={3}
+      onBack={onBack}
+      title={tr('Tell us about your baon')}
+      sub={tr('We’ll spread it until your next allowance.')}
       footer={
         <>
           {error && <p role="alert" className="mb-3 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
@@ -36,15 +41,12 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
         </>
       }
     >
-      <StepHeader step={3} onBack={onBack} />
-      <Title>{tr('Your baon')}</Title>
-
-      <Card className="py-6">
+      <Card className="py-5">
         <MoneyField label={tr('How much do you get?')} value={value.amountText} onChange={(amountText) => set({ amountText })} />
       </Card>
 
-      <fieldset className="mt-6">
-        <legend className="mb-3 text-lg font-extrabold">{tr('How often?')}</legend>
+      <fieldset className="mt-4">
+        <legend className="mb-2.5 font-extrabold">{tr('How often?')}</legend>
         <div className="flex flex-wrap gap-2.5">
           {FREQUENCIES.map(([id, label]) => (
             <Chip
@@ -58,9 +60,9 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
         </div>
       </fieldset>
 
-      <Card className="mt-6">
+      <Card className="mt-4 py-2 sm:py-2">
         <label className="flex min-h-11 items-center justify-between gap-3">
-          <span className="text-lg font-black">{value.frequency === 'irregular' ? tr('Make it last until') : tr('Next allowance')}</span>
+          <span className="font-extrabold">{value.frequency === 'irregular' ? tr('Make it last until') : tr('Next allowance')}</span>
           <input
             type="date"
             required
@@ -72,16 +74,13 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
         </label>
       </Card>
 
-      <Card className="mt-4">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-lg font-black">{tr('Count only class days')}</p>
-            <p className="font-semibold text-muted">{tr('Your daily budget spreads over school days.')}</p>
-          </div>
+      <Card className="mt-3 py-2 sm:py-2">
+        <div className="flex min-h-11 items-center justify-between gap-4">
+          <p className="font-extrabold">{tr('Count only class days')}</p>
           <Switch label={tr('Count only class days')} checked={value.countClassDays} onChange={(countClassDays) => set({ countClassDays })} />
         </div>
         {value.countClassDays && (
-          <div className="mt-4 grid grid-cols-7 gap-1.5" role="group" aria-label={tr('Class days')}>
+          <div className="mt-2 mb-2 grid grid-cols-7 gap-1.5" role="group" aria-label={tr('Class days')}>
             {DAYS.map((label, d) => {
               const on = value.classWeekdays.includes(d)
               return (
@@ -91,7 +90,7 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
                   aria-pressed={on}
                   aria-label={DAY_NAMES[d]}
                   onClick={() => toggleDay(d)}
-                  className={`aspect-square min-h-11 rounded-full text-[clamp(0.8rem,3.6vw,1.05rem)] font-black ${on ? 'bg-blue text-white' : 'bg-pebble text-muted'}`}
+                  className={`aspect-square min-h-11 rounded-full text-[clamp(0.8rem,3.6vw,1.05rem)] font-black ${on ? 'bg-blue text-white' : 'bg-page text-muted'}`}
                 >
                   {label}
                 </button>
@@ -100,6 +99,6 @@ export function YourBaon({ value, onChange, today, error, onBack, onContinue }: 
           </div>
         )}
       </Card>
-    </Screen>
+    </Step>
   )
 }

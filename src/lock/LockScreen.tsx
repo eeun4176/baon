@@ -152,7 +152,7 @@ export function LockScreen({ userId, name, onUnlocked, onSwitch }: { userId: str
     }
   }
 
-  if (view === 'signin') return <SignIn returnTo="/?reset=1" onBack={() => go('forgot')} onSignedIn={fromAccount} />
+  if (view === 'signin') return <SignIn inSetup={false} returnTo="/?reset=1" onBack={() => go('forgot')} onSignedIn={fromAccount} />
 
   const alert = error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>
   return (

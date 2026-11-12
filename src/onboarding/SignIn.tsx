@@ -7,8 +7,9 @@ import { useState, useSyncExternalStore } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
 import type { DocId } from '../legal/docs.ts'
 import { PolicyDialog } from '../legal/Legal.tsx'
-import { Button, Card, Icon, Screen, StepHeader, Title } from '../ui/kit.tsx'
+import { Button, Icon } from '../ui/kit.tsx'
 import { tr } from '../i18n/i18n.ts'
+import { Step } from './Step.tsx'
 
 const policyLink = 'font-extrabold text-blue underline'
 
@@ -29,9 +30,9 @@ function useOnline() {
 
 /**
  * Sign-in step. Calls onSignedIn after the email code works; Google leaves the page and comes
- * back to `returnTo` (default: the start page).
+ * back to `returnTo` (default: the start page). `inSetup` false (lock screen): no step numbers.
  */
-export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => void; onSignedIn: (user: SignedInUser) => void; returnTo?: string }) {
+export function SignIn({ onBack, onSignedIn, returnTo = '/', inSetup = true }: { onBack?: () => void; onSignedIn: (user: SignedInUser) => void; returnTo?: string; inSetup?: boolean }) {
   const online = useOnline()
   const [mode, setMode] = useState<'choose' | 'email' | 'code'>('choose')
   const [email, setEmail] = useState('')
@@ -76,33 +77,13 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
     })
 
   return (
-    <Screen
-      footer={
-        <>
-        <Card className="flex items-center gap-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-blue-tint text-blue">
-            <Icon name="shield" />
-          </span>
-          <p className="font-semibold">{tr('Your records are scrambled on your phone and synced to your account.')}</p>
-        </Card>
-        <p className="mt-3 text-center text-sm font-semibold text-muted">
-          {tr('By continuing, you agree to the')}{' '}<button type="button" onClick={() => setPolicy('terms')} className={policyLink}>{tr('Terms')}</button>,{' '}
-          <button type="button" onClick={() => setPolicy('privacy')} className={policyLink}>{tr('Privacy Policy')}</button> {tr('and')}{' '}
-          <button type="button" onClick={() => setPolicy('storage')} className={policyLink}>{tr('Local Storage Policy')}</button>.
-        </p>
-        {policy && <PolicyDialog id={policy} onClose={() => setPolicy(null)} />}
-        </>
-      }
-    >
-      <StepHeader step={1} onBack={onBack} />
-      <Title sub={tr('No new password to make. We only use this to know it’s you.')}>{tr('Sign in to get started')}</Title>
-
+    <Step n={inSetup ? 1 : undefined} onBack={onBack} title={tr('Sign in to get started')} sub={tr('No password needed. It’s just to know it’s you.')}>
       {!online && (
         <p role="status" className="mb-4 rounded-2xl bg-pebble p-4 font-bold">
-          {tr('You’re offline. Connect once to set up — after that, Baon works offline.')}</p>
+          {tr('You’re offline. Connect once to set up.')}</p>
       )}
 
-      <Card className="space-y-3">
+      <div className="space-y-3">
         {mode === 'choose' && (
           <>
             <Button variant="dark" disabled={!online || busy} onClick={google}>
@@ -118,7 +99,7 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
             <Button variant="secondary" disabled={!online || busy} onClick={() => setMode('email')}>
               <Icon name="mail" />
               {tr('Use email instead')}</Button>
-            <p className="text-center font-semibold text-muted">{tr('With email, we’ll send you a 6‑digit code.')}</p>
+            <p className="text-center font-semibold text-muted">{tr('We’ll email you a 6‑digit code.')}</p>
           </>
         )}
 
@@ -161,7 +142,18 @@ export function SignIn({ onBack, onSignedIn, returnTo = '/' }: { onBack: () => v
         )}
 
         {error && <p role="alert" className="rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
-      </Card>
-    </Screen>
+      </div>
+
+      <div className="mt-4 flex items-center gap-3 rounded-3xl bg-card p-4">
+        <Icon name="shield" className="size-6 shrink-0 text-blue" />
+        <p className="text-[0.9375rem] font-bold">{tr('Your records are scrambled and synced to your account.')}</p>
+      </div>
+      <p className="mt-3 text-center text-sm font-semibold text-muted">
+        {tr('By continuing, you agree to the')}{' '}<button type="button" onClick={() => setPolicy('terms')} className={policyLink}>{tr('Terms')}</button>,{' '}
+        <button type="button" onClick={() => setPolicy('privacy')} className={policyLink}>{tr('Privacy Policy')}</button> {tr('and')}{' '}
+        <button type="button" onClick={() => setPolicy('storage')} className={policyLink}>{tr('Local Storage Policy')}</button>.
+      </p>
+      {policy && <PolicyDialog id={policy} onClose={() => setPolicy(null)} />}
+    </Step>
   )
 }

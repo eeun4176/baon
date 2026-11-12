@@ -81,7 +81,7 @@ export function DeviceModeItems() {
           </li>
           <li className={item}>
             <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
-            <span className="block font-semibold text-muted">{tr('Your Google or email sign-in can also open your records, so sign out of Google on this phone too.')}</span>
+            <span className="block font-semibold text-muted">{tr('Your Google or email sign-in can also open your records, so sign out of Google here too.')}</span>
           </li>
         </>
       ) : (

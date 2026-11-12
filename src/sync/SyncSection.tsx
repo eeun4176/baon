@@ -50,7 +50,7 @@ export function SyncSection() {
       : status.problem === 'signin'
         ? tr('You’re signed out, so this device isn’t syncing.')
         : status.problem === 'deleted'
-          ? tr('This account was deleted on another device, so nothing syncs. Your records are still on this device.')
+          ? tr('This account was deleted on another device, so nothing syncs. Your records are still here.')
         : status.problem === 'server'
           ? tr('Couldn’t sync just now. Baon will try again.')
           : status.lastSyncedAt

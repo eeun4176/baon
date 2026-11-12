@@ -4,7 +4,8 @@
  * (BPI, SeaBank, GoTyme…), a running total, then "See my budget".
  */
 import { formatPeso } from '../ledger/money.ts'
-import { Button, Card, Icon, MoneyField, Screen, StepHeader, Switch, Title } from '../ui/kit.tsx'
+import { Button, Card, Icon, MoneyField, Switch } from '../ui/kit.tsx'
+import { Step } from './Step.tsx'
 import { moneyTotal, type MoneyAnswers } from './answers.ts'
 import { tr } from '../i18n/i18n.ts'
 
@@ -29,7 +30,11 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
   const removeWallet = (id: string) => onChange({ ...value, eWallets: value.eWallets.filter((w) => w.id !== id) })
 
   return (
-    <Screen
+    <Step
+      n={4}
+      onBack={onBack}
+      title={tr('How much do you have now?')}
+      sub={tr('A rough number is fine. Fix it anytime.')}
       footer={
         <>
           <p className="mb-3 flex items-baseline justify-between px-1" aria-live="polite">
@@ -41,14 +46,11 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
         </>
       }
     >
-      <StepHeader step={4} onBack={onBack} />
-      <Title sub={tr('A rough number is fine. Fix it anytime.')}>{tr('How much do you have now?')}</Title>
-
-      <Card className="py-6">
+      <Card className="py-5">
         <MoneyField label={tr('Cash in your wallet')} value={value.cashText} onChange={(cashText) => onChange({ ...value, cashText })} />
       </Card>
 
-      <Card className="mt-4 divide-y divide-pebble py-1">
+      <div className="mt-4 divide-y divide-pebble rounded-3xl border border-pebble-2 px-4 py-1">
         {value.eWallets.map((w) => (
           <div key={w.id} className="flex min-h-16 items-center gap-3 py-2">
             {w.custom ? (
@@ -59,13 +61,13 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
                 aria-label={tr('Bank or e-wallet name')}
                 placeholder={tr('e.g. BPI, SeaBank')}
                 onChange={(e) => setWallet(w.id, { name: e.target.value })}
-                className="min-w-0 flex-1 rounded-full bg-page px-4 py-2.5 text-lg font-black outline-none placeholder:font-bold placeholder:text-muted/70 focus:ring-2 focus:ring-blue/40"
+                className="min-w-0 flex-1 rounded-full bg-card px-4 py-2.5 text-lg font-black outline-none placeholder:font-bold placeholder:text-muted/70 focus:ring-2 focus:ring-blue/40"
               />
             ) : (
               <span className="flex-1 text-lg font-black">{w.name}</span>
             )}
             {w.on && (
-              <label className="flex min-h-11 w-32 items-center gap-1 rounded-full bg-pebble px-4">
+              <label className="flex min-h-11 w-32 items-center gap-1 rounded-full bg-card px-4">
                 <span className="font-black text-muted" aria-hidden="true">₱</span>
                 <input
                   inputMode="decimal"
@@ -89,7 +91,7 @@ export function YourMoney({ value, onChange, error, busy, onBack, onFinish }: {
         ))}
         <button type="button" onClick={addWallet} className="flex min-h-14 w-full items-center gap-2 font-black text-blue">
           <Icon name="plus" className="size-5" /> {tr('Add a bank or e-wallet')}</button>
-      </Card>
-    </Screen>
+      </div>
+    </Step>
   )
 }

@@ -157,7 +157,7 @@ export async function readBackupFile(file: Blob): Promise<BackupFile> {
   try {
     return BackupFileSchema.parse(JSON.parse(await file.text()))
   } catch {
-    throw new Error(tr('That file isn’t a Baon backup. Pick the backup file Baon saved — its name starts with “baon-backup”.'))
+    throw new Error(tr('That file isn’t a Baon backup. Pick the file whose name starts with “baon-backup”.'))
   }
 }
 

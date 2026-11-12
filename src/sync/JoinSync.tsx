@@ -6,7 +6,8 @@
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { SignedInUser } from '../auth/auth.ts'
-import { Button, Screen, StepHeader, Title } from '../ui/kit.tsx'
+import { Step } from '../onboarding/Step.tsx'
+import { Button } from '../ui/kit.tsx'
 import type { Vault } from '../vault/vault.ts'
 import { tr } from '../i18n/i18n.ts'
 
@@ -34,15 +35,13 @@ export function JoinSync({ user, onDone, onSkip }: { user: SignedInUser; onDone:
   }, [join])
 
   return (
-    <Screen footer={<Button disabled={!error} onClick={() => { setError(''); join() }}>{error ? tr('Try again') : tr('Bringing your records…')}</Button>}>
-      <StepHeader step={2} />
-      <Title sub={tr('Bringing your records here. This takes a few seconds.')}>{tr('Welcome back, {0}', user.name.split(' ')[0])}</Title>
+    <Step n={2} title={tr('Welcome back, {0}', user.name.split(' ')[0])} sub={tr('Bringing your records here. This takes a few seconds.')} footer={<Button disabled={!error} onClick={() => { setError(''); join() }}>{error ? tr('Try again') : tr('Bringing your records…')}</Button>}>
       {error && (
         <>
           <p role="alert" className="mt-4 rounded-2xl bg-card p-3 text-center font-bold">{error}</p>
           <button type="button" onClick={onSkip} className="mt-6 min-h-11 font-extrabold text-blue hover:underline">{tr('Set up this device as new instead')}</button>
         </>
       )}
-    </Screen>
+    </Step>
   )
 }

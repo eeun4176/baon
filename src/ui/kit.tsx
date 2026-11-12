@@ -14,7 +14,6 @@ import {
   Search, Share2, Shield, Tag, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
 import { formatPeso } from '../ledger/money.ts'
-import { tr } from '../i18n/i18n.ts'
 
 /** Full-height page column with safe-area padding. `footer` sticks to the bottom (main action). */
 export function Screen({ children, footer }: { children: ReactNode; footer?: ReactNode }) {
@@ -104,26 +103,6 @@ export function Button({
       {...props}
       className={`flex min-h-14 w-full items-center justify-center gap-2.5 rounded-full px-6 text-lg font-black disabled:opacity-40 ${variants[variant]} ${className}`}
     />
-  )
-}
-
-/** Round back button + 4-segment blue progress bar used on onboarding screens 2–5. */
-export function StepHeader({ step, onBack }: { step: 1 | 2 | 3 | 4; onBack?: () => void }) {
-  return (
-    <div className="flex items-center gap-3">
-      {onBack ? (
-        <button type="button" onClick={onBack} aria-label={tr('Back')} className="grid size-11 shrink-0 place-items-center rounded-full bg-card">
-          <Icon name="chevron-left" />
-        </button>
-      ) : (
-        <span className="size-11 shrink-0" />
-      )}
-      <div className="flex flex-1 gap-1.5" role="progressbar" aria-valuemin={1} aria-valuemax={4} aria-valuenow={step} aria-label={tr('Step {0} of 4', step)}>
-        {[1, 2, 3, 4].map((i) => (
-          <span key={i} className={`h-1.5 flex-1 rounded-full ${i <= step ? 'bg-blue' : 'bg-pebble-2'}`} />
-        ))}
-      </div>
-    </div>
   )
 }
 

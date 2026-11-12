@@ -178,3 +178,30 @@ input[type='search']::-webkit-search-cancel-button {
   background: var(--color-muted);
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E") center / contain no-repeat;
 }
+
+/* Onboarding (design "Get started") is a white page with gray fields, so inside it the two
+ * surface colors trade places: bg-page is the white one, bg-card the gray one. */
+:root {
+  --surface-card: var(--color-card);
+  --surface-page: var(--color-page);
+}
+.onboarding {
+  --color-card: var(--surface-page);
+  --color-page: var(--surface-card);
+}
+
+/* Onboarding picture: the buddy bobs, the glow breathes, coins float up, chips drift, stars twinkle. */
+@keyframes bn-bob { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-14px) rotate(2deg); } }
+@keyframes bn-pulse { 0%, 100% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.08); opacity: 0.6; } }
+@keyframes bn-coin { 0% { transform: translateY(0) rotate(0deg); opacity: 0; } 12%, 85% { opacity: 1; } 100% { transform: translateY(-260px) rotate(200deg); opacity: 0; } }
+@keyframes bn-drift-a { 0%, 100% { transform: translate(0, 0) rotate(-4deg); } 50% { transform: translate(10px, -12px) rotate(-1deg); } }
+@keyframes bn-drift-b { 0%, 100% { transform: translate(0, 0) rotate(5deg); } 50% { transform: translate(-12px, 10px) rotate(2deg); } }
+@keyframes bn-drift-c { 0%, 100% { transform: translate(0, 0) rotate(3deg); } 50% { transform: translate(8px, 10px) rotate(6deg); } }
+@keyframes bn-spark { 0%, 100% { transform: scale(0.6); opacity: 0.3; } 50% { transform: scale(1); opacity: 1; } }
+.bn-bob { animation: bn-bob 4s ease-in-out infinite; }
+.bn-pulse { animation: bn-pulse 5s ease-in-out infinite; }
+.bn-coin { opacity: 0; animation: bn-coin 5.5s ease-in infinite; }
+.bn-drift-a { animation: bn-drift-a 6s ease-in-out infinite; }
+.bn-drift-b { animation: bn-drift-b 7s ease-in-out infinite; }
+.bn-drift-c { animation: bn-drift-c 5s ease-in-out infinite; }
+.bn-spark { animation: bn-spark 2.4s ease-in-out infinite; }

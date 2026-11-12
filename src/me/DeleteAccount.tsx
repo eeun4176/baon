@@ -57,8 +57,8 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
       <Modal title={done === 'all' ? tr('Your account is deleted') : tr('Deleted from this phone')} onClose={() => location.replace('/')}>
         <p className="font-semibold text-muted">
           {done === 'all'
-            ? tr('Your sign-in account, your synced copies online and everything Baon saved on this phone are gone.')
-            : tr('Everything Baon saved on this phone is gone. Your sign-in account (and any synced copies online) couldn’t be removed from here — message the Baon team and we’ll remove them.')}
+            ? tr('Your account, your online copies and everything on this phone are gone.')
+            : tr('Everything on this phone is gone, but your online account couldn’t be removed from here. Message the Baon team and we’ll remove it.')}
         </p>
         <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>{tr('OK')}</button>
       </Modal>
@@ -69,7 +69,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
     <Modal title={tr('Delete your account?')} onClose={onClose}>
       <form onSubmit={remove} noValidate>
         <p className="font-semibold text-muted">
-          {tr('This deletes your sign-in account and synced copies online, and removes your records, wallets, plans, streak and recovery code from this phone. Your other devices keep their own records. It can’t be undone. Backups you saved elsewhere aren’t touched.')}</p>
+          {tr('This deletes your account and online copies, and removes everything Baon saved on this phone. Other devices keep their records, and backups you saved aren’t touched. It can’t be undone.')}</p>
         <Link to="/backup" className="mt-3 inline-block font-extrabold text-blue hover:underline">{tr('Make a backup first')}</Link>
         <label className="mt-4 block font-extrabold text-muted">
           {tr('Type DELETE to confirm')}<input
