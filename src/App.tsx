@@ -6,18 +6,9 @@
  * - more than one account on this phone → "Who's using Baon?" (each account: own records, own key)
  * Signed-in pages live inside AppShell (sidebar on desktop, bottom nav on phones).
  */
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
-import { BackupPanel } from './backup/BackupPanel.tsx'
-import { SyncSection } from './sync/SyncSection.tsx'
-import { Help } from './help/Help.tsx'
-import { History } from './history/History.tsx'
-import { Breakdown } from './home/Breakdown.tsx'
 import { Home } from './home/Home.tsx'
-import { Me } from './me/Me.tsx'
-import { Onboarding } from './onboarding/Onboarding.tsx'
-import { Plan } from './plan/Plan.tsx'
-import { Streak } from './streak/Streak.tsx'
 import { AppShell } from './shell/AppShell.tsx'
 import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
@@ -29,6 +20,18 @@ import { AccountPicker } from './lock/AccountPicker.tsx'
 import type { DeviceAccount } from './db/db.ts'
 import { listDeviceAccounts, openVault, PassphraseNeeded, type Vault } from './vault/vault.ts'
 import { tr } from './i18n/i18n.ts'
+
+// Pages other than Home download when first opened, so the first screen shows sooner.
+// Offline still works: the service worker saves every page file on the first visit.
+const BackupPanel = lazy(() => import('./backup/BackupPanel.tsx').then((m) => ({ default: m.BackupPanel })))
+const SyncSection = lazy(() => import('./sync/SyncSection.tsx').then((m) => ({ default: m.SyncSection })))
+const Help = lazy(() => import('./help/Help.tsx').then((m) => ({ default: m.Help })))
+const History = lazy(() => import('./history/History.tsx').then((m) => ({ default: m.History })))
+const Breakdown = lazy(() => import('./home/Breakdown.tsx').then((m) => ({ default: m.Breakdown })))
+const Me = lazy(() => import('./me/Me.tsx').then((m) => ({ default: m.Me })))
+const Onboarding = lazy(() => import('./onboarding/Onboarding.tsx').then((m) => ({ default: m.Onboarding })))
+const Plan = lazy(() => import('./plan/Plan.tsx').then((m) => ({ default: m.Plan })))
+const Streak = lazy(() => import('./streak/Streak.tsx').then((m) => ({ default: m.Streak })))
 
 type State =
   | { kind: 'loading' }
@@ -225,18 +228,20 @@ export default function App() {
       return null // IndexedDB opens in milliseconds; avoids a flash of the wrong screen
     case 'onboarding':
       return (
-        <Onboarding
-          adding={state.adding}
-          onDone={(vault, name) => {
-            addingFlag(false)
-            setState({ kind: 'app', vault, name })
-          }}
-          onCancel={state.adding ? () => { addingFlag(false); show(boot()) } : undefined}
-          onExisting={(userId) => {
-            addingFlag(false) // already on this phone: open it instead of setting it up again
-            show(listDeviceAccounts().then((list) => openAccount(list.find((a) => a.userId === userId)!, true)))
-          }}
-        />
+        <Suspense fallback={null}>
+          <Onboarding
+            adding={state.adding}
+            onDone={(vault, name) => {
+              addingFlag(false)
+              setState({ kind: 'app', vault, name })
+            }}
+            onCancel={state.adding ? () => { addingFlag(false); show(boot()) } : undefined}
+            onExisting={(userId) => {
+              addingFlag(false) // already on this phone: open it instead of setting it up again
+              show(listDeviceAccounts().then((list) => openAccount(list.find((a) => a.userId === userId)!, true)))
+            }}
+          />
+        </Suspense>
       )
     case 'picker':
       return <AccountPicker accounts={state.accounts} onPick={(account) => show(openAccount(account, true))} onAdd={add} onRemoved={afterRemove} />

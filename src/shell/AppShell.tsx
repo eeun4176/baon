@@ -9,7 +9,7 @@
  *   just fade and are clipped while the width animates (no jumping or re-wrapping).
  * Also hosts the Add dialog (opened by "?add=1" in the URL) and the Undo toast.
  */
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useSearchParams } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
 import { QuickAdd } from '../add/QuickAdd.tsx'
@@ -192,7 +192,7 @@ export function AppShell() {
 
       {/* ── Current page (each page fades up as it opens) ──────────── */}
       <div className="min-w-0 flex-1">
-        <Outlet />
+        <Suspense fallback={null}><Outlet /></Suspense>{/* pages load on first visit; the nav stays put meanwhile */}
       </div>
 
       <Snackbar />
