@@ -310,12 +310,17 @@ export function Home() {
 
   return (
     <Page>
-      {/* Phone: logo + avatar (the sidebar shows them on larger screens). */}
+      {/* Phone: logo, streak pill + avatar (the sidebar shows them on larger screens). */}
       <header className="mb-3.5 flex items-center justify-between px-1 md:hidden">
         <span className="flex items-center gap-2 text-[1.75rem] font-black tracking-tight">
           <img src={logoIcon} alt="" className="size-[2.375rem]" />
           {tr('Baon')}</span>
-        <Link to="/me" aria-label={tr('Me')} className="rounded-full"><Avatar className="size-10 bg-card" /></Link>
+        <span className="flex items-center gap-2">
+          <Link to="/streak" aria-label={tr('{0}-day streak', streak.current)} className="flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black">
+            <img src={streakFlame(streak.current, streak.pending)} alt="" className="size-6" /> {streak.current}
+          </Link>
+          <Link to="/me" aria-label={tr('Me')} className="rounded-full"><Avatar className="size-10 bg-card" /></Link>
+        </span>
       </header>
 
       <div className="flex flex-wrap items-end justify-between gap-4 px-1 lg:px-0">

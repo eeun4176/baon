@@ -441,6 +441,7 @@ export const FIL: Record<string, string> = {
   "Me": "Me",
   "Your account, money settings and data.": "Account, money settings at data mo.",
   "-day streak": "-day streak",
+  "{0}-day streak": "{0}-day streak",
   "My phone mode": "My phone mode",
   "Sign out": "Mag-sign out",
   "Me sections": "Mga section ng Me",
