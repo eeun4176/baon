@@ -1,5 +1,5 @@
 /*
- * BrandPanel.tsx — The onboarding picture (design "Get started"): Baon's buddy (the wallet mascot)
+ * BrandPanel.tsx — The onboarding picture: Baon's buddy (the wallet mascot)
  * on a dark panel with floating coins and sample chips. The motion classes (bn-*) are in index.css.
  *   BrandPanel  — desktop (≥ 1024px): the left half, with a caption that follows the step.
  *   BuddyArt    — phones: the big picture on the Welcome screen (the steps after it have no picture).

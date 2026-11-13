@@ -1,5 +1,5 @@
 /*
- * safeToSpend.ts — The number on the Home screen (plan §5, balance-based):
+ * safeToSpend.ts — The number on the Home screen (based on balances):
  *
  *   Ready to spend   = money in spending wallets − money set aside for school
  *   Budget days left = today … the day before the next allowance

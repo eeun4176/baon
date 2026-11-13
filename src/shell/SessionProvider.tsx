@@ -159,7 +159,7 @@ export function SessionProvider({ vault, name: initialName, onSignOut, children 
     [vault],
   )
 
-  // Each toast stays 5 s (plan §4.2: Undo for 5 s), then is marked "leaving" so it can
+  // Each toast stays 5 s (time to Undo), then is marked "leaving" so it can
   // slide away, and is removed 200 ms later. A newer toast restarts the timer.
   useEffect(() => {
     if (!toast) return

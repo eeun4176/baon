@@ -1,5 +1,5 @@
 /*
- * crypto.test.ts — Unit tests for crypto.ts (plan §11.3 "Security and isolation").
+ * crypto.test.ts — Unit tests for crypto.ts (security and isolation).
  * Run: npm test
  */
 import { describe, expect, it } from 'vitest'

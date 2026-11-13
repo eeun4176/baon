@@ -1,6 +1,6 @@
 /*
- * storage.ts — Keeping the records on the device (plan §9: "The app requests persistent
- * storage and warns when storage is low").
+ * storage.ts — Keeping the records on the device: asks for persistent storage
+ * and warns when storage is low.
  * Browsers may delete a site's data when the phone runs low on space, unless the site
  * is "persisted". Chrome/Edge grant that quietly for installed or often-used apps, Firefox
  * asks the student once, Safari grants it to home-screen apps.

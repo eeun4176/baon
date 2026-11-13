@@ -1,5 +1,5 @@
 /*
- * Me.tsx — Your account, money settings and data (design p11 phone, p22 desktop).
+ * Me.tsx — Your account, money settings and data.
  *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / device mode chips,
  *           Sign out (Lock in Shared phone mode). Phones: centered stack; wider screens: one row.
  *   Tabs: Profile (name, school, Senior high / College) · Security (device mode, lock/DeviceModeItems.tsx) ·

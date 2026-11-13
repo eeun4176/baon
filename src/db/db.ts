@@ -1,5 +1,5 @@
 /*
- * db.ts — IndexedDB layout via Dexie (plan §7.3).
+ * db.ts — IndexedDB layout via Dexie.
  *
  * Two kinds of databases on each phone:
  * - `sbt_device`: the list of accounts enrolled on this device (for the lock screen).
@@ -10,7 +10,7 @@
 import Dexie, { type EntityTable } from 'dexie'
 import type { Sealed } from '../crypto/crypto.ts'
 
-/** How the account's DEK is protected on this device (plan §7.2). */
+/** How the account's DEK is protected on this device. */
 export type DeviceMode = 'my-phone' | 'shared'
 
 /** One enrolled account in `sbt_device`. */

@@ -1,5 +1,5 @@
 /*
- * WeekRow.tsx — This week's Su–Sa row (design p6, p18, p21): streak days are blue
+ * WeekRow.tsx — This week's Su–Sa row: streak days are blue
  * circles with a ✓, today is a blue ring with a dot, other days are gray.
  * Used on Home (phone + desktop streak card) and on the Streak screen.
  */

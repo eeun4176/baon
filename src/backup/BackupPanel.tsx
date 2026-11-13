@@ -1,5 +1,5 @@
 /*
- * BackupPanel.tsx — Backup screens (Me → Backup and the /backup page, plan §7.4):
+ * BackupPanel.tsx — Backup screens (Me → Backup and the /backup page):
  *   Export a backup   first time: Recovery Kit (code → Copy / Download → type group 3 to confirm),
  *                     then downloads baon-backup-<date>.json (encrypted; opens only with the code)
  *   Lost it?          make a new code (old backups keep needing the old one), then a fresh export

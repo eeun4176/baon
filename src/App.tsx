@@ -40,7 +40,7 @@ type State =
   | { kind: 'error' }
 
 // Remembers "signed out" on this device so a reload doesn't reopen the app by itself.
-// (UX only, not security: My phone mode is protected by the phone's own screen lock.)
+// (My phone mode relies on the phone's own screen lock.)
 const SIGNED_OUT_KEY = 'baon.signedOut'
 const AUTO_LOCK_MS = 60_000 // Shared phone mode: away this long (another app, screen off) → locked again
 const ADDING_KEY = 'baon.adding' // "Add another account" in progress (survives Google's round trip, not a closed tab)

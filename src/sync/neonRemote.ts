@@ -18,7 +18,7 @@ const KEY_COLUMNS = 'dek'
  */
 function problem(error: unknown, status?: number): SyncError {
   const message = error instanceof Error ? error.message : String((error as { message?: string })?.message ?? '')
-  console.warn('baon sync request failed', status, message) // for whoever is setting up sync; students never see it
+  console.warn('baon sync request failed', status, message) // developer log; not shown in the app
   if (error instanceof AuthRequiredError || /AuthRequired/.test(message) || status === 401 || status === 403) return new SyncError('signin')
   if (!navigator.onLine || error instanceof TypeError || (status === 0 && /fetch|network/i.test(message))) return new SyncError('offline')
   return new SyncError('server', message)

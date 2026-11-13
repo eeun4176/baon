@@ -1,8 +1,8 @@
 /*
  * session.ts — The unlocked account, shared with every screen through React context.
  * Records are decrypted ONCE when the app opens and kept in memory (never persisted
- * in plain text); saving or undoing updates every screen at once (plan §8 "State:
- * UI + unlocked session only"). The provider lives in shell/SessionProvider.tsx.
+ * in plain text); saving or undoing updates every screen at once.
+ * The provider lives in shell/SessionProvider.tsx.
  */
 import { createContext, useContext } from 'react'
 import type { Presets } from './add/presets.ts'
@@ -15,7 +15,7 @@ import type { SchoolExpense } from './plan/school.ts'
 import type { DaySnapshot } from './streak/streak.ts'
 import type { Vault } from './vault/vault.ts'
 
-/** A short message at the bottom of the screen, optionally with Undo (plan §4.2: 5 s). */
+/** A short message at the bottom of the screen, optionally with Undo (5 s). */
 export interface Toast {
   message: string
   undo?: () => void

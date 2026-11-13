@@ -1,5 +1,5 @@
 /*
- * AllowanceCheckIn.tsx — "Did your baon arrive?" (design p13, plan §4.3). Shown on Home
+ * AllowanceCheckIn.tsx — "Did your baon arrive?" Shown on Home
  * instead of the safe-to-spend hero once the next allowance date is reached:
  *   Yes, ₱1,500   logs the allowance as income and moves the next date one cycle ahead
  *   Not yet       "When do you think it'll come?" Tomorrow / In 3 days / In a week: what's left is
@@ -22,7 +22,7 @@ import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
-// "Left from last week ₱95" (design p13), worded for each allowance frequency.
+// "Left from last week ₱95", worded for each allowance frequency.
 const LEFT_FROM = { daily: tr('yesterday'), weekly: tr('last week'), biweekly: tr('the last 2 weeks'), monthly: tr('last month'), irregular: tr('your last baon') } as const
 
 const WAIT = [[tr('Tomorrow'), 1], [tr('In 3 days'), 3], [tr('In a week'), 7]] as const

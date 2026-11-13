@@ -1,6 +1,6 @@
 /*
  * backup.test.ts — Export → wipe the phone → import gives back every record exactly
- * (plan §9), and a wrong code, another account or a damaged file changes nothing.
+ *, and a wrong code, another account or a damaged file changes nothing.
  * Run: npm test
  */
 import 'fake-indexeddb/auto'

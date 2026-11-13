@@ -1,6 +1,6 @@
 /*
- * streak.ts — Day snapshots and the logging streak (plan §5.1, with the rules the
- * team chose on 2026-11-11: logging honestly is what counts, even over budget):
+ * streak.ts — Day snapshots and the logging streak. Logging honestly is what
+ * counts, even over budget:
  *
  *   on      class day, something logged (or "No spending today"), spent ≤ that day's budget → +1
  *   over    class day, logged, spent > budget → +1 too (shown dark on the map)

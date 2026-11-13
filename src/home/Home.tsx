@@ -1,8 +1,8 @@
 /*
  * Home.tsx — Today at a glance.
- * Phone (design p6): logo, date line, greeting, Su–Sa week row, the safe-to-spend
+ * Phone: logo, date line, greeting, Su–Sa week row, the safe-to-spend
  *   hero with "Add expense" / "How it's counted", One-tap add, then today's entries.
- * Desktop (design p18): greeting row with a search box (matches show under it; Enter opens History); hero (with "₱720 of ₱1,500 left" bar) beside a dark
+ * Desktop: greeting row with a search box (matches show under it; Enter opens History); hero (with "₱720 of ₱1,500 left" bar) beside a dark
  *   streak card (week row, best streak, free pass); One-tap add + Set aside for school; Wallets;
  *   Spent per day + Today.
  */
@@ -75,7 +75,7 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
           {tr('Waiting for your baon · It came')}</button>
       )}
 
-      {/* Desktop: how much of this allowance is left (design p18) */}
+      {/* Desktop: how much of this allowance is left */}
       {allowance > 0 && (
         <div className="mt-4 hidden lg:block">
           <span className="block h-2.5 overflow-hidden rounded-full bg-page" aria-hidden="true">
@@ -113,7 +113,7 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   )
 }
 
-/** Desktop dark streak card (design p18): streak, this week's ✓ row, best streak + free pass, link to the map. */
+/** Desktop dark streak card: streak, this week's ✓ row, best streak + free pass, link to the map. */
 function StreakCard({ today, streak }: { today: string; streak: Streak }) {
   const n = streak.current
   return (
@@ -218,7 +218,7 @@ function TodayCard({ today, spent, className = '' }: { today: string; spent: num
   )
 }
 
-/** Wallet balances (design p18 "Wallets"). */
+/** Wallet balances. */
 function Wallets() {
   const { wallets, transactions } = useSession()
   const all = balances(wallets, transactions)
@@ -273,7 +273,7 @@ export function Home() {
         <HomeSearch />
       </div>
 
-      {/* Phone/tablet: week row above the hero (design p6) */}
+      {/* Phone/tablet: week row above the hero */}
       <div className="mt-6 lg:hidden">
         <Link to="/streak" aria-label={tr('This week · Open your streak')} className="block rounded-2xl">
           <WeekRow today={today} streak={streak} />
@@ -281,7 +281,7 @@ export function Home() {
       </div>
 
       <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-12 lg:gap-5">
-        {/* Allowance day: ask first — the new daily budget starts once the baon is in (design p13) */}
+        {/* Allowance day: ask first — the new daily budget starts once the baon is in */}
         <div className="lg:col-span-7">
           {t.result.allowanceDue || (checkingIn && t.allowance.lateFrom) ? (
             <AllowanceCheckIn t={t} onCancel={t.result.allowanceDue ? undefined : () => setCheckingIn(false)} />

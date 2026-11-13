@@ -1,6 +1,6 @@
 /*
- * money.test.ts — Tests for peso parsing/formatting (plan §11.3: "All money is
- * integer centavos; no floating-point totals"). Run: npm test
+ * money.test.ts — Tests for peso parsing/formatting (all money is
+ * integer centavos; no floating-point totals). Run: npm test
  */
 import { describe, expect, it } from 'vitest'
 import { formatPeso, parsePeso } from './money.ts'

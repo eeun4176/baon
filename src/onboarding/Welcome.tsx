@@ -1,5 +1,5 @@
 /*
- * Welcome.tsx — Onboarding's first screen on phones (design "Get started", mobile): the big buddy
+ * Welcome.tsx — Onboarding's first screen on phones: the big buddy
  * picture, the promise, and "Get started". Desktop skips it: the picture is already on the left.
  */
 import { Button } from '../ui/kit.tsx'

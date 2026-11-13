@@ -1,6 +1,6 @@
 /*
- * backup.ts — Encrypted export and import (plan §7.4, §9: "Export → clear site data →
- * import restores all records exactly").
+ * backup.ts — Encrypted export and import: exporting, clearing the site data and
+ * importing again restores every record exactly.
  *
  * The file holds the account's records exactly as stored on the phone (already AES-GCM
  * encrypted with the DEK and tied to the account by AAD) plus a copy of the DEK wrapped
@@ -74,7 +74,7 @@ export type BackupFile = z.infer<typeof BackupFileSchema>
 const DAY = 86_400_000
 
 /**
- * Whether Home should nudge for a backup (plan §9 "backup reminder"): never backed up once
+ * Whether Home should nudge for a backup: never backed up once
  * there are 3+ entries, or the last backup is 7+ days old and entries were added after it.
  */
 export function backupDue(lastBackupAt: string | undefined, entryTimes: string[], now = Date.now()): 'never' | 'old' | null {

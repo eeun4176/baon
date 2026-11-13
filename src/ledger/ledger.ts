@@ -1,5 +1,5 @@
 /*
- * ledger.ts — Wallets, transactions and balances (plan §5 "Transaction kinds", §10).
+ * ledger.ts — Wallets, transactions and balances.
  *
  * Balances are never stored: each wallet's balance is its opening balance plus
  * the effect of every transaction. That way an expense lowers a balance exactly

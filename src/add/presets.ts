@@ -1,5 +1,5 @@
 /*
- * presets.ts — One-tap buttons on Home (plan §4.2): "Jeep ₱15", "Lunch ₱80"…
+ * presets.ts — One-tap buttons on Home: "Jeep ₱15", "Lunch ₱80"…
  * The student can add (up to 8), edit, reorder and delete them. They're stored
  * encrypted as ONE settings record { items, dismissed }, so the array order is the
  * button order. Until the student changes anything, the design's four starters show.

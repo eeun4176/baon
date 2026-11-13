@@ -1,5 +1,5 @@
 /*
- * profile.ts — Optional profile details from Me → Profile (design p22): school,
+ * profile.ts — Optional profile details from Me → Profile: school,
  * "I'm in Senior high / College" and the profile photo (synced from Google or uploaded,
  * kept as a small JPEG so it shows offline). Stored encrypted as one settings record.
  * The display name itself lives in the device's account list (vault.renameAccount)

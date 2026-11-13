@@ -1,5 +1,5 @@
 /*
- * Onboarding.tsx — Runs the first-time screens in order (design "Get started"):
+ * Onboarding.tsx — Runs the first-time screens in order:
  *   Welcome (phones only) → Sign in → Whose phone? → Your baon → Your money now → Home
  * or, from "Whose phone?", Restore a backup → Home (records come from the file),
  * or, if the account already has records online (another device), Welcome back → records download → Home.
@@ -106,7 +106,7 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
 
   /** Hands the new account to the app, locked with the passphrase first in Shared phone mode. */
   async function done(vault: Vault, name: string) {
-    // shortcut: if this re-lock fails (storage error) the account stays in My phone mode; Me → Security shows the real mode.
+    // Known limit: if this re-lock fails (storage error) the account stays in My phone mode; Me → Security shows the real mode.
     if (passphrase) await vault.protect(passphrase).catch(() => {})
     onDone(vault, name)
   }

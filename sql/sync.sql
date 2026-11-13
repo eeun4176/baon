@@ -33,7 +33,7 @@ create trigger sync_records_touch before insert or update on public.sync_records
 -- 30,000 records ≈ 15 years of normal use; 10 MB ≈ 5+ years with a profile photo.
 -- Checked once per upload (statement), only for the accounts in it; over the cap → the whole
 -- upload is refused, nothing is saved, and the phone keeps its records and shows "Couldn't sync".
--- shortcut: re-counts the account's rows on every upload (fine up to the cap); keep a running total if accounts grow far bigger.
+-- Known limit: re-counts the account's rows on every upload (fine up to the cap); keep a running total if accounts grow far bigger.
 create or replace function public.sync_check_quota() returns trigger language plpgsql as $$
 declare
   over text;

@@ -1,5 +1,5 @@
 /*
- * Step.tsx — The frame around every onboarding step (design "Get started").
+ * Step.tsx — The frame around every onboarding step.
  * Phones: back button + 4 progress bars + "2 / 4", a blue step name, the title.
  * Desktop: the 4 named steps with numbers, "STEP 2 OF 4", the title, and Back beside the main button.
  * Without `n` (sign-in again from the lock screen) it shows only the title and Back.

@@ -1,5 +1,5 @@
 /*
- * Plan.tsx — Plan ahead (design p10 phone, p20 desktop).
+ * Plan.tsx — Plan ahead.
  *   Dark hero: total set aside for school ("2 set aside · 1 planned · 1 paid" on desktop).
  *   School expenses: each row has Set aside / Mark paid; tap a row to edit or delete.
  *   Class days: which days the daily budget counts (edits the allowance setup), plus
@@ -25,7 +25,7 @@ const DAY_NAMES = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), t
 const dueDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 const paidDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', month: 'short', day: 'numeric' })
 
-// Templates shown as quick-add chips above the desktop list (design p20).
+// Templates shown as quick-add chips above the desktop list.
 const QUICK = TEMPLATES.filter((t) => t.id !== 'thesis' && t.id !== 'other')
 
 type Open = { kind: 'item'; item?: SchoolExpense; template?: SchoolExpense['template'] } | { kind: 'pay'; item: SchoolExpense } | { kind: 'days' } | { kind: 'limits' } | null
@@ -235,7 +235,7 @@ export function Plan() {
       />
 
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-5">
-        {/* Desktop (design p20): hero beside Class days + Category limits; it takes their height, content centered */}
+        {/* Desktop: hero beside Class days + Category limits; it takes their height, content centered */}
         <section className="flex animate-rise flex-col justify-center rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white md:p-8 lg:col-span-7" aria-labelledby="set-aside-title">
             <h2 id="set-aside-title" className="text-lg font-extrabold text-white/80">{tr('Set aside for school')}</h2>
             <p className="mt-2"><BigMoney centavos={total} className="text-[clamp(2.75rem,15vw,4.25rem)]" /></p>

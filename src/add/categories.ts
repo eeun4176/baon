@@ -1,5 +1,5 @@
 /*
- * categories.ts — Expense categories and the starter one-tap presets (plan §4.2).
+ * categories.ts — Expense categories and the starter one-tap presets.
  * Quick Add shows the 5 most-used categories plus "More" (design: Fare, Food,
  * Load, School, Snacks, More). One-tap buttons live in presets.ts.
  * Students can add their own categories (e.g. "Milk tea", from Plan → Category limits). They're

@@ -1,6 +1,6 @@
 /*
  * money.ts — Converting between what students type/see (₱15.50) and what Baon
- * stores (integer centavos, 1550). Plan §5: money is NEVER a floating-point number,
+ * stores (integer centavos, 1550). Money is never a floating-point number,
  * so 0.1 + 0.2 rounding bugs can't creep into balances.
  */
 

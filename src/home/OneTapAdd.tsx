@@ -3,7 +3,7 @@
  * Load ₱50). One tap logs the expense right away (the button's wallet, else the
  * last-used one), then shows Undo for 5 seconds (plan criterion C1: ≤ 2 taps).
  * "Edit" opens the button editor; after the same expense is logged 3 times the card
- * offers to make it a button (plan §4.2).
+ * offers to make it a button.
  */
 import { useMemo, useState } from 'react'
 import { lastUsedWalletId } from '../add/categories.ts'

@@ -1,6 +1,6 @@
 /*
- * ledger.test.ts — Tests for balances and wallet rules (plan §5 "Why this design
- * avoids double-counting", §11.3 "Financial correctness"). Uses the design's
+ * ledger.test.ts — Tests for balances and wallet rules (no double-counting,
+ * correct totals). Uses the design's
  * sample student: Cash ₱650 + GCash ₱400 = ₱1,050, Savings ₱0. Run: npm test
  */
 import { describe, expect, it } from 'vitest'

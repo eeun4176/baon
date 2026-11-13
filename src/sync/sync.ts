@@ -4,7 +4,7 @@
  * What goes online: each record exactly as the phone stores it (scrambled with the account key,
  * tied to the account, id, type and version), plus the account key itself, so any device the
  * student signs in on can open them. Only the signed-in account can reach its rows (sql/sync.sql).
- * Decided 2026-11-11: the sign-in is the lock, so whoever runs the database could open them.
+ * The account sign-in protects the online copy (see docs/architecture.md).
  *
  * How a sync runs (syncNow):
  *   0. owner — the online sign-in must be this Baon's owner. A browser keeps one sign-in, so on a
@@ -153,7 +153,7 @@ async function adoptKey(db: AccountDb, vault: Vault, meta: VaultMeta, oldDek: Cr
     await db.meta.update('vault', { wrappedDek, recovery: undefined, sync: { merging: true } })
     return true
   })
-  // shortcut: a save started in the few milliseconds before this line still uses the old key; fine for a one-time merge.
+  // Known limit: a save started in the few milliseconds before this line still uses the old key; fine for a one-time merge.
   if (done) vault.replaceKey(await unwrapDek(wrappedDek, vault.wrappingKey()))
   return done
 }

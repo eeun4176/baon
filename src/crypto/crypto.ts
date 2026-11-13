@@ -1,5 +1,5 @@
 /*
- * crypto.ts — Baon's only encryption code (plan §7.2–7.3). Thin wrapper over the
+ * crypto.ts — Baon's only encryption code. Thin wrapper over the
  * browser's built-in Web Crypto API; no custom crypto, no extra libraries.
  *
  * Key ideas:
@@ -46,7 +46,7 @@ export function generateDeviceKey(): Promise<CryptoKey> {
 }
 
 // PBKDF2 is the only slow password hash built into browsers; 600,000 rounds (OWASP 2023) makes
-// every wrong guess slow. shortcut: no Argon2 without a library; revisit if Web Crypto gets one.
+// every wrong guess slow. Known limit: no Argon2 without a library; revisit if Web Crypto gets one.
 export const PASSPHRASE_ROUNDS = 600_000
 
 /** Shared-phone-mode wrapping key from the passphrase (+ a random salt saved next to it). Non-extractable. */

@@ -6,10 +6,10 @@ import { firstName, randomGreeting } from './greetings.ts'
 
 describe('firstName', () => {
   it.each([
-    ['John Ian Cabalquinto', 'John'],
+    ['Juan Miguel Dela Cruz', 'Juan'],
     ['Jasmine', 'Jasmine'],
     ['  Paolo   Reyes ', 'Paolo'],
-    ['cabalquintojohnian', 'cabalquintojohnian'], // email-code users: part before "@"
+    ['juandelacruz', 'juandelacruz'], // email-code users: part before "@"
   ])('%s → %s', (full, first) => {
     expect(firstName(full)).toBe(first)
   })
@@ -18,9 +18,9 @@ describe('firstName', () => {
 describe('randomGreeting', () => {
   it('greets by first name, never the full name', () => {
     for (let i = 0; i < 50; i++) {
-      const g = randomGreeting('John Ian Cabalquinto')
-      expect(g).toContain('John')
-      expect(g).not.toContain('Cabalquinto')
+      const g = randomGreeting('Juan Miguel Dela Cruz')
+      expect(g).toContain('Juan')
+      expect(g).not.toContain('Dela Cruz')
     }
   })
 
@@ -29,6 +29,6 @@ describe('randomGreeting', () => {
   })
 
   it('keeps the same greeting for the same pick, with the current name', () => {
-    expect(randomGreeting('John', 0.3).replace('John', 'Ana')).toBe(randomGreeting('Ana', 0.3))
+    expect(randomGreeting('Juan', 0.3).replace('Juan', 'Ana')).toBe(randomGreeting('Ana', 0.3))
   })
 })

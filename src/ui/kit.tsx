@@ -38,7 +38,7 @@ export function Page({ children }: { children: ReactNode }) {
   )
 }
 
-/** Page heading (design pages 19–22): title + gray subtitle, actions on the right. */
+/** Page heading: title + gray subtitle, actions on the right. */
 export function PageHeader({ title, sub, actions }: { title: string; sub?: string; actions?: ReactNode }) {
   return (
     <div className="mb-4 flex flex-wrap items-end justify-between gap-3 md:mb-5">
@@ -146,7 +146,7 @@ export function Chip({ selected, onClick, children }: { selected: boolean; onCli
   )
 }
 
-/** Big display amount (design "Money · 900"): gray ₱ + digits. Pass a non-negative amount. */
+/** Big display amount: gray ₱ + digits. Pass a non-negative amount. */
 export function BigMoney({ centavos, className = '' }: { centavos: number; className?: string }) {
   return (
     // key = amount: React re-mounts the span when the number changes, replaying the pop.

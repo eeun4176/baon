@@ -1,5 +1,5 @@
 /*
- * history.ts — The numbers behind History and Home's charts (design pages 9, 18, 19):
+ * history.ts — The numbers behind History and Home's charts:
  * entries grouped by day, search/category filter, spent per day, spent by
  * category, and "spent since Sunday". Pure functions so they can be tested.
  * Days are Manila days; "spending" = expenses minus refunds (moves/saves aren't spending).

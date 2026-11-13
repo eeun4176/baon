@@ -1,7 +1,7 @@
 /*
  * repo.ts — Saves and loads wallets and transactions through the encrypted vault.
- * Every record is checked with Zod on the way in AND on the way out (plan §8:
- * "validate decrypted payloads"), so a corrupted or tampered record can't reach the math.
+ * Every record is checked with Zod on the way in AND on the way out,
+ * so a corrupted or tampered record can't reach the math.
  */
 import * as z from 'zod/mini'
 import type { Vault } from '../vault/vault.ts'

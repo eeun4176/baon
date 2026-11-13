@@ -1,7 +1,7 @@
 /*
- * QuickAdd.tsx — Add (or edit) an entry: the most important flow (plan §4.2).
- *   Phone (design p8): full-screen sheet sliding up — big keypad, category chips, Save.
- *   Desktop (design p23): centered dialog over the dimmed page — type the amount,
+ * QuickAdd.tsx — Add (or edit) an entry: the most important flow.
+ *   Phone: full-screen sheet sliding up — big keypad, category chips, Save.
+ *   Desktop: centered dialog over the dimmed page — type the amount,
  *   "Enter to save · Esc to close", Cancel + Add.
  * Opened from anywhere with the URL "?add=1" (and "&edit=<id>" to fix an entry),
  * so the phone's Back button closes it. Uses the native <dialog> element, which

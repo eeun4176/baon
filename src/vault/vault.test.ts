@@ -1,6 +1,6 @@
 /*
  * vault.test.ts — Tests for vault.ts against a fake in-memory IndexedDB
- * (fake-indexeddb), covering plan §11.3: data survives reopening, nothing is
+ * (fake-indexeddb), checking that data survives reopening, nothing is
  * stored as plain text, accounts are isolated, and lock really locks.
  * Run: npm test
  */

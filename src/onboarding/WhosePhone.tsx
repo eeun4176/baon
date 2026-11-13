@@ -1,5 +1,5 @@
 /*
- * WhosePhone.tsx — Onboarding step 2 (design "Device"): picks the device mode.
+ * WhosePhone.tsx — Onboarding step 2: picks the device mode.
  * My own phone: Baon opens right away. Shared: the next step makes a passphrase, and Baon
  * asks for it every time it opens (vault.ts, lock/LockScreen.tsx). Also the way into restoring a backup.
  */

@@ -1,7 +1,6 @@
 /*
- * Help.tsx — Help & privacy (plan §7.6 privacy wording, §7.7 minors / RA 10173, §10
- * "plain-language privacy notice: what stays on the device, what backup sends, how to
- * delete everything").
+ * Help.tsx — Help & privacy: a plain-language privacy notice (what stays on
+ * the device, what backup sends, how to delete everything; RA 10173).
  *   Left:  "Your privacy, in plain words".
  *   Right: Policies (open as pop-ups, legal/Legal.tsx) and common questions (tap to open).
  * Delete account lives on Me → Security.

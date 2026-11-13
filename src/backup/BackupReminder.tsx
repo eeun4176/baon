@@ -1,6 +1,6 @@
 /*
- * BackupReminder.tsx — Home card that nudges for a backup (plan §9 "backup reminder";
- * design p11 "Not backed up yet"). Shows only when backupDue() says so; "Later" hides it
+ * BackupReminder.tsx — Home card that nudges for a backup ("Not backed up yet").
+ * Shows only when backupDue() says so; "Later" hides it
  * for 3 days on this browser.
  */
 import { useEffect, useState } from 'react'

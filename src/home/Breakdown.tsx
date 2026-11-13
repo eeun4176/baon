@@ -1,5 +1,5 @@
 /*
- * Breakdown.tsx — "How it's counted" (design artboard): shows how today's number
+ * Breakdown.tsx — "How it's counted": shows how today's number
  * is made — money in wallets, minus set-asides, divided by the days left.
  * Phone: its own screen (from the hero's "How it's counted" button).
  * Desktop: the same pieces sit beside the hero card on Home.

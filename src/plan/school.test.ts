@@ -15,7 +15,7 @@ const item = (id: string, pesos: number, status: SchoolExpense['status'], dueDat
 const pay = (id: string, pesos: number, day = '2026-11-06'): Transaction =>
   ({ id: `tx-${id}`, kind: 'expense', amountCentavos: pesos * 100, walletId: 'cash', categoryId: 'school', occurredAt: `${day}T12:00:00+08:00`, linkedId: id })
 
-// Design p20: Org fee ₱180 + Thesis printing ₱150 set aside, PE uniform planned, field trip paid.
+// Sample plan: Org fee ₱180 + Thesis printing ₱150 set aside, PE uniform planned, field trip paid.
 const items = [
   item('org', 180, 'setAside', '2026-11-12'),
   item('thesis', 150, 'setAside', '2026-11-13'),

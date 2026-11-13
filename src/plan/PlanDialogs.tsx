@@ -2,7 +2,7 @@
  * PlanDialogs.tsx — Pop-ups on the Plan tab:
  *   ItemDialog  add / edit a school expense (template, title, amount, due date, set aside now)
  *   PayDialog   "Mark paid": creates the real expense (prefilled amount, editable) which
- *               releases the reservation in the same step (plan §4.4)
+ *               releases the reservation in the same step
  * Everything saves through the session, so Home's safe-to-spend updates at once, with Undo.
  */
 import { useState, type FormEvent } from 'react'

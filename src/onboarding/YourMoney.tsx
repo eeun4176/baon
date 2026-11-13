@@ -1,5 +1,5 @@
 /*
- * YourMoney.tsx — Onboarding screen 5 (design "5 Your money now"): cash in wallet,
+ * YourMoney.tsx — Onboarding screen 5: cash in wallet,
  * GCash / Maya switches plus any bank or e-wallet the student names themselves
  * (BPI, SeaBank, GoTyme…), a running total, then "See my budget".
  */

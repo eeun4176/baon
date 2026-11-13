@@ -1,5 +1,5 @@
 /*
- * school.ts — School expenses: money set aside for printing, projects, org fees… (plan §4.4).
+ * school.ts — School expenses: money set aside for printing, projects, org fees….
  *
  * Status flow: Planned → Set aside → Paid.
  *   - Only "Set aside" items are subtracted from safe-to-spend (the money stays in the wallet).

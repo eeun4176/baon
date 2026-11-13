@@ -1,5 +1,5 @@
 /*
- * days.ts — Calendar-day helpers fixed to Philippine time (plan §5: a day runs
+ * days.ts — Calendar-day helpers fixed to Philippine time: a day runs
  * 00:00–23:59 Asia/Manila, whatever time zone the phone is set to).
  *
  * Days are plain "YYYY-MM-DD" strings (e.g. "2026-11-10"). Doing day math on these
@@ -42,7 +42,7 @@ export function weekday(day: string): number {
 
 /**
  * Same day next month, clamped to the month's last day (Jan 31 → Feb 28).
- * shortcut: a 29th–31st allowance then stays on the 28th in later months;
+ * Known limit: a 29th–31st allowance then stays on the 28th in later months;
  * store the original day-of-month if students report it.
  */
 export function addMonth(day: string): string {

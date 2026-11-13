@@ -1,6 +1,6 @@
 /*
- * StorageWarning.tsx — Home card when the phone is almost out of space (plan §9 "warns when
- * storage is low"): new entries may fail to save and the browser may clear site data, so it
+ * StorageWarning.tsx — Home card when the phone is almost out of space:
+ * new entries may fail to save and the browser may clear site data, so it
  * points to a backup. Renders nothing otherwise.
  */
 import { Link } from 'react-router'

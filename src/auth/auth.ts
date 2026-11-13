@@ -2,14 +2,14 @@
  * auth.ts — Online sign-in through Neon Auth (Google or a 6-digit email code).
  * Only onboarding imports this, and only with `await import(...)`, so the Neon SDK
  * is never part of the offline app bundle. Signing in proves WHO the student is;
- * it never unlocks or sends their records (plan §7.1).
+ * it never unlocks or sends their records.
  * The same client also reaches the database (Data API) for opt-in sync (sync/neonRemote.ts);
  * every database request carries the signed-in user's token automatically.
  */
 import { createClient } from '@neon/neon-js'
 
 // Live site: sign-in goes through baon's own address (api/auth.ts), so phones keep the sign-in.
-// shortcut: the dev server has no api/ functions, so dev (and `vite preview`) talk to Neon directly.
+// Known limit: the dev server has no api/ functions, so dev (and `vite preview`) talk to Neon directly.
 const AUTH_URL = import.meta.env.PROD ? `${location.origin}/api/auth` : import.meta.env.VITE_NEON_AUTH_URL
 
 /** Sign-in + database client (Neon). */
@@ -22,7 +22,7 @@ const client = neon.auth
 /** Result shape every Better Auth call returns. */
 type Result = Promise<{ error: { message?: string } | null }>
 
-// shortcut: @neon/neon-js 0.10.2 includes the Email OTP plugin at runtime but its
+// Known limit: @neon/neon-js 0.10.2 includes the Email OTP plugin at runtime but its
 // TypeScript types drop it, so we describe the two calls we use. Remove this cast
 // when a newer SDK version types `emailOtp` itself.
 const otp = client as unknown as {

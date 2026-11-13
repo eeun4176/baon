@@ -1,5 +1,5 @@
 /*
- * YourBaon.tsx — Onboarding screen 4 (design "4 Your baon"): allowance amount,
+ * YourBaon.tsx — Onboarding screen 4: allowance amount,
  * how often, next allowance date, and which days are class days.
  */
 import { FREQUENCIES } from '../budget/allowance.ts'

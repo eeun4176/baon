@@ -1,5 +1,5 @@
 /*
- * Streak.tsx — Streak & spending map (design p21; phones get the same cards stacked).
+ * Streak.tsx — Streak & spending map (phones get the same cards stacked).
  *   Dark hero: flame + current streak + this week's ✓ row. Tiles: best streak, free pass,
  *   on-budget days in the last 6 months. Spending map: one square per day (darker blue =
  *   more of that day's budget used, ink = over). "How streaks work" explains the rules.

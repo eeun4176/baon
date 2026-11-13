@@ -1,6 +1,6 @@
 /*
  * safeToSpend.test.ts — Scenario table for the safe-to-spend engine
- * (plan §11.3: "matches hand-calculated results for ≥ 20 scenarios").
+ * (each checked against a hand calculation; 20+ scenarios).
  * Base data is the design's sample student, Jasmine:
  *   Cash ₱650 + GCash ₱400 = ₱1,050, ₱330 set aside → ₱720 ready to spend,
  *   weekly ₱1,500 allowance next Sunday Nov 15, class days Mon–Sat.
@@ -48,7 +48,7 @@ function run(o: { now: Date; txs?: Transaction[]; allowance?: Partial<Allowance>
 }
 
 describe('safe-to-spend: design and plan numbers', () => {
-  it('1. Mon Nov 9: ₱720 ÷ 6 class days = ₱120 (plan §5 worked example)', () => {
+  it('1. Mon Nov 9: ₱720 ÷ 6 class days = ₱120 (worked example)', () => {
     const r = run({ now: at('2026-11-09') })
     expect([r.readyToSpend, r.budgetDays, r.dailyBudget]).toEqual([72000, 6, 12000])
   })
@@ -121,7 +121,7 @@ describe('safe-to-spend: everyday cases', () => {
   })
 })
 
-describe('safe-to-spend: edge cases (plan §5)', () => {
+describe('safe-to-spend: edge cases', () => {
   it('14. Sunday is not a class day → ₱0 planned, but spending is still allowed', () => {
     const r = run({ now: at('2026-11-08'), txs: [tx('expense', 50, '2026-11-08')] })
     expect([r.isClassDay, r.dailyBudget, r.leftToday, r.budgetDays]).toEqual([false, 0, -5000, 6])

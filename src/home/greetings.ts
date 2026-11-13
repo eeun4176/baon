@@ -1,5 +1,5 @@
 /*
- * greetings.ts — The Home greeting, picked at random on each open (plan §6).
+ * greetings.ts — The Home greeting, picked at random on each open.
  * Local and rule-based (no network). Never shaming, never about skipping food.
  * Short on purpose: with a first name it fits one line on a phone (Home also cuts it off as a last resort).
  * Moves into i18n files when Filipino/Taglish arrives (Phase 2).
@@ -18,8 +18,8 @@ const GREETINGS = [
 ]
 
 /**
- * First name for greetings: the first word of the full name ("John Ian Cabalquinto" → "John").
- * shortcut: two-word given names (e.g. "John Ian") keep only the first word; add an
+ * First name for greetings: the first word of the full name ("Juan Miguel Dela Cruz" → "Juan").
+ * Known limit: two-word given names (e.g. "Juan Miguel") keep only the first word; add an
  * editable "What should we call you?" field in Me if students ask for it.
  */
 export function firstName(fullName: string): string {

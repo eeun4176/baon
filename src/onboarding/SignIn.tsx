@@ -1,5 +1,5 @@
 /*
- * SignIn.tsx — Onboarding screen 2 (design "2 Sign in"): Continue with Google,
+ * SignIn.tsx — Onboarding screen 2: Continue with Google,
  * or "Use email instead" → 6-digit code. Needs internet; shows a calm message offline.
  * The auth module is loaded on demand so the offline app never downloads it.
  */

@@ -1,5 +1,5 @@
 /*
- * TxRow.tsx — One entry in a list (design p9/p18/p19): letter avatar, title,
+ * TxRow.tsx — One entry in a list: letter avatar, title,
  * gray "Category · Wallet · time" line and the amount (−₱15 ink, +₱1,500 blue).
  * Tapping it opens the entry for editing or deleting.
  */

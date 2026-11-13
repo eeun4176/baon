@@ -1,8 +1,8 @@
 /*
- * Charts.tsx — Lightweight CSS charts (plan §8: no chart library, keeps the app small).
- *   SpentPerDay: 7 rounded bars, today in blue, dashed line at today's budget (design p18).
- *   CategoryBars: horizontal blue bars per category, biggest first (design p19).
- * Bars grow in when shown. Each chart has a text summary for screen readers (plan §5.1).
+ * Charts.tsx — Lightweight CSS charts (no chart library, keeps the app small).
+ *   SpentPerDay: 7 rounded bars, today in blue, dashed line at today's budget.
+ *   CategoryBars: horizontal blue bars per category, biggest first.
+ * Bars grow in when shown. Each chart has a text summary for screen readers.
  */
 import { weekday } from '../budget/days.ts'
 import { formatPeso } from '../ledger/money.ts'

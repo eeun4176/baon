@@ -1,5 +1,5 @@
 /*
- * History.tsx — What happened (design p9 phone, p19 desktop).
+ * History.tsx — What happened.
  * Phone: "History" + List/Charts toggle, search, then day cards (or the charts).
  * Desktop: title + subtitle, search on the right, category chips, day cards on the
  *   left and a summary column on the right ("Spent since Sunday", By category, export).

@@ -1,5 +1,5 @@
 /*
- * presets.test.ts — "Make it a button?" suggestion (plan §4.2: after 3 same expenses)
+ * presets.test.ts — "Make it a button?" suggestion (after 3 same expenses)
  * and the encrypted save/load of the one-tap buttons.
  * Run: npm test
  */

@@ -1,5 +1,5 @@
 /*
- * AppShell.tsx — The frame around every signed-in screen (design p6–p11 phone, p18–p22 desktop).
+ * AppShell.tsx — The frame around every signed-in screen.
  *
  * Phone (< 768px): floating white pill nav (Home · History · Plan · Me) + round blue (+).
  * Tablet/desktop (≥ 768px): sidebar — logo + tagline, Add expense, Home · History · Plan ·
@@ -104,7 +104,7 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-dvh">
-      {/* ── Sidebar: tablet & desktop (design p18) ───────────────────── */}
+      {/* ── Sidebar: tablet & desktop ───────────────────── */}
       <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) md:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
         <nav aria-label={tr('Main')} className="flex h-full flex-col rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
           <div className="mb-4 flex items-center gap-2.5 overflow-hidden pt-1">
@@ -179,7 +179,7 @@ export function AppShell() {
 
       <Snackbar />
 
-      {/* ── Bottom nav + (+): phone only (design p6) ─────────────────── */}
+      {/* ── Bottom nav + (+): phone only ─────────────────── */}
       <nav aria-label={tr('Main')} className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden">
         <ul className="flex h-[68px] flex-1 items-center justify-around rounded-full bg-card px-1.5 shadow-[0_10px_30px_-6px_rgba(0,0,0,0.18)]">
           {MAIN.filter((t) => t.phone).map((t) => (
