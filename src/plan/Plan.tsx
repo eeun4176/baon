@@ -349,7 +349,7 @@ export function Plan() {
   const close = () => setOpen(null)
   const addSchool = () => setOpen({ kind: 'item' })
   const addUtang = () => setOpen({ kind: 'utang' })
-  const button = 'flex min-h-[3.125rem] items-center justify-center gap-1.5 rounded-full px-5 font-extrabold lg:min-h-12'
+  const button = 'flex min-h-[3.125rem] items-center justify-center gap-1.5 rounded-full px-4 font-extrabold whitespace-nowrap lg:min-h-12 lg:px-5'
 
   return (
     <Page>
@@ -367,9 +367,10 @@ export function Plan() {
       {/* Phone: hero, buttons, school, utang, class days, limits. Desktop: rows of 2 + 1, utang last. */}
       <div className="grid gap-3.5 lg:grid-cols-3 lg:gap-5">
         <div className="lg:col-span-2 lg:row-start-1"><KeptHero /></div>
-        <div className="grid grid-cols-2 gap-2 lg:hidden">
-          <button type="button" onClick={addSchool} className={`${button} bg-ink text-card`}><Icon name="plus" className="size-4" /> {tr('School expense')}</button>
-          <button type="button" onClick={addUtang} className={`${button} bg-card`}><Icon name="plus" className="size-4" /> {tr('Utang')}</button>
+        {/* School expense takes the room Utang doesn't need, so its label stays on one line even at 320px. */}
+        <div className="flex gap-2 lg:hidden">
+          <button type="button" onClick={addSchool} className={`${button} flex-1 bg-ink text-card`}><Icon name="plus" className="size-4 shrink-0" /> {tr('School expense')}</button>
+          <button type="button" onClick={addUtang} className={`${button} bg-card`}><Icon name="plus" className="size-4 shrink-0" /> {tr('Utang')}</button>
         </div>
         <SchoolCard onOpen={setOpen} className="lg:col-span-2 lg:row-start-2" />
         <UtangCard onAdd={addUtang} className="lg:col-span-3 lg:row-start-3" />
