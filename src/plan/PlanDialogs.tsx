@@ -21,8 +21,8 @@ const paidDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', weekd
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold outline-none focus:ring-2 focus:ring-blue/40'
 const label = 'block font-extrabold text-muted'
 
-/** Peso amount box (typed, centavos allowed). */
-function AmountInput({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
+/** Peso amount box (typed, centavos allowed). Also used by the utang dialogs. */
+export function AmountInput({ value, onChange, autoFocus }: { value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
   return (
     <label className={label}>
       {tr('Amount')}<span className={`${field} flex items-center gap-1`}>
@@ -42,7 +42,7 @@ function AmountInput({ value, onChange, autoFocus }: { value: string; onChange: 
 }
 
 /** Error line shown above the main button. */
-function ErrorLine({ text }: { text: string }) {
+export function ErrorLine({ text }: { text: string }) {
   return text ? <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{text}</p> : null
 }
 
@@ -152,7 +152,7 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
           <div className="mt-5 flex items-center justify-between gap-4 rounded-2xl bg-page p-4">
             <div>
               <p className="font-black">{tr('Set aside now')}</p>
-              <p className="text-sm font-semibold text-muted">{tr('Stays in your wallet but isn’t counted in your daily budget.')}</p>
+              <p className="text-sm font-semibold text-muted">{tr('Stays in your wallet, out of your daily budget.')}</p>
             </div>
             <Switch label={tr('Set aside now')} checked={setAside} onChange={setSetAside} />
           </div>

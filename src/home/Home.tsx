@@ -1,52 +1,123 @@
 /*
- * Home.tsx — Today at a glance.
- * Phone: logo, date line, greeting, Su–Sa week row, the safe-to-spend
- *   hero with "Add expense" / "How it's counted", One-tap add, then today's entries.
- * Desktop: greeting row with a search box (matches show under it; Enter opens History); hero (with "₱720 of ₱1,500 left" bar) beside a dark
- *   streak card (week row, best streak, free pass); One-tap add + Set aside for school; Wallets;
- *   Spent per day + Today.
+ * Home.tsx — Today at a glance (Home v2 design).
+ * Phone: logo + avatar, date line, greeting; the "Today" card; streak and Ipon outlook side by side;
+ *   a tipid tip; One-tap add; then "Your money": today's entries, spent per day, wallets,
+ *   set aside for school, category limits.
+ * Desktop: greeting row with a search box (matches show under it; Enter opens History); the "Today"
+ *   card and One-tap add on the left, the dark streak card and Ipon outlook (with its tip) on the
+ *   right; "Your money": spent per day beside today's entries, then wallets, set aside, limits.
+ * The "Today" card: what's safe to spend (or "over" / "spent"), Left until · Class days left ·
+ *   This week (with a green ↓ / red ↑ against last week), and a split bar of "left to spend"
+ *   vs "held back" (school, utang, money for later), drawn like Plan's.
  */
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router'
 import logoIcon from '../assets/logo-icon.png'
-import { streakFlame } from '../streak/flame.ts'
-import { manilaDate, weekday } from '../budget/days.ts'
-import { SpentPerDay } from '../history/Charts.tsx'
-import { filterEntries, spentPerDay } from '../history/history.ts'
+import { addDays, manilaDate, weekday } from '../budget/days.ts'
+import { filterEntries, weekTrend } from '../history/history.ts'
 import { TxRow } from '../history/TxRow.tsx'
-import { balances } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
-import { sortForList, statusOf } from '../plan/school.ts'
+import { Avatar } from '../me/Avatar.tsx'
 import { useSession } from '../session.ts'
 import { useAddDialog } from '../shell/useAddDialog.ts'
+import { streakFlame } from '../streak/flame.ts'
 import type { Streak } from '../streak/streak.ts'
 import { useStreak } from '../streak/useStreak.ts'
-import { WeekRow } from '../streak/WeekRow.tsx'
-import { BigMoney, Card, Icon, Page } from '../ui/kit.tsx'
-import { randomGreeting } from './greetings.ts'
-import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
+import { Pill, Icon, Page, SplitBar, type IconName } from '../ui/kit.tsx'
 import { BackupReminder } from '../backup/BackupReminder.tsx'
+import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
+import { randomGreeting } from './greetings.ts'
 import { LimitsCard } from './LimitsCard.tsx'
+import { EntriesCard, SetAsideCard, SpentPerDayCard, WalletsCard } from './MoneyCards.tsx'
 import { OneTapAdd } from './OneTapAdd.tsx'
+import { SavingsCard, TipBox } from './SavingsCard.tsx'
 import { StorageWarning } from './StorageWarning.tsx'
 import { useToday, type Today } from './useToday.ts'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const LONG = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
-const dueDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
+const SHORT = [tr('Su'), tr('Mo'), tr('Tu'), tr('We'), tr('Th'), tr('Fr'), tr('Sa')]
 const breakDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 const dateLine = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
-/** The big "Safe to spend today" card. `onCheckIn`: "It came" while waiting after "Not yet". */
-function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
+/** "4 class days", "1 day"… the days the money covers. */
+function daysText(t: Today): string {
+  const n = t.result.budgetDays
+  return t.allowance.countClassDays && !t.breakUntil
+    ? n === 1 ? tr('{0} class day', n) : tr('{0} class days', n)
+    : n === 1 ? tr('{0} day', n) : tr('{0} days', n)
+}
+
+/** Gray stat tile inside the Today card. */
+function Stat({ title, value, sub, className = '' }: { title: string; value: ReactNode; sub?: ReactNode; className?: string }) {
+  return (
+    <div className={`flex min-w-0 flex-col gap-0.5 rounded-[18px] bg-page px-3.5 py-3 lg:rounded-[20px] lg:px-4 lg:py-3.5 ${className}`}>
+      <span className="truncate text-xs font-extrabold text-muted lg:text-sm">{title}</span>
+      <span className="text-[1.1875rem] font-black tracking-tight lg:text-[1.375rem]">{value}</span>
+      {sub && <span className="text-xs font-extrabold">{sub}</span>}
+    </div>
+  )
+}
+
+/**
+ * "This week" tile: spent Sunday → today, with an arrow beside the amount and the peso difference
+ * against the same days last week (red ↑ more, green ↓ less). The words say it too.
+ */
+function WeekTile({ today }: { today: string }) {
+  const { transactions } = useSession()
+  const w = weekTrend(transactions, today)
+  const up = w.diff !== null && w.diff > 0
+  const down = w.diff !== null && w.diff < 0
+  const tone = up ? 'text-trend-up' : down ? 'text-trend-down' : 'text-muted'
+  return (
+    <Stat
+      title={tr('This week')}
+      value={
+        <span className="flex items-center gap-1">
+          {formatPeso(w.now)}
+          {(up || down) && <Icon name={up ? 'arrow-up' : 'arrow-down'} className={`size-5 ${tone}`} />}
+        </span>
+      }
+      sub={w.diff === null ? <span className="text-muted">{tr('Nothing last week to compare')}</span> : (
+        <span className={tone}>
+          {up ? tr('{0} more than last week', formatPeso(w.diff!)) : down ? tr('{0} less than last week', formatPeso(-w.diff!)) : tr('Same as last week')}
+        </span>
+      )}
+    />
+  )
+}
+
+/** Blue-tint note with an info icon (or a link when `to` is given). */
+function Note({ children, to }: { children: ReactNode; to?: string }) {
+  const body = (
+    <>
+      <Icon name="info" className="mt-0.5 size-[1.125rem] shrink-0" />
+      <span className="text-[0.8125rem] leading-snug font-bold lg:text-sm">{children}</span>
+    </>
+  )
+  // No flex-basis here: notes sit in a column, where a basis would set their height, not width.
+  const cls = 'flex items-start gap-2 rounded-2xl bg-blue-tint px-3 py-2.5 text-blue lg:rounded-[18px] lg:px-3.5 lg:py-3'
+  return to ? <Link to={to} className={`${cls} hover:underline`}>{body}</Link> : <p className={cls}>{body}</p>
+}
+
+/** The "Today" card. `onCheckIn`: "It came" while waiting after "Not yet". */
+function TodayHero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   const { open } = useAddDialog()
   const { transactions, snapshots, saveSnapshot, showToast } = useSession()
+  const [showHow, setShowHow] = useState(false)
   const r = t.result
   const over = r.isClassDay && r.leftToday < 0
   const spentOnDayOff = !r.isClassDay && r.spentToday > 0 // not "over": it comes out of the next class days
-  const label = over ? tr('Today') : r.isClassDay ? tr('Safe to spend today') : spentOnDayOff ? tr('No class today') : tr('No class today — ₱0 planned')
   const snap = snapshots.find((s) => s.date === r.today)
   const nothingLogged = !snap?.noSpend && !transactions.some((tx) => manilaDate(tx.occurredAt) === r.today)
+  const held = r.setAside + r.owed + r.forLater
+  const left = Math.max(0, r.readyToSpend)
+
+  const [chipIcon, chipText, chipTone]: [IconName, string, 'gray' | 'amber'] = t.breakUntil
+    ? ['pause', tr('On break'), 'gray']
+    : !r.isClassDay ? ['calendar', tr('No class today'), 'gray']
+    : over ? ['info', tr('Over today'), 'amber'] : ['calendar', tr('Class day'), 'gray']
+  const [amount, suffix] = over ? [-r.leftToday, tr('over')] : spentOnDayOff ? [r.spentToday, tr('spent')] : r.isClassDay ? [r.leftToday, tr('left today')] : [0, tr('planned')]
 
   /** "No spending today": counts as logged for the streak, with Undo. */
   async function markNoSpend() {
@@ -54,95 +125,128 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
     await saveSnapshot({ ...today, noSpend: true })
     showToast({ message: tr('Logged: no spending today'), undo: () => saveSnapshot({ ...today, noSpend: false }) })
   }
-  const allowance = t.allowance.amountCentavos
-  const leftShare = allowance > 0 ? Math.min(1, Math.max(0, r.readyToSpend / allowance)) : 0
-  return (
-    <Card className="h-full animate-rise px-4 py-8 text-center sm:px-6 lg:px-7 lg:py-7 lg:text-left">
-      <p className="text-[1.0625rem] font-extrabold text-muted">{label}</p>
-      <p className="mt-2" aria-live="polite">
-        <BigMoney centavos={spentOnDayOff ? r.spentToday : Math.abs(r.leftToday)} className="text-[clamp(3rem,18vw,4.5rem)] lg:text-[5.5rem]" />
-        {(over || spentOnDayOff) && <span className="ml-1 text-3xl font-black">{over ? tr('over') : tr('spent')}</span>}
-      </p>
-      {over && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">{tr('That’s okay. Tomorrow’s budget adjusts — you’ve got this.')}</p>}
-      {spentOnDayOff && <p className="mx-auto mt-3 max-w-xs font-bold lg:mx-0">{tr('It comes out of your next class days. Your streak isn’t affected.')}</p>}
-      <p className="mt-3 font-semibold text-muted">
-        {tr('{0} left until {1}', formatPeso(Math.max(0, r.readyToSpend)), LONG[weekday(t.allowance.nextDate)])} · {t.allowance.countClassDays && !t.breakUntil
-          ? r.budgetDays === 1 ? tr('{0} class day', r.budgetDays) : tr('{0} class days', r.budgetDays)
-          : r.budgetDays === 1 ? tr('{0} day', r.budgetDays) : tr('{0} days', r.budgetDays)}
-      </p>
-      {t.allowance.lateFrom && onCheckIn && (
-        <button type="button" onClick={onCheckIn} className="mt-2 min-h-11 font-extrabold text-blue hover:underline">
-          {tr('Waiting for your baon · It came')}</button>
-      )}
 
-      {/* Desktop: how much of this allowance is left */}
-      {allowance > 0 && (
-        <div className="mt-4 hidden lg:block">
-          <span className="block h-2.5 overflow-hidden rounded-full bg-page" aria-hidden="true">
-            <span className="block h-full origin-left animate-grow-x rounded-full bg-blue" style={{ width: `${leftShare * 100}%` }} />
-          </span>
-          <p className="mt-2 flex justify-between text-sm font-extrabold text-muted">
-            <span>
-              {r.readyToSpend <= allowance ? tr('{0} of {1} left', formatPeso(Math.max(0, r.readyToSpend)), formatPeso(allowance)) : tr('{0} left', formatPeso(Math.max(0, r.readyToSpend)))}</span>
-            <span>{tr('{0} set aside', formatPeso(r.setAside))}</span>
-          </p>
+  const notes = [
+    over && <Note key="over">{tr('It’s okay. Tomorrow’s budget adjusts.')}</Note>,
+    spentOnDayOff && <Note key="off">{tr('Comes out of your next class days. Streak is safe.')}</Note>,
+    t.breakUntil && <Note key="break">{tr('{0} · Budget counts every day, streak paused', t.breakUntil === r.today ? tr('No classes today') : tr('No classes until {0}', breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))))}</Note>,
+    r.overspent && <Note key="overspent">{tr('{0} more spent than you have. Log any money that came in.', formatPeso(-r.inWallets))}</Note>,
+    r.holdsExceedMoney && <Note key="holds" to="/breakdown">{tr('{0} more held back than you have. See how it’s counted', formatPeso(-r.readyToSpend))}</Note>,
+  ].filter(Boolean)
+
+  return (
+    <section aria-labelledby="today-title" className="flex h-full animate-rise flex-col gap-3.5 rounded-[30px] bg-card px-5 py-[1.375rem] lg:gap-[1.125rem] lg:rounded-[32px] lg:px-[1.875rem] lg:py-7">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="today-title" className="font-black lg:text-base">{tr('Today')}</h2>
+        <Pill tone={chipTone} className="h-7 gap-1.5 px-2.5 lg:h-8 lg:px-3 lg:text-[0.8125rem]"><Icon name={chipIcon} className="size-3.5 lg:size-4" />{chipText}</Pill>
+      </div>
+
+      <div className="flex flex-wrap items-end gap-x-7 gap-y-3">
+        <p className="flex items-baseline gap-1 font-black tracking-tighter lg:gap-1.5" aria-live="polite">
+          <span className="text-[1.875rem] text-muted/80 lg:text-[2.5rem]">₱</span>
+          <span key={amount} className="animate-pop text-[clamp(3rem,16vw,3.75rem)] leading-[0.95] lg:text-[5.25rem]">{formatPeso(amount).slice(1)}</span>
+          <span className="ml-1 text-lg tracking-normal lg:text-[1.375rem]">{suffix}</span>
+        </p>
+        {notes.length > 0 && <div className="flex min-w-60 flex-1 flex-col gap-2 lg:mb-1.5">{notes}</div>}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-2.5">
+        <Stat title={tr('Left until {0}', LONG[weekday(t.allowance.nextDate)])} value={formatPeso(left)} sub={<span className="text-muted lg:hidden">{tr('for {0}', daysText(t))}</span>} />
+        <Stat className="hidden lg:flex" title={t.allowance.countClassDays && !t.breakUntil ? tr('Class days left') : tr('Days left')} value={daysText(t)} />
+        <WeekTile today={r.today} />
+      </div>
+
+      {held > 0 && (
+        <div className="flex flex-col gap-1.5 lg:gap-2">
+          <SplitBar
+            className="h-2.5 lg:h-3"
+            label={tr('{0} left to spend, {1} held back', formatPeso(left), formatPeso(held))}
+            parts={[{ amount: left, color: 'bg-blue' }, { amount: held, color: 'bg-map-1' }]}
+          />
+          <div className="flex justify-between gap-3 text-xs font-extrabold text-muted lg:text-[0.8125rem]">
+            <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-blue" />{tr('{0} left to spend', formatPeso(left))}</span>
+            <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-map-1" />{tr('{0} held back', formatPeso(held))}</span>
+          </div>
         </div>
       )}
 
-      {t.breakUntil && (
-        <p className="mt-4 rounded-2xl bg-blue-tint p-3 font-extrabold text-blue">
-          {tr('{0} · Budget counts every day, streak paused', t.breakUntil === r.today ? tr('No classes today') : tr('No classes until {0}', breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))))}</p>
-      )}
-      {r.setAsidesExceedMoney && <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">{tr('Your set-asides are more than your money right now. Want to review them?')}</p>}
-
-      <div className="mt-6 grid grid-cols-2 gap-2.5 lg:flex">
-        <button
-          type="button"
-          onClick={() => open()}
-          className="flex min-h-14 items-center justify-center gap-1.5 rounded-full bg-blue px-3 text-center text-base leading-tight font-black text-white hover:shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] sm:text-lg lg:min-h-12 lg:px-6"
-        >
+      <div className="mt-auto flex gap-2 lg:flex-wrap lg:gap-2.5">
+        <button type="button" onClick={() => open()} className="flex min-h-[3.125rem] flex-1 items-center justify-center gap-1.5 rounded-full bg-blue px-4 font-extrabold text-white hover:shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] lg:min-h-13 lg:flex-none lg:px-6">
           <Icon name="plus" className="size-5" /> {tr('Add expense')}</button>
-        <Link to="/breakdown" className="flex min-h-14 items-center justify-center rounded-full bg-pebble px-3 text-center text-base leading-tight font-black hover:bg-pebble-2 sm:text-lg lg:min-h-12 lg:px-6">
-          {tr('How it’s counted')}</Link>
+        {/* Phone: its own screen. Desktop: the sum opens right here. */}
+        <Link to="/breakdown" className="flex min-h-[3.125rem] flex-1 items-center justify-center rounded-full bg-pebble px-4 font-extrabold hover:bg-pebble-2 lg:hidden">{tr('How it’s counted')}</Link>
+        <button type="button" aria-expanded={showHow} onClick={() => setShowHow((s) => !s)} className="hidden min-h-13 items-center rounded-full bg-pebble px-6 font-extrabold hover:bg-pebble-2 lg:flex">
+          {tr('How it’s counted')}</button>
       </div>
-      {r.isClassDay && !t.breakUntil && nothingLogged && (
-        <button type="button" onClick={markNoSpend} className="mt-4 min-h-11 font-extrabold text-blue hover:underline">
-          {tr('No spending today? Tap to log it')}</button>
+      {showHow && (
+        <p className="hidden animate-rise flex-wrap items-center gap-x-2.5 gap-y-1.5 rounded-[20px] bg-page px-4 py-3.5 text-sm font-extrabold lg:flex">
+          <span>{tr('{0} in wallets', formatPeso(r.inWallets))}</span><span className="text-muted">−</span>
+          <span>{tr('{0} held back', formatPeso(held))}</span><span className="text-muted">=</span>
+          <span className="font-black text-blue">{tr('{0} for {1}', formatPeso(left), daysText(t))}</span>
+          <Link to="/breakdown" className="ml-auto text-blue hover:underline">{tr('Details')}</Link>
+        </p>
       )}
-    </Card>
+
+      {(t.allowance.lateFrom && onCheckIn) || (r.isClassDay && !t.breakUntil && nothingLogged) ? (
+        <div className="-mt-1 flex flex-wrap gap-x-4">
+          {t.allowance.lateFrom && onCheckIn && (
+            <button type="button" onClick={onCheckIn} className="min-h-11 font-extrabold text-blue hover:underline">{tr('Waiting for your baon · It came')}</button>
+          )}
+          {r.isClassDay && !t.breakUntil && nothingLogged && (
+            <button type="button" onClick={markNoSpend} className="min-h-11 font-extrabold text-blue hover:underline">{tr('No spending today? Tap to log it')}</button>
+          )}
+        </div>
+      ) : null}
+    </section>
   )
 }
 
-/** Desktop dark streak card: streak, this week's ✓ row, best streak + free pass, link to the map. */
+/** Dark streak card (whole card opens the Streak page). Phone: compact, beside Ipon outlook. */
 function StreakCard({ today, streak }: { today: string; streak: Streak }) {
   const n = streak.current
+  const sunday = addDays(today, -weekday(today))
   return (
-    <section className="flex h-full animate-rise flex-col rounded-[28px] bg-hero p-6 text-white" aria-labelledby="streak-title">
-      <div className="flex items-center gap-3">
-        <img src={streakFlame(n, streak.pending)} alt="" className="size-11 shrink-0" />
-        <div>
-          <h2 id="streak-title" className="text-2xl font-black">{n ? tr('{0} {1} in a row', n, n === 1 ? tr('day') : tr('days')) : tr('Your streak')}</h2>
-          <p className="font-semibold text-white/70">{n ? tr('Keep logging — you’re doing great.') : tr('Log today to start it.')}</p>
-        </div>
-      </div>
-      <div className="mt-5">
-        <WeekRow today={today} streak={streak} dark />
-      </div>
-      {/* The stretchy part: when the hero beside this card grows, these tiles grow with it, so no gap opens */}
-      <dl className="mt-4 grid flex-1 grid-cols-2 gap-3">
-        <div className="flex flex-col justify-center rounded-2xl bg-white/10 px-4 py-3">
-          <dt className="text-sm font-extrabold text-white/70">{tr('Best streak')}</dt>
-          <dd className="text-xl font-black">{streak.best} {streak.best === 1 ? tr('day') : tr('days')}</dd>
-        </div>
-        <div className="flex flex-col justify-center rounded-2xl bg-white/10 px-4 py-3">
-          <dt className="text-sm font-extrabold text-white/70">{tr('Free pass')}</dt>
-          <dd className="text-xl font-black">{streak.passLeft} <span className="text-sm font-extrabold text-white/70">{streak.passLeft ? tr('saved') : tr('next one on Monday')}</span></dd>
-        </div>
-      </dl>
-      <Link to="/streak" className="mt-4 inline-flex items-center gap-1 font-extrabold text-[#8fb0ff] hover:text-white">
-        {tr('See spending map')}{' '}<Icon name="chevron-right" className="size-4" />
-      </Link>
-    </section>
+    <Link
+      to="/streak"
+      aria-label={tr('Streak: {0} in a row. Open streak and spending map.', n === 1 ? tr('{0} day', n) : tr('{0} days', n))}
+      className="flex h-full animate-rise flex-col gap-3 rounded-[26px] bg-hero p-4 text-white lg:gap-[1.125rem] lg:rounded-[32px] lg:p-6"
+    >
+      <span className="flex items-center gap-2 lg:gap-3">
+        <img src={streakFlame(n, streak.pending)} alt="" className="size-[2.125rem] shrink-0 lg:size-12" />
+        <span className="flex min-w-0 flex-1 flex-col lg:gap-0.5">
+          <span className="text-[1.375rem] leading-none font-black lg:text-[1.75rem]">{n === 1 ? tr('{0} day', n) : tr('{0} days', n)}</span>
+          <span className="text-xs font-bold text-white/70 lg:text-sm">
+            <span className="lg:hidden">{tr('in a row')}</span>
+            <span className="hidden lg:inline">{n ? tr('in a row · keep logging!') : tr('Log today to start it.')}</span>
+          </span>
+        </span>
+        <Icon name="chevron-right" className="hidden size-5 text-[#8fb0ff] lg:block" />
+      </span>
+      <ol className="grid grid-cols-7 gap-[3px] lg:gap-1" aria-hidden="true">
+        {SHORT.map((label, i) => {
+          const day = addDays(sunday, i)
+          const status = streak.days.get(day)?.status
+          const done = status === 'on' || status === 'over'
+          const dot = done ? 'bg-blue' : day === today ? 'border-[2.5px] border-blue lg:border-[3px]' : status === 'off' || status === 'break' ? 'border-[1.5px] border-dashed border-white/35 lg:border-2' : 'bg-white/15'
+          return (
+            <li key={day} className="flex flex-col items-center gap-1 lg:gap-1.5">
+              <span className="text-[0.625rem] font-extrabold text-white/70 lg:text-xs">{label}</span>
+              <span className={`grid size-3.5 place-items-center rounded-full lg:size-8 ${dot}`}>
+                {done && <Icon name="check" className="hidden size-3.5 lg:block" />}
+              </span>
+            </li>
+          )
+        })}
+      </ol>
+      <span className="text-xs font-extrabold text-white/70 lg:hidden">
+        {tr('Best {0}', streak.best)} · <span className="text-white">{streak.passLeft === 1 ? tr('1 free pass') : tr('{0} free passes', streak.passLeft)}</span></span>
+      <span className="hidden gap-2 lg:flex">
+        <span className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-white/10 text-[0.8125rem] font-extrabold text-white/85">
+          {tr('Best')} · <span className="font-black text-white">{streak.best === 1 ? tr('{0} day', streak.best) : tr('{0} days', streak.best)}</span></span>
+        <span className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full bg-white/10 text-[0.8125rem] font-extrabold text-white/85">
+          {tr('Free pass')} · <span className="font-black text-white">{streak.passLeft}</span></span>
+      </span>
+    </Link>
   )
 }
 
@@ -160,9 +264,9 @@ function HomeSearch() {
         e.preventDefault()
         if (q) navigate(`/history?q=${encodeURIComponent(q)}`)
       }}
-      className="relative z-20 hidden w-72 lg:block"
+      className="relative z-20 hidden w-[18.75rem] lg:block"
     >
-      <label className="flex min-h-11 items-center gap-2.5 rounded-full bg-card px-4 focus-within:ring-2 focus-within:ring-blue/40">
+      <label className="flex min-h-12 items-center gap-2.5 rounded-full bg-card px-[1.125rem] focus-within:ring-2 focus-within:ring-blue/40">
         <Icon name="search" className="size-5 shrink-0 text-muted" />
         <span className="sr-only">{tr('Search entries')}</span>
         <input
@@ -194,62 +298,11 @@ function HomeSearch() {
   )
 }
 
-/** Today's entries, newest first, so the day is easy to follow without opening History. */
-function TodayCard({ today, spent, className = '' }: { today: string; spent: number; className?: string }) {
-  const { transactions, wallets } = useSession()
-  const list = transactions.filter((tx) => manilaDate(tx.occurredAt) === today).reverse()
-  return (
-    <Card className={`flex animate-rise flex-col ${className}`}>
-      <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="text-xl font-black">{tr('Today')}</h2>
-        {list.length > 0 && <p className="text-sm font-extrabold text-muted">{tr('{0} spent', formatPeso(spent))}</p>}
-      </div>
-      {list.length ? (
-        <ul className="-mx-2 divide-y divide-page">
-          {list.slice(0, 5).map((tx, i) => <TxRow key={tx.id} tx={tx} wallets={wallets} index={i} />)}
-        </ul>
-      ) : (
-        <p className="my-auto py-2 font-semibold text-muted">{tr('Nothing logged today yet.')}</p>
-      )}
-      {list.length > 5 && (
-        <Link to="/history" className="mt-1 inline-flex min-h-11 items-center font-extrabold text-blue hover:underline">{tr('See all {0} in History', list.length)}</Link>
-      )}
-    </Card>
-  )
-}
-
-/** Wallet balances. */
-function Wallets() {
-  const { wallets, transactions } = useSession()
-  const all = balances(wallets, transactions)
-  const spending = wallets.filter((w) => w.type === 'spending' && !w.archived)
-  const total = spending.reduce((s, w) => s + all.get(w.id)!, 0)
-  return (
-    <Card className="h-full animate-rise">
-      <h2 className="text-xl font-black">{tr('Wallets')}</h2>
-      <p key={total} className="mt-1 animate-pop text-4xl font-black">{formatPeso(total)}</p>
-      <ul className="mt-3 divide-y divide-page">
-        {wallets.filter((w) => !w.archived).map((w) => (
-          <li key={w.id} className="flex items-center gap-3 py-3">
-            <Icon name={w.type === 'savings' ? 'piggy' : w.id === 'cash' ? 'wallet' : 'phone'} className="size-5 text-blue" />
-            <span className="flex-1">
-              <span className="block font-black">{w.name}</span>
-              {w.type === 'savings' && <span className="block text-sm font-semibold text-muted">{tr('Not counted as spendable')}</span>}
-            </span>
-            <span className="font-black">{formatPeso(all.get(w.id)!)}</span>
-          </li>
-        ))}
-      </ul>
-    </Card>
-  )
-}
-
 /** Home screen. */
 export function Home() {
-  const { name, transactions, schoolExpenses } = useSession()
+  const { name } = useSession()
   const t = useToday()
   const streak = useStreak()
-  const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid').slice(0, 3)
   const [pick] = useState(Math.random) // same greeting all visit; the name updates if it syncs
   const [checkingIn, setCheckingIn] = useState(false) // "It came" while waiting after "Not yet"
   const greeting = randomGreeting(name, pick)
@@ -257,85 +310,58 @@ export function Home() {
 
   return (
     <Page>
-      {/* Phone: logo header (the sidebar shows it on larger screens). */}
-      <header className="mb-6 flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight md:hidden">
-        <img src={logoIcon} alt="" className="size-10" />
-        {tr('Baon')}<Link to="/streak" aria-label={tr('{0}-day streak', streak.current)} className="ml-auto flex min-h-11 items-center gap-1 rounded-full bg-card px-3.5 text-xl font-black tracking-normal">
-          <img src={streakFlame(streak.current, streak.pending)} alt="" className="size-6" /> {streak.current}
-        </Link>
+      {/* Phone: logo + avatar (the sidebar shows them on larger screens). */}
+      <header className="mb-3.5 flex items-center justify-between px-1 md:hidden">
+        <span className="flex items-center gap-2 text-[1.75rem] font-black tracking-tight">
+          <img src={logoIcon} alt="" className="size-[2.375rem]" />
+          {tr('Baon')}</span>
+        <Link to="/me" aria-label={tr('Me')} className="rounded-full"><Avatar className="size-10 bg-card" /></Link>
       </header>
 
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-4 px-1 lg:px-0">
         <div className="min-w-0 max-w-full">
-          <p className="text-sm font-extrabold tracking-[0.12em] text-muted uppercase">{dateLine.format(new Date())}</p>
-          <h1 className="mt-1 truncate text-[clamp(1.375rem,6.4vw,2rem)] leading-tight font-black lg:text-[2rem]" title={greeting}>{greeting}</h1>
+          <p className="text-xs font-black tracking-[0.08em] text-muted uppercase lg:text-[0.8125rem]">{dateLine.format(new Date())}</p>
+          <h1 className="mt-0.5 truncate text-[1.75rem] leading-tight font-black tracking-tight lg:mt-1 lg:text-[2.125rem]" title={greeting}>{greeting}</h1>
         </div>
         <HomeSearch />
       </div>
 
-      {/* Phone/tablet: week row above the hero */}
-      <div className="mt-6 lg:hidden">
-        <Link to="/streak" aria-label={tr('This week · Open your streak')} className="block rounded-2xl">
-          <WeekRow today={today} streak={streak} />
-        </Link>
-      </div>
-
-      <div className="mt-4 grid gap-4 lg:mt-6 lg:grid-cols-12 lg:gap-5">
-        {/* Allowance day: ask first — the new daily budget starts once the baon is in */}
-        <div className="lg:col-span-7">
+      {/* Phone order: Today · streak + outlook · tip · One-tap add. Desktop: Today and One-tap add on the left, streak + outlook on the right. */}
+      <div className="mt-3.5 grid gap-3.5 lg:mt-5 lg:grid-cols-3 lg:gap-5">
+        <div className="lg:col-span-2">
           {t.result.allowanceDue || (checkingIn && t.allowance.lateFrom) ? (
             <AllowanceCheckIn t={t} onCancel={t.result.allowanceDue ? undefined : () => setCheckingIn(false)} />
           ) : (
-            <Hero t={t} onCheckIn={() => setCheckingIn(true)} />
+            <TodayHero t={t} onCheckIn={() => setCheckingIn(true)} />
           )}
         </div>
-        <div className="hidden lg:col-span-5 lg:block"><StreakCard today={today} streak={streak} /></div>
+        <div className="grid grid-cols-2 gap-3 lg:row-span-2 lg:grid-cols-1 lg:grid-rows-[auto_1fr] lg:gap-5">
+          <StreakCard today={today} streak={streak} />
+          <SavingsCard t={t} />
+          <TipBox className="col-span-2 lg:hidden" />
+        </div>
+        <div className="lg:col-span-2"><OneTapAdd /></div>
+      </div>
 
-        <StorageWarning className="lg:col-span-12" />
-        <LimitsCard className="lg:col-span-12" />
-        <div className="lg:col-span-6"><OneTapAdd /></div>
-        {/* Phones: right under One-tap add. Desktop: last, beside Spent per day. */}
-        <TodayCard today={today} spent={t.result.spentToday} className="lg:order-1 lg:col-span-5" />
-        <Card className="hidden animate-rise md:flex md:flex-col lg:col-span-6">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-xl font-black">{tr('Set aside for school')}</h2>
-            <Link to="/plan" className="font-extrabold text-blue">{tr('See all')}</Link>
-          </div>
-          <p key={t.result.setAside} className="mt-1 animate-pop text-4xl font-black">{formatPeso(t.result.setAside)}</p>
-          {upcoming.length ? (
-            <ul className="mt-2 divide-y divide-page">
-              {upcoming.map((i) => (
-                <li key={i.id} className="flex items-center justify-between gap-3 py-2.5">
-                  <span className="min-w-0">
-                    <span className="block truncate font-black">{i.title}</span>
-                    <span className="block text-sm font-semibold text-muted">
-                      {tr('{0} · Due {1}', i.status === 'setAside' ? tr('Set aside') : tr('Planned'), dueDay.format(new Date(`${i.dueDate}T00:00:00Z`)))}
-                    </span>
-                  </span>
-                  <span className="font-black">{formatPeso(i.estimatedCentavos)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <>
-              <p className="mt-3 font-semibold text-muted">{tr('Nothing set aside yet. Plan printing, projects or org fees ahead.')}</p>
-              {/* The button sits at the bottom, so a taller One-tap add beside this card never leaves it looking cut short */}
-              <Link to="/plan" className="mt-auto flex min-h-11 items-center justify-center gap-2 self-stretch rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">
-                <Icon name="plus" className="size-5" /> {tr('Plan an expense')}</Link>
-            </>
-          )}
-        </Card>
+      <div className="mt-3.5 space-y-3.5 lg:mt-5 lg:space-y-5">
+        <StorageWarning />
+        <BackupReminder />
+      </div>
 
-        <BackupReminder className="lg:col-span-12" />
-        <div className="hidden md:block lg:col-span-12"><Wallets /></div>
+      <div className="mt-5 mb-3.5 flex items-center gap-2.5 px-1 lg:mt-6 lg:mb-5 lg:gap-3" role="presentation">
+        <span className="text-xs font-black tracking-[0.08em] text-muted uppercase lg:text-[0.8125rem]">{tr('Your money')}</span>
+        <span className="h-px flex-1 bg-pebble-2" />
+      </div>
 
-        <Card className="hidden animate-rise md:flex md:flex-col lg:col-span-7">{/* the bars stretch when Today beside it is taller */}
-          <div className="mb-1 flex items-baseline justify-between">
-            <h2 className="text-xl font-black">{tr('Spent per day')}</h2>
-            <Link to="/history" className="font-extrabold text-blue">{tr('Open history')}</Link>
-          </div>
-          <SpentPerDay days={spentPerDay(transactions, today)} today={today} budget={t.result.dailyBudget} />
-        </Card>
+      {/* Phone: entries, then spent per day. Desktop: spent per day (wide) beside entries. */}
+      <div className="grid gap-3.5 lg:grid-cols-3 lg:gap-5">
+        <EntriesCard today={today} spent={t.result.spentToday} />
+        <SpentPerDayCard today={today} budget={t.result.dailyBudget} className="lg:order-first lg:col-span-2" />
+      </div>
+      <div className="mt-3.5 grid gap-3.5 md:grid-cols-2 lg:mt-5 lg:grid-cols-3 lg:gap-5">
+        <WalletsCard />
+        <SetAsideCard />
+        <LimitsCard />
       </div>
     </Page>
   )

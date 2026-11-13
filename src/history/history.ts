@@ -2,12 +2,13 @@
  * history.ts — The numbers behind History and Home's charts:
  * entries grouped by day, search/category filter, spent per day, spent by
  * category, and "spent since Sunday". Pure functions so they can be tested.
- * Days are Manila days; "spending" = expenses minus refunds (moves/saves aren't spending).
+ * Days are Manila days; "spending" = expenses minus refunds (moves, saves and utang aren't spending).
  */
 import { categoryLabel } from '../add/categories.ts'
 import { addDays, daysBetween, manilaDate, weekday } from '../budget/days.ts'
-import type { Transaction, Wallet } from '../ledger/ledger.ts'
+import { SOURCE_LABEL, type Transaction, type Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
+import { tr } from '../i18n/i18n.ts'
 
 /** Net spending of one transaction: expense +, refund −, everything else 0. */
 function spendOf(tx: Transaction): number {
@@ -33,8 +34,19 @@ export function describe(tx: Transaction, wallets: Wallet[]): { title: string; d
       return { title: tx.note || categoryLabel(tx.categoryId), detail: `${categoryLabel(tx.categoryId)} · ${name(tx.walletId)}`, amount: `−${money}`, tone: 'out' }
     case 'refund':
       return { title: tx.note || 'Refund', detail: `Refund · ${name(tx.walletId)}`, amount: `+${money}`, tone: 'in' }
-    case 'income':
-      return { title: tx.note || 'Allowance', detail: `Allowance · ${name(tx.walletId)}`, amount: `+${money}`, tone: 'in' }
+    case 'income': {
+      const source = SOURCE_LABEL[tx.source ?? 'allowance']
+      return { title: tx.note || source, detail: `${source} · ${name(tx.walletId)}`, amount: `+${money}`, tone: 'in' }
+    }
+    // Utang: gray like moves, because it's neither spending nor the student's own money.
+    case 'borrow':
+      return { title: tx.person ?? '', detail: `${tr('Borrowed')} · ${name(tx.walletId)}`, amount: `+${money}`, tone: 'move' }
+    case 'repay':
+      return { title: tx.person ?? '', detail: `${tr('Paid back')} · ${name(tx.walletId)}`, amount: `−${money}`, tone: 'move' }
+    case 'lend':
+      return { title: tx.person ?? '', detail: `${tr('Lent')} · ${name(tx.walletId)}`, amount: `−${money}`, tone: 'move' }
+    case 'collect':
+      return { title: tx.person ?? '', detail: `${tr('Paid you back')} · ${name(tx.walletId)}`, amount: `+${money}`, tone: 'move' }
     case 'transfer':
       return { title: tx.note || 'Moved money', detail: `${name(tx.walletId)} → ${name(tx.toWalletId)}`, amount: money, tone: 'move' }
     case 'save':
@@ -106,6 +118,18 @@ export function spentBetween(txs: Transaction[], from: string, to: string): { to
   const days = spentPerDay(txs, to, daysBetween(from, to) + 1)
   const total = days.reduce((s, d) => s + d.spent, 0)
   return { total, perDay: Math.floor(total / days.length / 100) * 100 }
+}
+
+/**
+ * This week so far (Sunday → today) against the same days last week, for Home's up/down arrow.
+ * `diff` is in centavos (+ = spent more), not a percent: a percent rise has no ceiling, so a small
+ * last week turned a normal week into "2,019% more". null when last week had nothing to compare with.
+ */
+export function weekTrend(txs: Transaction[], today: string): { now: number; before: number; diff: number | null } {
+  const since = addDays(today, -weekday(today))
+  const now = spentBetween(txs, since, today).total
+  const before = spentBetween(txs, addDays(since, -7), addDays(today, -7)).total
+  return { now, before, diff: before > 0 ? now - before : null }
 }
 
 /** "Spent since Sunday" card: total this week (Sun–today) and the average per day so far. */

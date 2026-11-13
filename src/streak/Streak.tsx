@@ -2,14 +2,16 @@
  * Streak.tsx — Streak & spending map (phones get the same cards stacked).
  *   Dark hero: flame + current streak + this week's ✓ row. Tiles: best streak, free pass,
  *   on-budget days in the last 6 months. Spending map: one square per day (darker blue =
- *   more of that day's budget used, ink = over). "How streaks work" explains the rules.
+ *   more of that day's budget used, ink = over; hover shows the date, number of expenses and
+ *   amount spent). "How streaks work" explains the rules.
  * Phones show the last 15 weeks of the map, larger screens 26 weeks (about 6 months).
  */
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { streakFlame } from './flame.ts'
 import { useToday } from '../home/useToday.ts'
+import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
-import { addDays, weekday } from '../budget/days.ts'
+import { addDays, manilaDate, weekday } from '../budget/days.ts'
 import { Card, Icon, Page, PageHeader, type IconName } from '../ui/kit.tsx'
 import { mapLevel } from './streak.ts'
 import { useStreak } from './useStreak.ts'
@@ -22,12 +24,13 @@ const PHONE_WEEKS = 15
 const ROW_LABELS = ['', tr('M'), '', tr('W'), '', tr('F'), '']
 const month = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'short' })
 const shortDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'short', day: 'numeric' })
+const hoverDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 const LEVEL_CLASS = { 0: 'bg-map-0', 1: 'bg-map-1', 2: 'bg-map-2', 3: 'bg-map-3', over: 'bg-map-over' } as const
 
 const RULES: { icon: IconName; title: string; text: string }[] = [
-  { icon: 'check', title: tr('Log every class day'), text: tr('Log what you spent, or tap “No spending today”. Never skip meals for it.') },
+  { icon: 'check', title: tr('Log every class day'), text: tr('Log what you spent, or tap “No spending today”.') },
   { icon: 'flame', title: tr('Went over? It still counts'), text: tr('Logging is what matters. Tomorrow’s budget adjusts.') },
-  { icon: 'ticket', title: tr('A free pass every Monday'), text: tr('Forgot a day? A saved pass covers it. Save up to 3 at a 10-day streak, 5 at 100.') },
+  { icon: 'ticket', title: tr('A free pass every Monday'), text: tr('Forgot a day? A saved pass covers it.') },
   { icon: 'calendar', title: tr('No class? It’s frozen'), text: tr('Days without class never break your streak.') },
 ]
 
@@ -46,10 +49,26 @@ function Tile({ title, value, sub, blue = false, className = '' }: { title: stri
 export function Streak() {
   const streak = useStreak()
   const { result, breakUntil } = useToday()
-  const { showToast } = useSession()
+  const { transactions, showToast } = useSession()
   const [sharing, setSharing] = useState(false)
   const today = result.today
   const n = streak.current
+
+  // Expenses logged per day (refunds, moves, money in and utang aren't expenses), for the map's hover.
+  const expenseCount = useMemo(() => {
+    const count = new Map<string, number>()
+    for (const tx of transactions) if (tx.kind === 'expense') count.set(manilaDate(tx.occurredAt), (count.get(manilaDate(tx.occurredAt)) ?? 0) + 1)
+    return count
+  }, [transactions])
+
+  /** Map hover: "Tue, Nov 10 · 3 expenses · ₱140 spent", or "… · No expenses". */
+  function dayTitle(day: string): string {
+    const count = expenseCount.get(day) ?? 0
+    const date = hoverDay.format(new Date(`${day}T00:00:00Z`))
+    if (!count) return `${date} · ${tr('No expenses')}`
+    const spent = formatPeso(Math.max(0, streak.days.get(day)?.spent ?? 0))
+    return `${date} · ${count === 1 ? tr('1 expense') : tr('{0} expenses', count)} · ${tr('{0} spent', spent)}`
+  }
 
   // Map: whole Sun–Sat weeks ending this week.
   const firstSunday = addDays(today, -weekday(today) - (WEEKS - 1) * 7)
@@ -149,7 +168,7 @@ export function Streak() {
                 ...week.map((day) => (
                   <span
                     key={day}
-                    title={day}
+                    title={day > today ? undefined : dayTitle(day)}
                     className={`aspect-square rounded-[4px] md:rounded-md ${day > today ? 'bg-transparent' : LEVEL_CLASS[mapLevel(streak.days.get(day))]} ${phoneHidden}`}
                   />
                 )),

@@ -26,6 +26,12 @@ describe('category limits', () => {
     expect(cycleStart([tx('expense', 5, '2026-11-01', 'food')])).toBeNull()
   })
 
+  it('a scholarship or salary doesn\'t start a new cycle; only the allowance does', () => {
+    const stipend = { ...tx('income', 3000, '2026-11-12'), source: 'scholarship' as const }
+    expect(cycleStart([...history, stipend])).toBe('2026-11-09')
+    expect(cycleStart([...history, { ...stipend, source: 'allowance' as const }])).toBe('2026-11-12')
+  })
+
   it('counts this cycle only: expenses minus refunds', () => {
     const spent = spentThisCycle(history)
     expect(spent.get('snacks')).toBe(15000) // 60 + 110 − 20

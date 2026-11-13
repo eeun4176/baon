@@ -4,7 +4,22 @@
  */
 import { describe as group, expect, it } from 'vitest'
 import type { Transaction, Wallet } from '../ledger/ledger.ts'
-import { describe, filterEntries, groupByDay, rangeDays, spentBetween, spentByCategory, spentPerDay, spentThisWeek } from './history.ts'
+import { describe, filterEntries, groupByDay, rangeDays, spentBetween, spentByCategory, spentPerDay, spentThisWeek, weekTrend } from './history.ts'
+
+group('week trend (Home arrow)', () => {
+  const spend = (day: string, pesos: number): Transaction => ({ id: `${day}-${pesos}`, kind: 'expense', amountCentavos: pesos * 100, walletId: 'cash', categoryId: 'food', occurredAt: `${day}T12:00:00+08:00` })
+  // Tue Nov 10: this week = Sun Nov 8 – Tue Nov 10; last week = Sun Nov 1 – Tue Nov 3 (Wed Nov 4 isn't counted).
+  const last = [spend('2026-11-02', 200), spend('2026-11-03', 200), spend('2026-11-04', 500)]
+
+  it('compares the same days of last week in pesos: less is negative', () => {
+    expect(weekTrend([...last, spend('2026-11-09', 300)], '2026-11-10')).toEqual({ now: 30000, before: 40000, diff: -10000 })
+  })
+
+  it('more is positive, with no ceiling problem; nothing last week means no arrow', () => {
+    expect(weekTrend([spend('2026-11-02', 5), spend('2026-11-10', 1060)], '2026-11-10').diff).toBe(105500) // ₱1,055 more, not "21,100%"
+    expect(weekTrend([spend('2026-11-10', 500)], '2026-11-10').diff).toBeNull()
+  })
+})
 
 const wallets: Wallet[] = [
   { id: 'cash', name: 'Cash', type: 'spending', openingCentavos: 0, archived: false },

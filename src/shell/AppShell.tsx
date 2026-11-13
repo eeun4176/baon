@@ -22,6 +22,7 @@ import { pageTitle } from '../pageTitle.ts'
 import { formatBytes, keepStorage, useStorage } from '../storage.ts'
 import { useAutoSync } from '../sync/useSync.ts'
 import { useAddDialog } from './useAddDialog.ts'
+import { useSession } from '../session.ts'
 import { tr } from '../i18n/i18n.ts'
 
 const MAIN: { to: string; label: string; icon: IconName; phone: boolean }[] = [
@@ -37,6 +38,7 @@ const MORE: { to: string; label: string; icon: IconName }[] = [
 ]
 
 const STORAGE_KEY = 'baon.sidebar'
+let demoStarted = false // DEV ONLY: "?demo=" already ran on this page load
 
 /** Initial sidebar state: the remembered choice, else collapsed below 1024px. */
 function initialCollapsed(): boolean {
@@ -89,6 +91,22 @@ export function AppShell() {
   useGooglePhotoSync() // copies the Google profile photo when online
   useAutoSync() // keeps other devices in step, if sync is on for this one
   useEffect(() => void keepStorage(), []) // ask the browser not to clear Baon when space runs low
+
+  // DEV ONLY: "?demo=add" / "?demo=clear" fills or empties sample data (src/dev/demo.ts).
+  // import.meta.env.DEV is false in the live build, so this and demo.ts are left out of it.
+  const { vault, allowance, reload, showToast } = useSession()
+  const demo = params.get('demo')
+  useEffect(() => {
+    if (!import.meta.env.DEV || !demo || demoStarted) return
+    demoStarted = true // dev runs effects twice; the demo must run once per page load
+    import('../dev/demo.ts')
+      .then(({ runDemo }) => runDemo(vault, allowance, demo))
+      .then((message) => showToast({ message }), (e: unknown) => showToast({ message: `Demo failed: ${e instanceof Error ? e.message : e}` }))
+      .finally(() => {
+        reload()
+        window.history.replaceState(null, '', window.location.pathname) // drop "?demo" so a refresh doesn't run it again
+      })
+  }, [demo]) // eslint-disable-line react-hooks/exhaustive-deps -- runs once per "?demo=" visit
 
   /** Collapses/expands the sidebar and remembers it. */
   function toggle() {

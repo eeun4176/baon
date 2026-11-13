@@ -4,7 +4,17 @@
  * sample student: Cash ₱650 + GCash ₱400 = ₱1,050, Savings ₱0. Run: npm test
  */
 import { describe, expect, it } from 'vitest'
-import { balances, checkTransaction, sortWallets, spendingTotal, type Transaction, type Wallet } from './ledger.ts'
+import { balances, checkTransaction, isAllowance, sortWallets, spendingTotal, type Transaction, type Wallet } from './ledger.ts'
+import { dueStatus, owedTotal, utangList } from './utang.ts'
+
+describe('utang due chip', () => {
+  it('anytime, in N days, today, N days late', () => {
+    expect(dueStatus(undefined, '2026-11-13')).toEqual({ kind: 'none', days: 0 })
+    expect(dueStatus('2026-11-16', '2026-11-13')).toEqual({ kind: 'later', days: 3 })
+    expect(dueStatus('2026-11-13', '2026-11-13')).toEqual({ kind: 'today', days: 0 })
+    expect(dueStatus('2026-11-12', '2026-11-13')).toEqual({ kind: 'late', days: -1 })
+  })
+})
 
 const wallets: Wallet[] = [
   { id: 'cash', name: 'Cash', type: 'spending', openingCentavos: 65000, archived: false },
@@ -111,5 +121,46 @@ describe('sortWallets', () => {
     const w = (id: string, name: string, type: 'spending' | 'savings' = 'spending') => ({ id, name, type, openingCentavos: 0, archived: false })
     const sorted = sortWallets([w('savings', 'Savings', 'savings'), w('x1', 'Maya'), w('gcash', 'GCash'), w('cash', 'Cash')])
     expect(sorted.map((x) => x.name)).toEqual(['Cash', 'GCash', 'Maya', 'Savings'])
+  })
+})
+
+describe('money in sources', () => {
+  it('old entries without a source count as the allowance; others don\'t', () => {
+    expect(isAllowance(tx('income', 150000, 'cash'))).toBe(true)
+    expect(isAllowance(tx('income', 300000, 'cash', { source: 'scholarship' }))).toBe(false)
+  })
+
+  it('only money in has a source, and the allowance can\'t be made to last until a date', () => {
+    expect(checkTransaction(tx('expense', 100, 'cash', { source: 'gift' }), wallets)).toMatch(/source/)
+    expect(checkTransaction(tx('income', 100, 'cash', { source: 'allowance', spreadUntil: '2026-12-01' }), wallets)).toMatch(/allowance/)
+    expect(checkTransaction(tx('income', 100, 'cash', { source: 'salary', spreadUntil: '2026-11-01' }), wallets)).toMatch(/after/)
+    expect(checkTransaction(tx('income', 100, 'cash', { source: 'salary', spreadUntil: '2026-12-01' }), wallets)).toBeNull()
+  })
+})
+
+describe('utang', () => {
+  const borrow = tx('borrow', 20000, 'cash', { person: 'Mia', dueDate: '2026-11-20' })
+  const lend = tx('lend', 10000, 'gcash', { person: 'Carlo' })
+  const repay = tx('repay', 5000, 'cash', { person: 'Mia', linkedId: borrow.id })
+
+  it('moves wallets: borrowed in, paid back out, lent out, collected in', () => {
+    const collect = tx('collect', 10000, 'gcash', { person: 'Carlo', linkedId: lend.id })
+    const b = balances(wallets, [borrow, repay, lend, collect])
+    expect([b.get('cash'), b.get('gcash')]).toEqual([65000 + 20000 - 5000, 40000])
+  })
+
+  it('tracks what\'s left, including part payments', () => {
+    const list = utangList([borrow, repay, lend])
+    expect(list.map((u) => [u.tx.person, u.owe, u.paid, u.left])).toEqual([['Mia', true, 5000, 15000], ['Carlo', false, 0, 10000]])
+    expect(owedTotal([borrow, repay, lend])).toBe(15000) // only what the student owes is held back
+  })
+
+  it('needs a person, a spending wallet, and a link for payments', () => {
+    expect(checkTransaction(tx('borrow', 100, 'cash'), wallets)).toMatch(/Who/)
+    expect(checkTransaction(tx('lend', 100, 'savings', { person: 'Ana' }), wallets)).toMatch(/spending wallet/)
+    expect(checkTransaction(tx('repay', 100, 'cash', { person: 'Mia' }), wallets)).toMatch(/point to/)
+    expect(checkTransaction(tx('expense', 100, 'cash', { person: 'Mia' }), wallets)).toMatch(/person/)
+    expect(checkTransaction(borrow, wallets)).toBeNull()
+    expect(checkTransaction(repay, wallets)).toBeNull()
   })
 })

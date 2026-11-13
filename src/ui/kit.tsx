@@ -9,8 +9,8 @@
  */
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
-  ArrowRight, Book, Bus, Calendar, ChartPie, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
-  Ellipsis, Flame, HardDrive, History, House, Lock, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pencil, PiggyBank, Plus, Printer,
+  ArrowDown, ArrowRight, ArrowUp, Book, Bus, Calendar, ChartPie, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
+  Ellipsis, Flame, HardDrive, History, House, Info, Lock, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pause, Pencil, PiggyBank, Plus, Printer,
   Search, Share2, Shield, Tag, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
 import { formatPeso } from '../ledger/money.ts'
@@ -157,6 +157,29 @@ export function BigMoney({ centavos, className = '' }: { centavos: number; class
   )
 }
 
+/**
+ * Split bar (Home "left vs held back", Plan "school vs utang"): one rounded pill per part,
+ * sized by its amount, with a small gap between, so each part ends in a round cap.
+ * Parts of ₱0 are left out. `label` is what screen readers hear instead of the picture.
+ */
+export function SplitBar({ parts, label, className = 'h-3' }: { parts: { amount: number; color: string }[]; label: string; className?: string }) {
+  const shown = parts.filter((p) => p.amount > 0)
+  if (!shown.length) return null
+  return (
+    <div role="img" aria-label={label} className={`flex gap-1 ${className}`}>
+      {shown.map((p, i) => (
+        <span key={i} className={`h-full origin-left animate-grow-x rounded-full ${p.color}`} style={{ flex: p.amount, animationDelay: `${i * 80}ms` }} />
+      ))}
+    </div>
+  )
+}
+
+/** Small heads-up chip: amber for "Limit reached", "Due today", "2 days late"; gray for the rest. */
+export function Pill({ children, tone = 'gray', className = '' }:{ children: ReactNode; tone?: 'gray' | 'amber' | 'dark' | 'blue'; className?: string }) {
+  const color = { gray: 'bg-page text-ink/80', amber: 'bg-amber-tint text-amber', dark: 'bg-ink text-card', blue: 'bg-blue-tint text-blue' }[tone]
+  return <span className={`inline-flex h-6 shrink-0 items-center rounded-full px-2.5 text-xs font-black whitespace-nowrap ${color} ${className}`}>{children}</span>
+}
+
 /** Big centered money field: gray ₱ + Nunito 900 digits. Shrinks on narrow phones. */
 export function MoneyField({ label, value, onChange, autoFocus }: { label: string; value: string; onChange: (v: string) => void; autoFocus?: boolean }) {
   return (
@@ -200,6 +223,10 @@ const ICONS = {
   printer: Printer,
   backspace: Delete,
   arrow: ArrowRight,
+  'arrow-up': ArrowUp,
+  'arrow-down': ArrowDown,
+  info: Info,
+  pause: Pause,
   flame: Flame,
   cloud: CloudUpload,
   help: CircleHelp,

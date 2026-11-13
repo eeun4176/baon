@@ -8,10 +8,10 @@ import 'fake-indexeddb/auto'
 import { IDBFactory, IDBKeyRange } from 'fake-indexeddb'
 import Dexie from 'dexie'
 import { beforeEach, describe, expect, it } from 'vitest'
-import { deviceDb } from '../db/db.ts'
+import { deviceDb, openAccountDb } from '../db/db.ts'
 import { backupStatus, newRecoveryCode, saveRecoveryCode } from '../backup/backup.ts'
 import { saveAllowance } from '../budget/allowance.ts'
-import { createVault, listDeviceAccounts, openVault, PassphraseNeeded, type Vault } from '../vault/vault.ts'
+import { createVault, listDeviceAccounts, openVault, PassphraseNeeded, SCHEMA_VERSION, type Vault } from '../vault/vault.ts'
 import { joinSync, lastSyncedAt, removeFromDevice, SyncError, syncNow, type CloudKey, type CloudRecord, type Remote, type WireRecord } from './sync.ts'
 
 /** In-memory cloud for one signed-in user; the clock only moves forward, like the server's. */
@@ -87,6 +87,28 @@ describe('sync', () => {
     cloud.user = 'u1'
     await syncNow(vault, cloud)
     expect(cloud.rows.has('t1')).toBe(true)
+    vault.lock()
+  })
+
+  it('after an update, the next sync downloads everything again (picks up records it had to skip)', async () => {
+    device()()
+    const cloud = new FakeCloud()
+    const vault = await phone('Jasmine', { t1: { note: 'Jeep' } })
+    await syncNow(vault, cloud)
+    cloud['tick'] += 120 // two minutes later (past the one-minute re-read)
+    await vault.put('transaction', 't2', { note: 'Fishball' })
+    await syncNow(vault, cloud)
+    // As if an older version had skipped t1 (too new for it) and moved its cursor past it.
+    const db = openAccountDb('u1')
+    await db.records.delete('t1')
+    await syncNow(vault, cloud)
+    expect(await db.records.get('t1')).toBeUndefined() // same version: nothing new to download
+
+    await db.meta.update('vault', { schemaVersion: SCHEMA_VERSION - 1 }) // the app was just updated
+    await syncNow(vault, cloud)
+    expect(await vault.get('t1')).toEqual({ note: 'Jeep' })
+    expect((await db.meta.get('vault'))?.schemaVersion).toBe(SCHEMA_VERSION)
+    db.close()
     vault.lock()
   })
 

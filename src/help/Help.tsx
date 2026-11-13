@@ -37,10 +37,12 @@ const PRIVACY: { icon: IconName; title: string; text: ReactNode }[] = [
 ]
 
 const FAQ: [string, ReactNode][] = [
-  [tr('How is “Safe to spend today” counted?'), <>{tr('Your money left (minus what you set aside for school) divided by the days until your next baon.')}{' '}<Link to="/breakdown" className="font-extrabold text-blue hover:underline">{tr('See the breakdown')}</Link>.</>],
+  [tr('How is “Safe to spend today” counted?'), <>{tr('Your money left, minus what’s held back, divided by the days until your next baon.')}{' '}<Link to="/breakdown" className="font-extrabold text-blue hover:underline">{tr('See the breakdown')}</Link>.</>],
   [tr('I went over my budget. Is my streak gone?'), tr('No. A logged class day still counts. Tomorrow’s budget just gets smaller.')],
-  [tr('What is the free pass?'), tr('It covers a class day you forgot to log, so your streak keeps going. You get 1 every Monday and can save up to 3 at a 10-day streak, 5 at 100.')],
-  [tr('No classes for a while?'), tr('On Plan → Class days, set a break. Your budget counts every day and your streak is frozen until classes are back.')],
+  [tr('What is the free pass?'), tr('It covers a class day you forgot to log. You get 1 every Monday, and can save up to 3 (10+ day streak) or 5 (100+).')],
+  [tr('I borrowed or lent money.'), tr('Add it on Plan → Utang. What you owe is held back until paid; what you lent isn’t spending.')],
+  [tr('I have a scholarship or a job.'), tr('Use Add → Money in and pick where it came from. “Make it last until” spreads a big amount over weeks.')],
+  [tr('No classes for a while?'), tr('Set a break on Plan → Class days. Every day counts and your streak is frozen.')],
   [tr('Does Baon work without internet?'), tr('Yes. After the first sign-in, everything works offline and syncs when you’re back online.')],
   [tr('Can I use Baon on more than one device?'), tr('Yes. Sign in with the same account and your records sync by themselves.')],
   [tr('I share or borrow a phone. Is that okay?'), tr('Yes. Turn on shared phone mode in Me → Security. On a phone that isn’t yours, tap Remove from this phone when you’re done.')],

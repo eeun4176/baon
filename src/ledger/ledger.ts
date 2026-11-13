@@ -8,14 +8,20 @@
  * Effects on balances:
  *   expense   wallet −amount          (counts as spending)
  *   refund    wallet +amount          (linked to the expense it reduces)
- *   income    wallet +amount          (allowance, freelance pay…)
+ *   income    wallet +amount          (money in: allowance, scholarship, salary… see `source`)
  *   transfer  from −, to +            (Cash ↔ GCash; total unchanged)
  *   save      spending −, savings +   (shown as "Saved", not spending)
  *   withdraw  savings −, spending +
+ *   borrow    wallet +amount          (utang: money that isn't yours, held back until paid back)
+ *   repay     wallet −amount          (paying utang back; not spending)
+ *   lend      wallet −amount          (a friend owes you; not spending)
+ *   collect   wallet +amount          (the friend paid you back)
+ * repay/collect point to their borrow/lend entry (linkedId); see utang.ts.
  */
 // zod/mini: same checks as full Zod at ~6 KB instead of ~30+ KB (plan C4: small bundle).
 // Rules are written as .check(...) instead of chained methods.
 import * as z from 'zod/mini'
+import { manilaDate } from '../budget/days.ts'
 import { tr } from '../i18n/i18n.ts'
 
 /** A non-empty id string. */
@@ -31,18 +37,41 @@ export const WalletSchema = z.object({
 })
 export type Wallet = z.infer<typeof WalletSchema>
 
+const DAY = z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}$/))
+
+/** Where money in came from. Only 'allowance' answers "Did your baon arrive?" and starts a limits cycle. */
+export const SOURCES = ['allowance', 'scholarship', 'salary', 'gift', 'other'] as const
+export type Source = (typeof SOURCES)[number]
+export const SOURCE_LABEL: Record<Source, string> = {
+  allowance: tr('Allowance'),
+  scholarship: tr('Scholarship'),
+  salary: tr('Salary / sideline'),
+  gift: tr('Gift'),
+  other: tr('Other'),
+}
+
 export const TransactionSchema = z.object({
   id: id(),
-  kind: z.enum(['expense', 'refund', 'income', 'transfer', 'save', 'withdraw']),
+  kind: z.enum(['expense', 'refund', 'income', 'transfer', 'save', 'withdraw', 'borrow', 'repay', 'lend', 'collect']),
   amountCentavos: z.int().check(z.positive()),
-  walletId: id(), // the wallet money leaves (or arrives in, for income/refund)
+  walletId: id(), // the wallet money leaves (or arrives in, for income/refund/borrow/collect)
   toWalletId: z.optional(id()), // only for transfer/save/withdraw
   categoryId: z.optional(z.string()), // expenses (and refunds) only
   occurredAt: z.iso.datetime({ offset: true }), // when it happened; days are cut in Asia/Manila
   note: z.optional(z.string().check(z.maxLength(200))),
-  linkedId: z.optional(z.string()), // refund → original expense; paid school expense → its plan item
+  linkedId: z.optional(z.string()), // refund → expense; paid school expense → plan item; repay/collect → borrow/lend
+  source: z.optional(z.enum(SOURCES)), // income only; missing = allowance (entries made before sources existed)
+  spreadUntil: z.optional(DAY), // income only (not allowance): "make it last until", see heldForLater()
+  person: z.optional(z.string().check(z.trim(), z.minLength(1), z.maxLength(40))), // utang: who
+  dueDate: z.optional(DAY), // borrow/lend: when it should be paid back (optional)
 })
 export type Transaction = z.infer<typeof TransactionSchema>
+
+/** Utang entries: never spending, never income. */
+export const UTANG_KINDS = new Set<Transaction['kind']>(['borrow', 'repay', 'lend', 'collect'])
+
+/** True for money in that is the allowance (old entries have no source). */
+export const isAllowance = (tx: Transaction) => tx.kind === 'income' && (tx.source ?? 'allowance') === 'allowance'
 
 /** Display order everywhere: Cash, then other spending wallets A–Z, then savings. */
 export function sortWallets(wallets: Wallet[]): Wallet[] {
@@ -60,6 +89,18 @@ const MOVES = new Set<Transaction['kind']>(['transfer', 'save', 'withdraw'])
 export function checkTransaction(tx: Transaction, wallets: Wallet[]): string | null {
   const from = wallets.find((w) => w.id === tx.walletId)
   if (!from) return tr('That wallet no longer exists.')
+
+  if ((tx.source || tx.spreadUntil) && tx.kind !== 'income') return tr('Only money in has a source.')
+  if (tx.spreadUntil && isAllowance(tx)) return tr('Your allowance already lasts until the next one.')
+  if (tx.spreadUntil && tx.spreadUntil < manilaDate(tx.occurredAt)) return tr('Pick a date after the money came in.')
+  if ((tx.person || tx.dueDate) && !UTANG_KINDS.has(tx.kind)) return tr('Only utang has a person.')
+
+  if (UTANG_KINDS.has(tx.kind)) {
+    if (from.type !== 'spending') return tr('Use a spending wallet for utang.')
+    if (!tx.person) return tr('Who is it with?')
+    if (tx.dueDate && (tx.kind === 'repay' || tx.kind === 'collect')) return tr('Only the utang itself has a due date.')
+    if ((tx.kind === 'repay' || tx.kind === 'collect') && !tx.linkedId) return tr('A payment must point to its utang.')
+  }
 
   if (!MOVES.has(tx.kind)) {
     if (tx.toWalletId) return tr('Only moves between wallets have a second wallet.')
@@ -89,8 +130,8 @@ export function balances(wallets: Wallet[], txs: Transaction[]): Map<string, num
   }
 
   for (const tx of txs) {
-    if (tx.kind === 'expense') add(tx.walletId, -tx.amountCentavos)
-    else if (tx.kind === 'income' || tx.kind === 'refund') add(tx.walletId, tx.amountCentavos)
+    if (tx.kind === 'expense' || tx.kind === 'repay' || tx.kind === 'lend') add(tx.walletId, -tx.amountCentavos)
+    else if (tx.kind === 'income' || tx.kind === 'refund' || tx.kind === 'borrow' || tx.kind === 'collect') add(tx.walletId, tx.amountCentavos)
     else {
       add(tx.walletId, -tx.amountCentavos)
       add(tx.toWalletId, tx.amountCentavos)

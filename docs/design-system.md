@@ -27,6 +27,9 @@ Colors are tokens. Use the token (`bg-card`, `text-muted`), never a raw color, s
 | `hero` | `#1d1f1e` | `#2a2d2c` | Dark hero cards and toasts (dark in both themes) |
 | `coin` | `#ffc94d` | same | The logo's coin |
 | `red` | `#dc2626` | same | Destructive actions only |
+| `trend-up` | `#c81e1e` | `#f87171` | Text only: spending went up (with an up arrow and words) |
+| `trend-down` | `#15803d` | `#4ade80` | Text only: spending went down (with a down arrow and words) |
+| `amber`, `amber-tint` | `#8a4b0f` on `#fff4e5` | `#f5b969` on `#3a2a14` | Heads-up chips: "Limit reached", "Today", "2 days late", "Over today" |
 | `bar` | `#cfd0d0` | `#3a3e3c` | Gray chart bars, switch "off" track |
 | `map-0` to `map-3`, `map-over` | gray, light blue, mid blue, blue, ink | | Spending map shades |
 
@@ -48,7 +51,8 @@ Notes:
 - **Buttons and chips:** fully round (pill). Main buttons are at least 56px tall.
 - **Tap targets:** at least 44px.
 - **Gaps:** 16px between cards on phones, 20px on desktop.
-- **Layouts:** one column on phones; a 12-column grid on desktop (1024px and wider).
+- **Layouts:** one column on phones; a 12-column grid on desktop (1024px and wider). Home and Plan (v2) use 3 columns on desktop: a wide card (2) beside a narrow one (1).
+- **Home and Plan cards (v2):** corner radius 26px on phones and 32px on desktop; the main card on each page ("Today", "Kept out of your daily budget") is 30px on phones. Gray stat tiles inside cards use `page`.
 
 ## Motion
 
@@ -74,6 +78,8 @@ In `src/ui/kit.tsx` unless noted. Reuse these before making a new one.
 | `Card` | The white rounded card |
 | `Button` | Full-width pill button: `primary` (blue), `secondary` (gray), `dark` (ink) |
 | `Chip` | A pill the student can select |
+| `Pill` | A small status label: gray, `amber` (heads-up), `dark` ("Set aside"), `blue` ("Paid") |
+| `SplitBar` | One rounded bar per part, sized by amount, with a gap between (Home: left vs held back; Plan: school vs utang vs later) |
 | `Switch` | On/off switch |
 | `MoneyField`, `BigMoney` | Typing and showing peso amounts |
 | `Segmented` | Tabs inside a page |

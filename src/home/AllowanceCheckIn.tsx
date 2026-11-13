@@ -13,6 +13,7 @@ import { useState, type FormEvent } from 'react'
 import { acceptTyped, centavosToText } from '../add/keypad.ts'
 import { advanceNextDate, FREQUENCIES } from '../budget/allowance.ts'
 import { addDays, weekday } from '../budget/days.ts'
+import { isAllowance } from '../ledger/ledger.ts'
 import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { BigMoney, Card } from '../ui/kit.tsx'
@@ -48,7 +49,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
   const next = advanceNextDate(allowance, today)
   const spending = wallets.filter((w) => w.type === 'spending' && !w.archived)
   // Where the last allowance went (often Cash, sometimes GCash), else Cash.
-  const lastIncome = [...transactions].reverse().find((tx) => tx.kind === 'income' && spending.some((w) => w.id === tx.walletId))
+  const lastIncome = [...transactions].reverse().find((tx) => isAllowance(tx) && spending.some((w) => w.id === tx.walletId))
   const defaultWallet = lastIncome?.walletId ?? spending.find((w) => w.id === 'cash')?.id ?? spending[0]?.id ?? 'cash'
   const frequency = FREQUENCIES.find(([id]) => id === allowance.frequency)![1]
 
@@ -56,7 +57,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
   async function receive(amountCentavos: number, walletId: string, nextDate: string) {
     const before = allowance
     const id = crypto.randomUUID()
-    await addTransaction({ id, kind: 'income', amountCentavos, walletId, occurredAt: new Date().toISOString(), note: tr('Allowance') })
+    await addTransaction({ id, kind: 'income', source: 'allowance', amountCentavos, walletId, occurredAt: new Date().toISOString(), note: tr('Allowance') })
     try {
       await updateAllowance({ ...allowance, nextDate, lateFrom: undefined })
     } catch (e) {
@@ -129,7 +130,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
 
       {waiting && (
         <Modal title={tr('When do you think it’ll come?')} onClose={() => setWaiting(false)}>
-          <p className="font-semibold text-muted">{tr('We’ll split what’s left over those days, so it lasts while you wait.')}</p>
+          <p className="font-semibold text-muted">{tr('What’s left is split over those days.')}</p>
           <div className="mt-5 grid gap-2.5">
             {WAIT.map(([text, days]) => (
               <button key={days} type="button" disabled={busy} onClick={() => wait(days)} className="flex min-h-13 items-center justify-between rounded-full bg-pebble px-5 text-lg font-black hover:bg-pebble-2 disabled:opacity-60">

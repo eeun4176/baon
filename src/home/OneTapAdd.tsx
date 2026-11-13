@@ -10,7 +10,7 @@ import { lastUsedWalletId } from '../add/categories.ts'
 import { presetIcon, suggestPreset, type Preset } from '../add/presets.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
-import { Card, Icon } from '../ui/kit.tsx'
+import { Icon } from '../ui/kit.tsx'
 import { PresetEditor } from './PresetEditor.tsx'
 import { tr } from '../i18n/i18n.ts'
 
@@ -54,14 +54,14 @@ export function OneTapAdd() {
   }
 
   return (
-    <Card>
+    <section aria-labelledby="onetap-title" className="animate-rise rounded-[26px] bg-card p-[1.125rem] lg:rounded-[32px] lg:px-[1.625rem] lg:py-[1.375rem]">
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-black">{tr('One-tap add')}</h2>
-        <button type="button" onClick={() => setEditor('list')} className="-mr-2 flex min-h-11 items-center gap-1.5 rounded-full px-3 font-extrabold text-blue hover:bg-blue-tint">
+        <h2 id="onetap-title" className="text-base font-black lg:text-lg">{tr('One-tap add')}</h2>
+        <button type="button" onClick={() => setEditor('list')} className="-mr-2 flex min-h-9 items-center gap-1.5 rounded-full px-3 text-sm font-extrabold text-blue hover:bg-blue-tint lg:text-[0.9375rem]">
           <Icon name="pencil" className="size-4" /> {tr('Edit')}</button>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-2.5">
+      <div className="mt-3 grid grid-cols-2 gap-2 lg:mt-3.5 lg:grid-cols-4 lg:gap-2.5">
         {presets.items.map((p, i) => (
           <button
             key={p.id}
@@ -69,15 +69,15 @@ export function OneTapAdd() {
             disabled={busy !== null}
             onClick={() => log(p)}
             aria-label={tr('Add {0}, {1}', p.label, formatPeso(p.amountCentavos))}
-            className="flex min-h-14 animate-rise items-center gap-2 rounded-[20px] bg-page px-3 text-left text-[1.0625rem] font-black hover:bg-pebble active:bg-pebble disabled:opacity-60"
+            className="flex min-h-[3.375rem] min-w-0 animate-rise items-center justify-center gap-2 rounded-[18px] bg-page px-3 font-extrabold hover:bg-pebble active:bg-pebble disabled:opacity-60 lg:min-h-15 lg:gap-2.5 lg:rounded-[20px] lg:text-base"
             style={{ animationDelay: `${i * 30}ms` }}
           >
-            <Icon name={presetIcon(p)} className="size-6 shrink-0 text-blue" />
+            <Icon name={presetIcon(p)} className="size-5 shrink-0 text-blue lg:size-[1.375rem]" />
             <span className="truncate">{p.label} {formatPeso(p.amountCentavos)}</span>
           </button>
         ))}
         {presets.items.length === 0 && (
-          <button type="button" onClick={() => setEditor('new')} className="col-span-2 flex min-h-14 items-center justify-center gap-2 rounded-[20px] border-2 border-dashed border-pebble-2 font-black text-blue">
+          <button type="button" onClick={() => setEditor('new')} className="col-span-2 flex min-h-14 items-center justify-center gap-2 rounded-[20px] border-2 border-dashed border-pebble-2 font-black text-blue lg:col-span-4">
             <Icon name="plus" className="size-5" /> {tr('Add a one-tap button')}</button>
         )}
       </div>
@@ -94,6 +94,6 @@ export function OneTapAdd() {
       )}
 
       {editor && <PresetEditor startNew={editor === 'new'} onClose={() => setEditor(null)} />}
-    </Card>
+    </section>
   )
 }

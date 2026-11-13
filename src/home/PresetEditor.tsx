@@ -165,7 +165,7 @@ export function PresetEditor({ onClose, startNew = false }: { onClose: () => voi
           ))}
         </ul>
       ) : (
-        <p className="mt-4 rounded-3xl bg-page p-4 font-semibold text-muted">{tr('No buttons yet. Add the things you buy most, like your jeep fare or lunch.')}</p>
+        <p className="mt-4 rounded-3xl bg-page p-4 font-semibold text-muted">{tr('No buttons yet. Add what you buy most, like jeep fare.')}</p>
       )}
       <button
         type="button"

@@ -1,6 +1,7 @@
 /*
  * Breakdown.tsx — "How it's counted": shows how today's number
- * is made — money in wallets, minus set-asides, divided by the days left.
+ * is made — money in wallets, minus what's held back (school, utang, money for later),
+ * divided by the days left.
  * Phone: its own screen (from the hero's "How it's counted" button).
  * Desktop: the same pieces sit beside the hero card on Home.
  */
@@ -33,9 +34,16 @@ export function DayPills({ t, dark = false }: { t: Today; dark?: boolean }) {
   )
 }
 
-/** "In wallets", "Set aside" and "Ready to spend" cards. */
+/** "In wallets", "Held back" and "Ready to spend" cards. */
 export function MoneyTiles({ t }: { t: Today }) {
   const r = t.result
+  // What's held back and why: school set-asides, utang to pay back, money kept for later.
+  const parts = [
+    [r.setAside, tr('School')],
+    [r.owed, tr('Utang')],
+    [r.forLater, tr('For later')],
+  ].filter(([amount]) => amount) as [number, string][]
+  const held = r.setAside + r.owed + r.forLater
   return (
     <div className="grid grid-cols-2 gap-3">
       <Card className="text-center">
@@ -44,9 +52,10 @@ export function MoneyTiles({ t }: { t: Today }) {
         <p className="mt-3 text-[clamp(1.5rem,7vw,2rem)] font-black">{formatPeso(r.inWallets)}</p>
       </Card>
       <Card className="text-center">
-        <p className="text-lg font-black">{tr('Set aside')}</p>
-        <p className="truncate font-semibold text-muted">{r.setAside ? tr('For school') : tr('Nothing yet')}</p>
-        <p className="mt-3 text-[clamp(1.5rem,7vw,2rem)] font-black">{formatPeso(-r.setAside)}</p>
+        <p className="text-lg font-black">{tr('Held back')}</p>
+        <p className="truncate font-semibold text-muted">
+          {parts.length === 0 ? tr('Nothing yet') : parts.length === 1 ? parts[0][1] : parts.map(([a, l]) => `${l} ${formatPeso(a)}`).join(' · ')}</p>
+        <p className="mt-3 text-[clamp(1.5rem,7vw,2rem)] font-black">{formatPeso(-held)}</p>
       </Card>
       <Card className="col-span-2 flex items-center justify-between gap-3">
         <div>
@@ -87,7 +96,7 @@ export function Breakdown() {
         )}
         <MoneyTiles t={t} />
         <p className="px-4 pt-6 text-center font-semibold text-muted">
-          {tr('Savings aren’t counted. Spend more today and tomorrow’s budget adjusts.')}</p>
+          {tr('Savings aren’t counted. Overspend today and tomorrow adjusts.')}</p>
       </div>
     </Page>
   )

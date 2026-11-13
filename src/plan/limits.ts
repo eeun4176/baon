@@ -7,7 +7,7 @@
  */
 import * as z from 'zod/mini'
 import { manilaDate } from '../budget/days.ts'
-import type { Transaction } from '../ledger/ledger.ts'
+import { isAllowance, type Transaction } from '../ledger/ledger.ts'
 import { MAX_CENTAVOS } from '../ledger/money.ts'
 import type { Vault } from '../vault/vault.ts'
 
@@ -32,7 +32,7 @@ export async function loadLimits(vault: Vault): Promise<Limits> {
 /** First Manila day of this allowance cycle: the day the latest allowance came in, or null before any. */
 export function cycleStart(transactions: Transaction[]): string | null {
   let start: string | null = null
-  for (const tx of transactions) if (tx.kind === 'income') {
+  for (const tx of transactions) if (isAllowance(tx)) { // a scholarship or salary doesn't start a new cycle
     const day = manilaDate(tx.occurredAt)
     if (!start || day > start) start = day
   }

@@ -69,7 +69,8 @@ Online, each record is stored exactly as the phone stores it (scrambled), and th
 ## The number on Home
 
 ```
-Ready to spend   = money in spending wallets - money set aside for school
+Ready to spend   = money in spending wallets - money held back
+Held back        = school set-asides + utang still owed + money kept for later
 Budget days left = today up to the day before the next allowance
                    (class days only, if that option is on; at least 1)
 Daily budget     = Ready to spend / Budget days left, rounded down to whole pesos
@@ -77,6 +78,38 @@ Left for today   = Daily budget - what was spent today
 ```
 
 The full rules are in `src/budget/safeToSpend.ts`. Streak rules are in `src/streak/streak.ts`.
+
+**Overspending.** Baon never blocks an entry. Going over today's budget makes the next days' budget smaller. Taking out more than a wallet holds offers two choices, because the usual cause is money in that was never logged:
+
+- **"Add the missing ₱100 as money in, then save"** logs ₱100 money in (source Other, note "Not logged before") and the entry together, so the wallet ends at exactly ₱0. One Undo removes both.
+- **"Save anyway"** saves the entry, and the wallet goes below ₱0. Home then says how much more was spent than there was.
+
+## Home extras
+
+**This week's trend.** Under the daily budget: what was spent this week so far (Sunday to today), against the same days last week. A green down arrow means less, a red up arrow means more, and the words say it too ("₱80 less than last week"). It's in pesos, not percent: a percent rise has no ceiling, so a small last week made a normal week read "2,019% more". No arrow when last week had nothing to compare with (`weekTrend` in `src/history/history.ts`).
+
+**Ipon outlook** (`src/home/savings.ts`). On each logged class day of the last 4 weeks, what was left of that day's budget (budget − spent). The average, times the budget days in the next 30 days, is shown as "If you keep this up: ₱600 a month · ₱3,600 in 6 months". It needs 5 such days first. If the average is below zero, it shows how much ₱20 less a day would save instead.
+
+**Tipid tips.** One tip for the category spent on most in the last 7 days (general tips otherwise). It changes daily, and "Another tip" shows the next one.
+
+## Money that isn't the allowance
+
+**Money in has a source:** Allowance, Scholarship, Salary / sideline, Gift or Other. Only the allowance answers "Did your baon arrive?" and starts a new category-limits cycle. Entries made before sources existed count as the allowance.
+
+**Make it last until.** Any money in except the allowance can be spread to a date. The part meant for days after the current budget period is held back, spread evenly over every day from when it came in, and each new period releases its share. Example: ₱3,000 on Nov 10 lasting until Dec 14 (35 days), next allowance Nov 15: Nov 15 to Dec 14 is 30 of those days, so ₱2,571 is held back now.
+
+**Utang** (Plan → Utang) is worked out from entries only (`src/ledger/utang.ts`):
+
+| Entry | Wallet | Budget |
+|---|---|---|
+| Borrowed | + | What's still owed is held back until it's paid back |
+| Paid back | − | Releases that much of the hold; not spending |
+| Lent | − | Not spending; not counted until it comes back |
+| Got paid back | + | Counted again |
+
+Part payments add up. An utang with payments can't be deleted until its payments are deleted, so no payment points at nothing.
+
+**Record versions.** Each saved record carries the version of Baon that wrote it (`SCHEMA_VERSION` in `src/vault/vault.ts`, now 2). An older Baon skips records from a newer one while syncing, instead of failing on entries it can't read. After it updates, its next sync downloads everything again to pick them up.
 
 ## Folders
 

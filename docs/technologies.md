@@ -44,6 +44,7 @@ Every tool Baon uses and what it is for. Versions are in `package.json`.
 | Technology | What it is | What Baon uses it for |
 |---|---|---|
 | **Vitest** | Test runner | Unit tests for money, budget, streak, encryption, sync and translations. A big-data timing test (1,000 to 10,000 expenses) runs only when asked: `$env:BIG=1; npx vitest run src/ledger/bigdata.test.ts` |
+| **Demo data** (`src/dev/demo.ts`, `npm run dev` only) | Sample entries for trying features | Open `/?demo=add` to add a scholarship, utang and 2 weeks of expenses; `/?demo=clear` removes exactly those. Not in the live build |
 | **Lighthouse** (in Chrome DevTools) | Page quality report | Performance, accessibility, best practices and SEO of the live site. Set DevTools → Network back to "No throttling" first, or it can't load the page |
 | **fake-indexeddb** | A pretend IndexedDB | Lets the storage and sync tests run without a browser |
 | **ESLint** (with typescript-eslint and React plugins) | Code checker | Catches common mistakes and unused code |

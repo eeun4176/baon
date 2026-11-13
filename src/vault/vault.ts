@@ -29,8 +29,13 @@ export function onLocalChange(listener: () => void): () => void {
   return () => savedListeners.delete(listener)
 }
 
-/** Current record schema version; bump it with a migration when record shapes change. */
-export const SCHEMA_VERSION = 1
+/**
+ * Current record schema version; bump it when records gain something older versions can't read.
+ * Older Baon skips newer records while syncing; after it updates it downloads everything again (sync.ts).
+ *   1  first version
+ *   2  money-in sources, "make it last until", utang (borrow/repay/lend/collect)
+ */
+export const SCHEMA_VERSION = 2
 
 /** Shared phone mode, opened without the passphrase: show the lock screen. */
 export class PassphraseNeeded extends Error {}

@@ -17,6 +17,8 @@
  *              a deleted record is uploaded as a "deleted" marker so other devices delete it too
  *   3. pull  — download what changed since this device last looked; each record must open with
  *              the account key before it is saved (a bad or foreign row is never stored)
+ * Newer records: a record from a newer Baon (v > SCHEMA_VERSION) is skipped, and after this
+ * device updates, its next sync downloads everything again to pick it up.
  * Conflicts: a record changed here AND elsewhere before syncing keeps this device's version
  * (it was just uploaded, so every device ends up with it).
  * A new device gets everything with joinSync (onboarding), without the setup questions.
@@ -203,6 +205,9 @@ export async function syncNow(vault: Vault, remote: Remote): Promise<{ changed: 
     const meta = await db.meta.get('vault')
     if (!meta) return { changed: 0 }
     let sync: SyncMeta = meta.sync ?? {}
+    // Updated since the last sync: download everything again to pick up records the older
+    // version had to skip (they were newer than it could read).
+    if (meta.schemaVersion < SCHEMA_VERSION) sync = { ...sync, cursor: undefined }
 
     // 1. Key
     const myDek = await unwrapDek(meta.wrappedDek, vault.wrappingKey(), true)
@@ -248,7 +253,7 @@ export async function syncNow(vault: Vault, remote: Remote): Promise<{ changed: 
       await queueAll(db, online)
       await push(db, remote)
     }
-    await db.meta.update('vault', { sync: { cursor, lastSyncedAt: new Date().toISOString() } })
+    await db.meta.update('vault', { sync: { cursor, lastSyncedAt: new Date().toISOString() }, schemaVersion: SCHEMA_VERSION })
     if (await applyAccountName(vault)) changed++ // renamed on another device
     return { changed }
   })

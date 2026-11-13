@@ -29,6 +29,10 @@
   --color-hero: #1d1f1e;      /* dark hero cards + toast: stay dark in both themes */
   --color-bar: #cfd0d0;       /* gray chart bars, switch "off" track */
   --color-red: #dc2626;       /* destructive actions only (Delete account); white text passes 4.5:1 */
+  --color-trend-up: #c81e1e;  /* text: spending went up vs last week (passes 4.5:1 on page and white) */
+  --color-trend-down: #15803d; /* text: spending went down vs last week (passes 4.5:1 on page and white) */
+  --color-amber: #8a4b0f;      /* text of heads-up chips: "Limit reached", "Due today", "2 days late" */
+  --color-amber-tint: #fff4e5; /* background of those chips */
 
   /* Spending map scale: none → light → mid → full, plus over */
   --color-map-0: #e3e4e4;
@@ -55,6 +59,10 @@
     --color-bar: #3a3e3c;
     --color-map-0: #2a2d2c;
     --color-map-over: #eef0ef;
+    --color-trend-up: #f87171;
+    --color-trend-down: #4ade80;
+    --color-amber: #f5b969;
+    --color-amber-tint: #3a2a14;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme]) {
@@ -70,6 +78,10 @@
       --color-bar: #3a3e3c;
       --color-map-0: #2a2d2c;
       --color-map-over: #eef0ef;
+      --color-trend-up: #f87171;
+      --color-trend-down: #4ade80;
+      --color-amber: #f5b969;
+      --color-amber-tint: #3a2a14;
     }
   }
 }

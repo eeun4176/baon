@@ -163,7 +163,7 @@ describe('safe-to-spend: edge cases', () => {
 
   it('20. set-asides bigger than money: warns and never shows a positive budget', () => {
     const r = run({ now: at('2026-11-10'), setAside: 120000 })
-    expect([r.setAsidesExceedMoney, r.readyToSpend, r.dailyBudget]).toEqual([true, -15000, 0])
+    expect([r.holdsExceedMoney, r.overspent, r.readyToSpend, r.dailyBudget]).toEqual([true, false, -15000, 0])
   })
 
   it('21. no money at all → ₱0, not an error', () => {
@@ -198,5 +198,49 @@ describe('safe-to-spend: edge cases', () => {
     const wed = run({ now: at('2026-11-11'), allowance }) // We Th Fr + break Sa
     expect([wed.budgetDays, wed.dailyBudget]).toEqual([4, 18000])
     expect(run({ now: at('2026-11-14'), allowance }).isClassDay).toBe(true)
+  })
+})
+
+describe('safe-to-spend: overspending, utang and money for later', () => {
+  it('27. spent more than the wallets hold → "overspent", not the set-aside warning', () => {
+    const r = run({ now: at('2026-11-10'), setAside: 0, txs: [tx('expense', 1100, '2026-11-09')] })
+    expect([r.inWallets, r.overspent, r.holdsExceedMoney, r.dailyBudget]).toEqual([-5000, true, false, 0])
+  })
+
+  it('28. borrowed ₱200: in the wallet but held back, so the budget doesn\'t grow', () => {
+    const borrow = tx('borrow', 200, '2026-11-10', { person: 'Mia' })
+    const r = run({ now: at('2026-11-10'), txs: [borrow] })
+    expect([r.inWallets, r.owed, r.readyToSpend, r.dailyBudget]).toEqual([125000, 20000, 72000, 14400])
+  })
+
+  it('29. paying back ₱50 of ₱200 releases ₱50 of the hold; paying the rest clears it', () => {
+    const borrow = tx('borrow', 200, '2026-11-10', { person: 'Mia' })
+    const part = tx('repay', 50, '2026-11-10', { person: 'Mia', linkedId: borrow.id })
+    const half = run({ now: at('2026-11-10'), txs: [borrow, part] })
+    expect([half.owed, half.readyToSpend]).toEqual([15000, 72000])
+    const rest = tx('repay', 150, '2026-11-10', { person: 'Mia', linkedId: borrow.id })
+    expect(run({ now: at('2026-11-10'), txs: [borrow, part, rest] }).owed).toBe(0)
+  })
+
+  it('30. lent ₱100: leaves the wallet and isn\'t spending; getting it back restores it', () => {
+    const lend = tx('lend', 100, '2026-11-10', { person: 'Carlo' })
+    const out = run({ now: at('2026-11-10'), txs: [lend] })
+    expect([out.readyToSpend, out.spentToday]).toEqual([62000, 0])
+    const back = tx('collect', 100, '2026-11-10', { person: 'Carlo', linkedId: lend.id })
+    expect(run({ now: at('2026-11-10'), txs: [lend, back] }).readyToSpend).toBe(72000)
+  })
+
+  it('31. ₱3,000 scholarship lasting until Dec 14: only this week\'s share is spendable now', () => {
+    // Tue Nov 10 → Dec 14 is 35 days; Nov 15 (next allowance) → Dec 14 is 30 of them: ₱3,000 × 30/35 held.
+    const stipend = tx('income', 3000, '2026-11-10', { source: 'scholarship', spreadUntil: '2026-12-14' })
+    const r = run({ now: at('2026-11-10'), txs: [stipend] })
+    expect([r.forLater, r.readyToSpend]).toEqual([257142, 72000 + 300000 - 257142])
+  })
+
+  it('32. the hold shrinks as allowance periods pass, and is gone after the date', () => {
+    const stipend = tx('income', 3000, '2026-11-10', { source: 'scholarship', spreadUntil: '2026-12-14' })
+    const later = run({ now: at('2026-11-16'), txs: [stipend], allowance: { nextDate: '2026-11-22' } })
+    expect(later.forLater).toBe(197142) // Nov 22 → Dec 14 = 23 of 35 days
+    expect(run({ now: at('2026-12-15'), txs: [stipend], allowance: { nextDate: '2026-12-20' } }).forLater).toBe(0)
   })
 })

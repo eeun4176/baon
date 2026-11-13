@@ -17,7 +17,7 @@ export function StorageWarning({ className = '' }: { className?: string }) {
       <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-card/15"><Icon name="drive" /></span>
       <div className="min-w-48 flex-1">
         <h2 className="text-lg font-black">{tr('Your phone is almost full')}</h2>
-        <p className="font-semibold opacity-80">{tr('Baon may not be able to save new entries. Free up some space.')}</p>
+        <p className="font-semibold opacity-80">{tr('New entries may not save. Free up some space.')}</p>
       </div>
       <Link to="/backup" className="flex min-h-12 w-full items-center justify-center rounded-full bg-blue px-5 font-black whitespace-nowrap text-white sm:w-auto">
         {tr('Back up now')}</Link>
