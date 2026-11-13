@@ -91,7 +91,7 @@ function Hero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
 
       {t.breakUntil && (
         <p className="mt-4 rounded-2xl bg-blue-tint p-3 font-extrabold text-blue">
-          {tr('{0} · budget counts every day, streak paused', t.breakUntil === r.today ? tr('No classes today') : tr('No classes until {0}', breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))))}</p>
+          {tr('{0} · Budget counts every day, streak paused', t.breakUntil === r.today ? tr('No classes today') : tr('No classes until {0}', breakDay.format(new Date(`${t.breakUntil}T00:00:00Z`))))}</p>
       )}
       {r.setAsidesExceedMoney && <p className="mt-4 rounded-2xl bg-pebble p-3 font-bold">{tr('Your set-asides are more than your money right now. Want to review them?')}</p>}
 
@@ -275,7 +275,7 @@ export function Home() {
 
       {/* Phone/tablet: week row above the hero (design p6) */}
       <div className="mt-6 lg:hidden">
-        <Link to="/streak" aria-label={tr('This week · open your streak')} className="block rounded-2xl">
+        <Link to="/streak" aria-label={tr('This week · Open your streak')} className="block rounded-2xl">
           <WeekRow today={today} streak={streak} />
         </Link>
       </div>
@@ -309,7 +309,7 @@ export function Home() {
                   <span className="min-w-0">
                     <span className="block truncate font-black">{i.title}</span>
                     <span className="block text-sm font-semibold text-muted">
-                      {tr('{0} · due {1}', i.status === 'setAside' ? tr('Set aside') : tr('Planned'), dueDay.format(new Date(`${i.dueDate}T00:00:00Z`)))}
+                      {tr('{0} · Due {1}', i.status === 'setAside' ? tr('Set aside') : tr('Planned'), dueDay.format(new Date(`${i.dueDate}T00:00:00Z`)))}
                     </span>
                   </span>
                   <span className="font-black">{formatPeso(i.estimatedCentavos)}</span>

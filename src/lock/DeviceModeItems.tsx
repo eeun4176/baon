@@ -71,7 +71,7 @@ export function DeviceModeItems() {
           <li className={item}>
             <Icon name="lock" className="mt-0.5 size-5 shrink-0 text-blue" />
             <span>
-              <span className="block font-black">{tr('Shared phone mode · on')}</span>
+              <span className="block font-black">{tr('Shared phone mode · On')}</span>
               <span className="block font-semibold text-muted">{tr('Baon asks for your passphrase every time it opens.')}</span>
               <span className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setDialog('change')} className={`${pill} bg-blue text-white`}>{tr('Change passphrase')}</button>
@@ -89,7 +89,7 @@ export function DeviceModeItems() {
           <li className={item}>
             <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
             <span>
-              <span className="block font-black">{tr('My phone mode · on')}</span>
+              <span className="block font-black">{tr('My phone mode · On')}</span>
               <span className="block font-semibold text-muted">{tr('Baon opens right away, so keep your phone’s screen lock on.')}</span>
             </span>
           </li>

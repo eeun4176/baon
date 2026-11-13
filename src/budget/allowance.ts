@@ -13,7 +13,7 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/
 export const AllowanceSchema = z.object({
   amountCentavos: z.int().check(z.minimum(0)), // usual amount, prefilled in "Did your baon arrive?"
   frequency: z.enum(['daily', 'weekly', 'biweekly', 'monthly', 'irregular']),
-  // Next expected allowance (Manila day). For "irregular" it's the "make it last until" date.
+  // Next expected allowance (Manila day). For "irregular" it's the "Make it last until" date.
   nextDate: z.string().check(z.regex(DAY)),
   countClassDays: z.boolean(),
   classWeekdays: z.array(z.int().check(z.minimum(0), z.maximum(6))), // 0 = Sunday … 6 = Saturday
@@ -57,7 +57,7 @@ export function nextAllowanceDate(current: string, frequency: Allowance['frequen
 /**
  * After "Yes, it arrived": the next expected date after today. Skips whole cycles if the
  * student answers late (e.g. a weekly baon confirmed 9 days after it was due).
- * Null for irregular allowances — the student picks the "make it last until" date.
+ * Null for irregular allowances — the student picks the "Make it last until" date.
  */
 export function advanceNextDate(allowance: Allowance, today: string): string | null {
   let next = nextAllowanceDate(allowance.lateFrom ?? allowance.nextDate, allowance.frequency)

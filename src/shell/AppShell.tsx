@@ -165,7 +165,7 @@ export function AppShell() {
             {storage && !collapsed && (
               <p className="flex animate-fade items-center gap-2 overflow-hidden rounded-2xl border border-pebble px-3 py-2.5 text-sm font-bold whitespace-nowrap text-muted">
                 <Icon name="drive" className="size-4 shrink-0" />
-                {storage} {tr('· saved on this device')}</p>
+                {storage} {tr('· Saved on this device')}</p>
             )}
             <ProfileMenu collapsed={collapsed} />
           </div>

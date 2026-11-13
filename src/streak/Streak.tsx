@@ -98,7 +98,7 @@ export function Streak() {
                 <span key={n} className="inline-block animate-pop">{n}</span> {n === 1 ? tr('day') : tr('days')}
               </h2>
               <p className="mt-1.5 font-bold text-white/80 md:text-lg">
-                {breakUntil ? tr('in a row · frozen during your break until {0}', shortDay.format(new Date(`${breakUntil}T00:00:00Z`))) : tr('logged in a row')}
+                {breakUntil ? tr('in a row · Frozen during your break until {0}', shortDay.format(new Date(`${breakUntil}T00:00:00Z`))) : tr('logged in a row')}
               </p>
             </div>
           </div>

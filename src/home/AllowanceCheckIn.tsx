@@ -108,7 +108,7 @@ export function AllowanceCheckIn({ t, onCancel }: { t: Today; onCancel?: () => v
         <h2 className="mt-2 text-[clamp(1.6rem,7vw,2.1rem)] leading-tight font-black">{tr('Did your baon arrive?')}</h2>
         <p className="mt-1 font-semibold text-muted">
           {frequency}
-          {usual ? tr(' · usually {0}', formatPeso(usual)) : ''}
+          {usual ? tr(' · Usually {0}', formatPeso(usual)) : ''}
         </p>
         <div className="mt-5 grid grid-cols-2 gap-2.5 lg:max-w-md">
           <button type="button" disabled={busy} onClick={yes} className="min-h-14 rounded-full bg-blue px-3 text-lg font-black whitespace-nowrap text-white disabled:opacity-60">

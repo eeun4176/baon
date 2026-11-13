@@ -18,7 +18,7 @@ export function SpentPerDay({ days, today, budget }: { days: { day: string; spen
   return (
     <figure className="flex flex-1 flex-col">{/* in a taller card (Home, desktop) the bars take the extra height */}
       <figcaption className="mb-4 text-sm font-semibold text-muted">
-        {tr('{0} on average · budget line at {1}', formatPeso(average), formatPeso(budget))}
+        {tr('{0} on average · Budget line at {1}', formatPeso(average), formatPeso(budget))}
       </figcaption>
       <div aria-hidden="true" className="flex flex-1 flex-col">
         <div className="grid grid-cols-7 gap-2 text-center">

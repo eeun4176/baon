@@ -70,7 +70,7 @@ export function AllowanceDialog({ onClose }: { onClose: () => void }) {
       return setError(tr('Couldn’t save. Try again.'))
     }
     onClose()
-    showToast({ message: tr('Allowance updated · daily budget recalculated'), undo: () => updateAllowance(before) })
+    showToast({ message: tr('Allowance updated · Daily budget recalculated'), undo: () => updateAllowance(before) })
   }
 
   return (
@@ -147,7 +147,7 @@ export function WalletDialog({ wallet, onClose }: { wallet?: Wallet; onClose: ()
         {wallet && (
           <p className="mt-4 rounded-2xl bg-page p-4 font-semibold text-muted">
             {tr('Balance now:')} <strong className="font-black text-ink">{formatPeso(balance)}</strong>
-            {wallet.type === 'savings' ? tr(' · not counted as spendable') : ''}
+            {wallet.type === 'savings' ? tr(' · Not counted as spendable') : ''}
           </p>
         )}
         <ErrorLine text={error} />

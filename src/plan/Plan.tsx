@@ -164,7 +164,7 @@ function BreakControl() {
   const untilText = (to: string) => (to === today ? tr('No classes today') : tr('No classes until {0}', dueDay.format(new Date(`${to}T00:00:00Z`))))
 
   /** Starts a break today, ending on `to` (inclusive). */
-  const start = (to: string) => saveBreaks([...(allowance.breaks ?? []), { from: today, to }], tr('{0} · streak paused', untilText(to)))
+  const start = (to: string) => saveBreaks([...(allowance.breaks ?? []), { from: today, to }], tr('{0} · Streak paused', untilText(to)))
 
   /** Ends the current break: it stops yesterday (or disappears if it started today). */
   const end = () =>
@@ -177,7 +177,7 @@ function BreakControl() {
   if (current) {
     return (
       <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-blue-tint py-2 pr-2 pl-4">{/* one row, about as tall as the link it replaces */}
-        <p className="min-w-0 text-sm font-bold text-blue">{tr('{0} · streak paused', untilText(current.to))}</p>
+        <p className="min-w-0 text-sm font-bold text-blue">{tr('{0} · Streak paused', untilText(current.to))}</p>
         <button type="button" onClick={end} className="min-h-11 shrink-0 rounded-full bg-card px-4 text-sm font-black">{tr('Classes are back')}</button>
       </div>
     )

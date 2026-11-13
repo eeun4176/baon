@@ -67,7 +67,7 @@ export function ProfileMenu({ collapsed }: { collapsed: boolean }) {
         {/* stays in place and fades (no re-wrapping while the sidebar animates) */}
         <span className={`min-w-0 transition-opacity duration-200 ${collapsed ? 'opacity-0' : 'opacity-100 delay-75'}`}>
           <span className="block truncate font-black">{name}</span>
-          <span className="block truncate text-sm font-semibold text-muted">{tr('My phone · works offline')}</span>
+          <span className="block truncate text-sm font-semibold text-muted">{tr('My phone · Works offline')}</span>
         </span>
       </button>
     </div>

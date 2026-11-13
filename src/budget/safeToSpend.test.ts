@@ -171,7 +171,7 @@ describe('safe-to-spend: edge cases (plan §5)', () => {
     expect([r.inWallets, r.dailyBudget]).toEqual([0, 0])
   })
 
-  it('22. irregular allowance uses the "make it last until" date', () => {
+  it('22. irregular allowance uses the "Make it last until" date', () => {
     // Tue Nov 10 → last until Fri Nov 20, every day counts: 10 days → ₱72
     const r = run({ now: at('2026-11-10'), allowance: { frequency: 'irregular', nextDate: '2026-11-20', countClassDays: false } })
     expect([r.budgetDays, r.dailyBudget]).toEqual([10, 7200])

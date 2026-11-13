@@ -102,4 +102,5 @@ Patterns:
 - All on-screen text goes through `tr()`, with a Filipino entry in `src/i18n/fil.ts`.
 - Filipino is casual Taglish, the way students talk, not formal Tagalog.
 - Helper text is one short sentence. If it isn't needed, remove it.
+- Sentence case: only the first word starts with a capital ("Works offline", not "Works Offline"). Each part after a "·" starts with a capital too ("My phone · Works offline"). Text that continues a number stays lowercase ("12 days in a row", "₱50 spent").
 - A test fails if a text has no Filipino entry, or if an entry is no longer used.

@@ -85,7 +85,7 @@ function Scene() {
         <img src={flame} alt="" className="size-5 lg:size-6" /> 12{tr('-day streak')}</span>
       <span className="bn-drift-b absolute right-0 bottom-[21%] hidden flex-col rounded-2xl min-[360px]:flex bg-white/12 px-3 py-2 lg:right-[8%] lg:px-4 lg:py-3" style={{ animationDelay: '1.2s' }}>
         <span className="text-xs font-black lg:text-sm">{tr('Printing set aside')}</span>
-        <span className="text-xs font-bold text-white/75">{tr('₱150 · due Fri')}</span>
+        <span className="text-xs font-bold text-white/75">{tr('₱150 · Due Fri')}</span>
       </span>
 
       {/* The two right-hand chips need room: phones narrower than 360px show only the left ones */}

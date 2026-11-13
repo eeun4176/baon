@@ -210,7 +210,7 @@ function StorageItem() {
     <li className="flex items-start gap-3 rounded-2xl bg-page p-3 sm:p-4">
       <Icon name="drive" className={`mt-0.5 size-5 shrink-0 ${storage.persisted ? 'text-blue' : 'text-muted'}`} />
       <span>
-        <span className="block font-black">{storage.persisted ? tr('Kept on this device · on') : tr('Records could be cleared')}</span>
+        <span className="block font-black">{storage.persisted ? tr('Kept on this device · On') : tr('Records could be cleared')}</span>
         <span className="block font-semibold text-muted">
           {storage.persisted
             ? tr('The browser won’t delete Baon’s records to free up space.{0}', used)
@@ -340,7 +340,7 @@ export function Me() {
               {allowance.amountCentavos ? <BigMoney centavos={allowance.amountCentavos} className="text-[2.5rem] sm:text-5xl" /> : <span className="text-4xl font-black">{tr('It varies')}</span>}
             </p>
             <p className="mt-3 font-semibold text-white/80">
-              {FREQUENCY_TEXT[allowance.frequency]} · {allowance.frequency === 'irregular' ? tr('make it last until') : tr('next on')} {DAY_NAMES[weekday(allowance.nextDate)]}, {nextDay.format(new Date(`${allowance.nextDate}T00:00:00Z`))}
+              {FREQUENCY_TEXT[allowance.frequency]} · {allowance.frequency === 'irregular' ? tr('Make it last until') : tr('Next on')} {DAY_NAMES[weekday(allowance.nextDate)]}, {nextDay.format(new Date(`${allowance.nextDate}T00:00:00Z`))}
             </p>
             <p className="font-semibold text-white/80">{allowance.countClassDays ? tr('Counts class days: {0}', classDaysText(allowance)) : tr('Counts every day')}</p>
             <button type="button" onClick={() => setDialog({ kind: 'allowance' })} className="mt-5 min-h-12 rounded-full bg-blue px-6 font-black text-white">
@@ -355,7 +355,7 @@ export function Me() {
               </button>
             </div>
             <p key={ready} className="mt-1 animate-pop text-[2rem] font-black sm:text-4xl">{formatPeso(ready)}</p>
-            <p className="text-sm font-semibold text-muted">{tr('ready to spend · savings kept apart')}</p>
+            <p className="text-sm font-semibold text-muted">{tr('Ready to spend · Savings kept apart')}</p>
             <ul className="mt-3 divide-y divide-page border-t border-page">
               {active.map((w) => (
                 <li key={w.id}>
