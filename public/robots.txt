@@ -1,0 +1,3 @@
+# robots.txt - Search engines may list Baon's welcome page. Without this file the server answered with the app's HTML.
+User-agent: *
+Allow: /

@@ -3,7 +3,9 @@
  * - react: JSX + fast refresh
  * - tailwindcss: compiles the utility classes and §12.2 tokens in src/index.css
  * - basicSsl: serves dev over HTTPS, because service workers and Web Crypto
- *   only run on secure pages (needed when testing on a phone over Wi-Fi)
+ *   only run on secure pages (needed when testing on a phone over Wi-Fi).
+ *   Not for `npm run preview`: browsers refuse a service worker from its self-made
+ *   certificate, so offline never installed; plain http://localhost counts as secure.
  * - VitePWA: generates the web app manifest and the offline service worker
  */
 import { defineConfig } from 'vite';
@@ -12,11 +14,11 @@ import tailwindcss from '@tailwindcss/vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { VitePWA } from 'vite-plugin-pwa';
 
-export default defineConfig({
+export default defineConfig(({ isPreview }) => ({
   plugins: [
     react(),
     tailwindcss(),
-    basicSsl(),
+    !isPreview && basicSsl(),
     VitePWA({
       registerType: 'autoUpdate',
       devOptions: {
@@ -56,4 +58,4 @@ export default defineConfig({
   server: {
     host: true, // Exposes your HTTPS dev server to phones on the same Wi-Fi
   },
-});
+}));

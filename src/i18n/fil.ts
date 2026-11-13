@@ -77,6 +77,9 @@ export const FIL: Record<string, string> = {
   "Backup": "Backup",
   "Keep a copy of your records, and use Baon on all your devices.": "Mag-save ng kopya ng records mo, at gamitin ang Baon sa lahat ng device mo.",
   "Baon couldn’t open its storage on this phone. Close the app and open it again.": "Hindi ma-open ng Baon ang storage nito sa phone na ’to. Isara ang app tapos buksan ulit.",
+  "Go to Home": "Pumunta sa Home",
+  "Page not found": "Walang ganitong page",
+  "This address isn’t part of Baon. Check the link, or go to Home.": "Walang ganitong address sa Baon. I-check ang link, o pumunta sa Home.",
 
   // backup/backup.ts
   "That isn’t a recovery code. It’s groups of 4 letters and numbers, like ABCD-1234-…": "Hindi ’yan recovery code. Grupo ’to ng tig-4 na letra at numero, gaya ng ABCD-1234-…",

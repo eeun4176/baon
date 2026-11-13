@@ -22,7 +22,7 @@ import { AppShell } from './shell/AppShell.tsx'
 import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
 import { firstName } from './home/greetings.ts'
-import { HOME_TITLE } from './pageTitle.ts'
+import { HOME_TITLE, isKnownPath } from './pageTitle.ts'
 import { Button, Card, Page, PageHeader, Screen } from './ui/kit.tsx'
 import { LockScreen } from './lock/LockScreen.tsx'
 import { AccountPicker } from './lock/AccountPicker.tsx'
@@ -44,7 +44,6 @@ type State =
 const SIGNED_OUT_KEY = 'baon.signedOut'
 const AUTO_LOCK_MS = 60_000 // Shared phone mode: away this long (another app, screen off) → locked again
 const ADDING_KEY = 'baon.adding' // "Add another account" in progress (survives Google's round trip, not a closed tab)
-
 /** Reads/writes the adding-an-account mark; blocked storage just means Google sends you to the picker. */
 function addingFlag(value?: boolean): boolean {
   try {
@@ -117,6 +116,21 @@ function SignedOut({ name, onContinue, onSwitch }: { name: string; onContinue: (
   )
 }
 
+/** Shown for an address Baon doesn't have. Home goes through the normal checks (sign-in, lock). */
+function NotFound() {
+  return (
+    <Screen footer={<Button onClick={() => window.location.replace('/')}>{tr('Go to Home')}</Button>}>
+      <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight">
+        <img src={logoIcon} alt="" className="size-10" />
+        {tr('Baon')}</header>
+      <div className="mt-16 animate-rise">
+        <h1 className="text-[2rem] leading-tight font-black">{tr('Page not found')}</h1>
+        <p className="mt-2 text-lg font-semibold text-muted">{tr('This address isn’t part of Baon. Check the link, or go to Home.')}</p>
+      </div>
+    </Screen>
+  )
+}
+
 /** Backup page (sidebar link): the same panel as Me → Backup. */
 function BackupPage() {
   return (
@@ -152,7 +166,7 @@ function SignedInApp({ vault, name, onSignOut }: { vault: Vault; name: string; o
           </Route>
           {/* Old Quick Add address and the home-screen shortcut open the Add dialog on Home. */}
           <Route path="add" element={<Navigate to="/?add=1" replace />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </SessionProvider>
@@ -202,6 +216,9 @@ export default function App() {
     document.addEventListener('visibilitychange', onChange)
     return () => document.removeEventListener('visibilitychange', onChange)
   }, [app])
+
+  // Before any other screen, so an unknown address never shows Welcome, the lock or the app.
+  if (state.kind !== 'loading' && !isKnownPath(window.location.pathname)) return <NotFound />
 
   switch (state.kind) {
     case 'loading':

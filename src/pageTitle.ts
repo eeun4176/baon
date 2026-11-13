@@ -16,8 +16,17 @@ const PAGES: Record<string, string> = {
   '/help': tr('Help & privacy'),
 }
 
+/** Path without trailing slashes ("/history/" → "/history", "/" stays "/"). */
+const tidy = (pathname: string) => pathname.replace(/\/+$/, '') || '/'
+
 /** Tab title for a signed-in path (unknown paths count as Home). */
 export function pageTitle(pathname: string): string {
-  const page = PAGES[pathname.replace(/\/+$/, '') || '/']
+  const page = PAGES[tidy(pathname)]
   return page ? tr('{0} | Baon Student Budget Tracker', page) : HOME_TITLE
+}
+
+/** True if Baon has this address: Home, a page above, or /add (the Add shortcut). Anything else → "Page not found". */
+export function isKnownPath(pathname: string): boolean {
+  const path = tidy(pathname)
+  return path === '/' || path === '/add' || path in PAGES
 }

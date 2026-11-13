@@ -9,7 +9,7 @@ import { BuddyArt } from './BrandPanel.tsx'
 /** First screen a new student sees. */
 export function Welcome({ onStart, onBack }: { onStart: () => void; onBack?: () => void }) {
   return (
-    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-3 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
+    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-3 pt-[max(env(safe-area-inset-top),1rem)] pb-[max(env(safe-area-inset-bottom),1.25rem)]">
       <BuddyArt />
       <div className="px-3">
         <h1 className="text-[clamp(1.75rem,8.5vw,2.125rem)] leading-[1.12] font-black text-balance">{tr('Know what you can spend today.')}</h1>
@@ -22,6 +22,6 @@ export function Welcome({ onStart, onBack }: { onStart: () => void; onBack?: () 
           <button type="button" onClick={onBack} className="mt-1 min-h-11 w-full font-extrabold text-blue hover:underline">{tr('Back to accounts')}</button>
         )}
       </div>
-    </div>
+    </main>
   )
 }
