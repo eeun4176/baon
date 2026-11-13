@@ -43,11 +43,12 @@ Every tool Baon uses and what it is for. Versions are in `package.json`.
 
 | Technology | What it is | What Baon uses it for |
 |---|---|---|
-| **Vitest** | Test runner | Unit tests for money, budget, streak, encryption, sync and translations |
+| **Vitest** | Test runner | Unit tests for money, budget, streak, encryption, sync and translations. A big-data timing test (1,000 to 10,000 expenses) runs only when asked: `$env:BIG=1; npx vitest run src/ledger/bigdata.test.ts` |
+| **Lighthouse** (in Chrome DevTools) | Page quality report | Performance, accessibility, best practices and SEO of the live site. Set DevTools → Network back to "No throttling" first, or it can't load the page |
 | **fake-indexeddb** | A pretend IndexedDB | Lets the storage and sync tests run without a browser |
 | **ESLint** (with typescript-eslint and React plugins) | Code checker | Catches common mistakes and unused code |
 | **GitHub Actions** (`.github/workflows/ci.yml`) | Runs checks on every push | Lint, tests and build must pass |
-| **Basic SSL plugin** (`@vitejs/plugin-basic-ssl`) | Local https | Encryption and install only work on secure pages, so local testing on a phone needs https |
+| **Basic SSL plugin** (`@vitejs/plugin-basic-ssl`) | Local https | Encryption and install only work on secure pages, so local testing on a phone needs https. Used by `npm run dev` only: `npm run preview` runs on plain `http://localhost` (already secure), because browsers won't install the offline service worker from the self-made certificate |
 
 ## What Baon does not use, on purpose
 

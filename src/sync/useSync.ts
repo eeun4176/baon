@@ -2,7 +2,9 @@
  * useSync.ts — Runs sync while the app is open (always on) and shares its status with the
  * screens (Me → Backup shows it).
  * When: on open, when the internet comes back, when the app comes back to the front,
- * every minute while it's in front, and 2 seconds after any change made here.
+ * every 5 minutes while it's in front, and 2 seconds after any change made here.
+ * (5, not 1: every check is ~3 server requests even when nothing changed, and a busy class
+ * of students checking each minute would keep the free database awake all day.)
  * Signed out, or the account was deleted elsewhere: it stops trying until the student acts (or reopens Baon).
  * The sync code and the cloud connection are loaded only when sync actually runs.
  */
@@ -98,7 +100,7 @@ export function useAutoSync() {
     const stopListening = onLocalChange(soon)
     window.addEventListener('online', onOnline)
     document.addEventListener('visibilitychange', onVisible)
-    const every = window.setInterval(run, 60_000)
+    const every = window.setInterval(run, 5 * 60_000)
     return () => {
       stopListening()
       window.clearTimeout(timer)

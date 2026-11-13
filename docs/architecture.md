@@ -48,7 +48,11 @@ There is no Baon server that holds business logic. The only server code is one s
 2. Upload the changes waiting in the outbox. Every save or delete is added to the outbox in the same step as the save itself.
 3. Download what changed since the last sync. A record is saved only if it opens with the account's key.
 
+Sync runs when Baon opens, when the student comes back to it, when the internet returns, 2 seconds after any change, and every 5 minutes while it is on screen. The regular check is every 5 minutes, not every minute, so many open apps don't keep the free database busy.
+
 Online, each record is stored exactly as the phone stores it (scrambled), and the account key is stored with the account so any device the student signs in on can open them. Row level security in the database lets each user reach only their own rows (`sql/sync.sql`).
+
+**Storage cap.** The database refuses an upload that would take one account past 30,000 records or 10 MB (about 15 years of normal use), so one account can't fill the database for everyone. Editing and deleting still work at the cap. A refused upload changes nothing online; the phone keeps its records and shows "Couldn't sync".
 
 **What this protects, and what it doesn't.** Records are unreadable in the device's storage and to other accounts. The sign-in is the lock for the online copy, so whoever can sign in to the student's Google or email account can get their records, and whoever runs the database could open them. This was a deliberate choice (2026-11-11) so Baon works on every device with no codes.
 
@@ -56,7 +60,7 @@ Online, each record is stored exactly as the phone stores it (scrambled), and th
 
 ## How the app starts
 
-1. `App.tsx` reads the list of accounts on this device.
+1. `App.tsx` reads the list of accounts on this device. An address Baon doesn't have (for example `/asdas`) shows "Page not found" before any other screen; its "Go to Home" button still goes through the steps below.
 2. No account: onboarding (sign in, device mode, allowance, money now).
 3. One account in My phone mode: it opens straight away. Shared phone mode: the lock screen.
 4. More than one account: the account picker ("Who's using Baon?").
@@ -80,7 +84,7 @@ The full rules are in `src/budget/safeToSpend.ts`. Streak rules are in `src/stre
 |---|---|
 | `api/` | The sign-in forwarder that runs on Vercel |
 | `sql/` | Database setup for sync and the privacy check, run in Neon's SQL Editor |
-| `public/` | App icons |
+| `public/` | App icons and `robots.txt` |
 | `src/crypto/` | The only encryption code |
 | `src/db/` | The on-device database layout |
 | `src/vault/` | The encrypted record store every screen saves through |

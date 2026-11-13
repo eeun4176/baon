@@ -29,6 +29,34 @@ drop trigger if exists sync_records_touch on public.sync_records;
 create trigger sync_records_touch before insert or update on public.sync_records
   for each row execute function public.sync_touch();
 
+-- Storage cap per account, so one account (buggy or abusive) can't fill the database for everyone.
+-- 30,000 records ≈ 15 years of normal use; 10 MB ≈ 5+ years with a profile photo.
+-- Checked once per upload (statement), only for the accounts in it; over the cap → the whole
+-- upload is refused, nothing is saved, and the phone keeps its records and shows "Couldn't sync".
+-- shortcut: re-counts the account's rows on every upload (fine up to the cap); keep a running total if accounts grow far bigger.
+create or replace function public.sync_check_quota() returns trigger language plpgsql as $$
+declare
+  over text;
+begin
+  select r.user_id into over
+  from public.sync_records r
+  where r.user_id in (select distinct user_id from changed)
+  group by r.user_id
+  having count(*) > 30000 or sum(octet_length(r.ciphertext)) > 10 * 1024 * 1024
+  limit 1;
+  if over is not null then
+    raise exception 'sync storage limit reached' using errcode = '54000'; -- program_limit_exceeded
+  end if;
+  return null;
+end $$;
+-- Postgres allows a transition table on one event per trigger, hence two triggers.
+drop trigger if exists sync_records_quota_insert on public.sync_records;
+create trigger sync_records_quota_insert after insert on public.sync_records
+  referencing new table as changed for each statement execute function public.sync_check_quota();
+drop trigger if exists sync_records_quota_update on public.sync_records;
+create trigger sync_records_quota_update after update on public.sync_records
+  referencing new table as changed for each statement execute function public.sync_check_quota();
+
 -- The account's key (base64 of 32 bytes): the first device to sync saves it, the others use it.
 create table if not exists public.sync_keys (
   user_id    text primary key default (auth.user_id()),
