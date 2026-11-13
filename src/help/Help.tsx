@@ -40,7 +40,7 @@ const PRIVACY: { icon: IconName; title: string; text: ReactNode }[] = [
 const FAQ: [string, ReactNode][] = [
   [tr('How is “Safe to spend today” counted?'), <>{tr('Your money left (minus what you set aside for school) divided by the days until your next baon.')}{' '}<Link to="/breakdown" className="font-extrabold text-blue hover:underline">{tr('See the breakdown')}</Link>.</>],
   [tr('I went over my budget. Is my streak gone?'), tr('No. A logged class day still counts. Tomorrow’s budget just gets smaller.')],
-  [tr('What is the free pass?'), tr('Once a week, one class day you forgot to log is covered, so your streak keeps going.')],
+  [tr('What is the free pass?'), tr('It covers a class day you forgot to log, so your streak keeps going. You get 1 every Monday and can save up to 3 at a 10-day streak, 5 at 100.')],
   [tr('No classes for a while?'), tr('On Plan → Class days, set a break. Your budget counts every day and your streak is frozen until classes are back.')],
   [tr('Does Baon work without internet?'), tr('Yes. After the first sign-in, everything works offline and syncs when you’re back online.')],
   [tr('Can I use Baon on more than one device?'), tr('Yes. Sign in with the same account and your records sync by themselves.')],

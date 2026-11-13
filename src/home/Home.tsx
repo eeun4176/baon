@@ -136,7 +136,7 @@ function StreakCard({ today, streak }: { today: string; streak: Streak }) {
         </div>
         <div className="flex flex-col justify-center rounded-2xl bg-white/10 px-4 py-3">
           <dt className="text-sm font-extrabold text-white/70">{tr('Free pass')}</dt>
-          <dd className="text-xl font-black">{streak.passLeft ? 1 : 0} <span className="text-sm font-extrabold text-white/70">{streak.passLeft ? tr('left this week') : tr('used this week')}</span></dd>
+          <dd className="text-xl font-black">{streak.passLeft} <span className="text-sm font-extrabold text-white/70">{streak.passLeft ? tr('saved') : tr('next one on Monday')}</span></dd>
         </div>
       </dl>
       <Link to="/streak" className="mt-4 inline-flex items-center gap-1 font-extrabold text-[#8fb0ff] hover:text-white">

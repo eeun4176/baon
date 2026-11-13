@@ -1,13 +1,14 @@
 /*
  * streak.test.ts — Streak rules: on +1, over +1 too, a missed day breaks unless the
- * weekly free pass covers it, no-class days and breaks freeze it, today is never final.
+ * saved free pass covers it (+1 every Monday), no-class days and breaks freeze it, today is never final.
  * Week of Sun Nov 1 – Sat Nov 7 and Sun Nov 8 – Sat Nov 14, 2026; classes Mon–Fri.
  * Run: npm test
  */
 import { describe, expect, it } from 'vitest'
 import type { Allowance } from '../budget/allowance.ts'
+import { addDays, weekday } from '../budget/days.ts'
 import type { Transaction } from '../ledger/ledger.ts'
-import { mapLevel, streakSummary, type DaySnapshot } from './streak.ts'
+import { mapLevel, passesFor, streakSummary, type DaySnapshot } from './streak.ts'
 
 const allowance: Allowance = { amountCentavos: 150000, frequency: 'weekly', nextDate: '2026-11-15', countClassDays: true, classWeekdays: [1, 2, 3, 4, 5] }
 
@@ -41,14 +42,34 @@ describe('streak', () => {
 
   it('the first missed day of a week uses the free pass; the second breaks it', () => {
     const one = run('2026-11-06', week1.filter((t) => !t.occurredAt.startsWith('2026-11-04')))
-    expect([one.days.get('2026-11-04')!.status, one.current, one.passLeft]).toEqual(['pass', 4, false])
+    expect([one.days.get('2026-11-04')!.status, one.current, one.passLeft]).toEqual(['pass', 4, 0])
     const two = run('2026-11-06', week1.filter((t) => !/2026-11-0[34]/.test(t.occurredAt)))
     expect([two.days.get('2026-11-04')!.status, two.current, two.best]).toEqual(['none', 2, 2])
   })
 
   it('the free pass comes back on Monday', () => {
     const r = run('2026-11-09', week1.filter((t) => !t.occurredAt.startsWith('2026-11-04')))
-    expect(r.passLeft).toBe(true)
+    expect(r.passLeft).toBe(1)
+  })
+
+  it('passes are saved, +1 every Monday: up to 3 at a 10+ day streak, 5 at 100+', () => {
+    expect([0, 9, 10, 99, 100].map(passesFor)).toEqual([1, 1, 3, 3, 5])
+    // Four class weeks logged (Nov 2–27, 20 days). The streak reaches 10 on Fri Nov 13,
+    // so Mondays Nov 16 and 23 save a 2nd and 3rd pass; Mon Nov 30 is lost (already full).
+    const month: string[] = []
+    for (let d = '2026-11-02'; d <= '2026-11-27'; d = addDays(d, 1)) if (weekday(d) >= 1 && weekday(d) <= 5) month.push(d)
+    const at = (today: string, extra: string[]) =>
+      streakSummary({ today, snapshots: [], transactions: [...month, ...extra].map((d) => spend(d, 50)), allowance })
+
+    expect(at('2026-11-30', ['2026-11-30']).passLeft).toBe(3)
+    // Mon–Wed missed: all three saved passes cover them; Thu logged → 21, none left.
+    const saved = at('2026-12-03', ['2026-12-03'])
+    expect([saved.days.get('2026-12-02')!.status, saved.current, saved.passLeft]).toEqual(['pass', 21, 0])
+    // They come back one a week, not three.
+    expect(at('2026-12-07', ['2026-12-03', '2026-12-04', '2026-12-07']).passLeft).toBe(1)
+    // A fourth missed day (Thu) has no pass left: the streak breaks.
+    const broke = at('2026-12-04', ['2026-12-04'])
+    expect([broke.days.get('2026-12-03')!.status, broke.current, broke.best]).toEqual(['none', 1, 20])
   })
 
   it('today with nothing logged yet is pending, not a break', () => {
@@ -65,7 +86,7 @@ describe('streak', () => {
   it('a "No classes" break freezes the streak, even with nothing logged', () => {
     const r = run('2026-11-12', [...week1, spend('2026-11-12', 30)], { allowance: { breaks: [{ from: '2026-11-09', to: '2026-11-11' }] } })
     expect(r.days.get('2026-11-10')!.status).toBe('break')
-    expect([r.current, r.passLeft]).toEqual([6, true])
+    expect([r.current, r.passLeft]).toEqual([6, 1])
   })
 
   it('days logged without a saved budget get the benefit of the doubt', () => {

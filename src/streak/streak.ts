@@ -5,7 +5,8 @@
  *   on      class day, something logged (or "No spending today"), spent ≤ that day's budget → +1
  *   over    class day, logged, spent > budget → +1 too (shown dark on the map)
  *   none    class day, nothing logged        → breaks, unless this week's free pass covers it
- *   pass    a "none" day covered by the free pass (1 per Mon–Sun week, used automatically)
+ *   pass    a "none" day covered by a saved free pass, used automatically. +1 pass every Monday;
+ *           unused ones are kept, up to 1, then 3 at a 10+ day streak, then 5 at 100+
  *   off     not a class day                  → neither adds nor breaks
  *   break   inside a "No classes" break      → frozen: neither adds nor breaks
  *   pending today, nothing logged yet        → the day isn't over, so no effect
@@ -38,13 +39,13 @@ export interface Day {
 export interface Streak {
   current: number
   best: number
-  passLeft: boolean // free pass still unused this Mon–Sun week
+  passLeft: number // free passes saved right now
   pending: boolean // today is a class day with nothing logged yet (the flame stays gray until it is)
   days: Map<string, Day> // every day from the first record to today
 }
 
-/** Monday of the week `day` is in (free passes reset every Monday). */
-const mondayOf = (day: string) => addDays(day, -((weekday(day) + 6) % 7))
+/** Most free passes a streak of `streak` days can keep saved: longer streaks can save more. */
+export const passesFor = (streak: number) => (streak >= 100 ? 5 : streak >= 10 ? 3 : 1)
 
 /** Walks every day from the first record to today and applies the rules above. */
 export function streakSummary(input: { today: string; snapshots: DaySnapshot[]; transactions: Transaction[]; allowance: Allowance }): Streak {
@@ -60,13 +61,14 @@ export function streakSummary(input: { today: string; snapshots: DaySnapshot[]; 
   const firsts = [...snaps.keys(), ...logged.keys()].sort()
   const start = firsts[0] && firsts[0] < today ? firsts[0] : today
   const days = new Map<string, Day>()
-  const passUsed = new Set<string>()
+  let passes = 1 // saved free passes; everyone starts with one
   let current = 0
   let best = 0
 
   for (let d = start; d <= today; d = addDays(d, 1)) {
     const snap = snaps.get(d)
     const spent = logged.get(d) ?? 0
+    if (weekday(d) === 1) passes = Math.min(passes + 1, passesFor(current)) // Monday refill, lost if already full
     let status: DayStatus
     if (breakOn(d, allowance)) status = 'break'
     else if (!(snap ? snap.isClassDay : counts(d, allowance))) status = 'off'
@@ -75,15 +77,15 @@ export function streakSummary(input: { today: string; snapshots: DaySnapshot[]; 
     else status = 'on' // includes days with entries but no saved budget (app wasn't open): benefit of the doubt
 
     if (status === 'none') {
-      if (!passUsed.has(mondayOf(d))) {
-        passUsed.add(mondayOf(d))
+      if (passes > 0) {
+        passes--
         status = 'pass'
       } else current = 0
     }
     if (status === 'on' || status === 'over') best = Math.max(best, ++current)
     days.set(d, { status, spent, budget: snap?.dailyBudgetCentavos })
   }
-  return { current, best, passLeft: !passUsed.has(mondayOf(today)), pending: days.get(today)?.status === 'pending', days }
+  return { current, best, passLeft: passes, pending: days.get(today)?.status === 'pending', days }
 }
 
 /** Spending-map shade 0–3 (0 = gray) or 'over', by share of that day's budget used. */

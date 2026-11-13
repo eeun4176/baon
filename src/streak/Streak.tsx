@@ -27,7 +27,7 @@ const LEVEL_CLASS = { 0: 'bg-map-0', 1: 'bg-map-1', 2: 'bg-map-2', 3: 'bg-map-3'
 const RULES: { icon: IconName; title: string; text: string }[] = [
   { icon: 'check', title: tr('Log every class day'), text: tr('Log what you spent, or tap “No spending today”. Never skip meals for it.') },
   { icon: 'flame', title: tr('Went over? It still counts'), text: tr('Logging is what matters. Tomorrow’s budget adjusts.') },
-  { icon: 'ticket', title: tr('One free pass a week'), text: tr('Forgot a day? Your free pass covers it, once a week.') },
+  { icon: 'ticket', title: tr('A free pass every Monday'), text: tr('Forgot a day? A saved pass covers it. Save up to 3 at a 10-day streak, 5 at 100.') },
   { icon: 'calendar', title: tr('No class? It’s frozen'), text: tr('Days without class never break your streak.') },
 ]
 
@@ -111,7 +111,7 @@ export function Streak() {
         {/* Tiles */}
         <div className="grid grid-cols-2 gap-4 lg:col-span-4 lg:gap-5">
           <Tile title={tr('Best streak')} value={streak.best} sub={streak.best === 1 ? tr('day') : tr('days')} />
-          <Tile title={tr('Free pass')} value={streak.passLeft ? 1 : 0} sub={streak.passLeft ? tr('left this week') : tr('used this week')} blue={streak.passLeft} />
+          <Tile title={tr('Free pass')} value={streak.passLeft} sub={streak.passLeft ? tr('saved') : tr('next one on Monday')} blue={streak.passLeft > 0} />
           <Card className="col-span-2 flex animate-rise items-center justify-between gap-3">
             <div>
               <h2 className="font-black">{tr('On-budget days')}</h2>
