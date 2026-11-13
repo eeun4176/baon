@@ -124,7 +124,8 @@ What the card shows:
 |---|---|
 | Fewer than 5 logged class days in the last 4 weeks | "Log 3 more class days to see this." (so one lucky day doesn't promise too much) |
 | Average left over is above ₱0 | "You could save ₱660/mo" and "₱3,960 in 6 months" |
-| Average left over is ₱0 or below | "Over budget lately. ₱20 less a day saves about ₱440 a month." (₱20 × 22 days) |
+| Exactly on budget, or less than ₱1 a day left | "Right on budget. ₱20 less a day saves about ₱440 a month." (₱20 × 22 days) |
+| Average is below ₱0 (over budget) | "Over budget lately. ₱20 less a day saves about ₱440 a month." |
 
 The last line always shows **"In Savings now"**: the real balance of all Savings wallets.
 
@@ -316,7 +317,7 @@ A limit is a reminder, never a block: "Just a reminder. You can still log anythi
 
 **Use case:** Rico has no load on the way to school but still wants to log his fare.
 
-**How it works:** after the first sign-in, every screen works offline. The service worker saves all the app's files on the first visit, including pages that download only when first opened. Entries made offline sync when the internet is back. Install: Android (Chrome) menu ⋮ → Install app; iPhone (Safari) Share → Add to Home Screen; on a computer, the install icon in the address bar.
+**How it works:** after the first sign-in, every screen works offline. The service worker saves all the app's files on the first visit, including pages that download only when first opened. If a new version was deployed while Baon was open and a page's old file is gone, Baon reloads once to get the new version (`src/loadPage.ts`). Entries made offline sync when the internet is back. Install: Android (Chrome) menu ⋮ → Install app; iPhone (Safari) Share → Add to Home Screen; on a computer, the install icon in the address bar.
 
 To test offline locally, use `npm run build` then `npm run preview` (`http://localhost:4173`). The dev server (`npm run dev`) has the service worker turned off.
 

@@ -90,7 +90,7 @@ Use cases and worked examples for every feature are in [Features](features.md).
 
 **This week's trend.** Under the daily budget: what was spent this week so far (Sunday to today), against the same days last week. A green down arrow means less, a red up arrow means more, and the words say it too ("₱80 less than last week"). It's in pesos, not percent: a percent rise has no ceiling, so a small last week made a normal week read "2,019% more". No arrow when last week had nothing to compare with (`weekTrend` in `src/history/history.ts`).
 
-**Ipon outlook** (`src/home/savings.ts`). On each logged class day of the last 4 weeks, what was left of that day's budget (budget − spent). The average, times the budget days in the next 30 days, is shown as "If you keep this up: ₱600 a month · ₱3,600 in 6 months". It needs 5 such days first. If the average is below zero, it shows how much ₱20 less a day would save instead.
+**Ipon outlook** (`src/home/savings.ts`). On each logged class day of the last 4 weeks, what was left of that day's budget (budget − spent). The average, times the budget days in the next 30 days, is shown as "If you keep this up: ₱600 a month · ₱3,600 in 6 months". It needs 5 such days first. If the average isn't above ₱0, it shows how much ₱20 less a day would save instead, starting with "Right on budget" (₱0 to under ₱1 a day left) or "Over budget lately" (below ₱0).
 
 **Tipid tips.** One tip for the category spent on most in the last 7 days (general tips otherwise). Not random: it moves to the next tip in that list once a day, and "Another tip" shows the next one, looping back to the first after the last.
 

@@ -32,7 +32,13 @@ describe('ipon outlook', () => {
     mix.set(addDays(today, -40), { status: 'on', budget: 50000, spent: 0 }) // older than 4 weeks
     mix.set(addDays(today, -8), { status: 'off', budget: 0, spent: 0 })
     mix.set(addDays(today, -9), { status: 'on', budget: undefined, spent: 0 }) // no saved budget
-    expect(iponOutlook(mix, monFri, today)).toMatchObject({ count: 6, perDay: -3000 })
+    expect(iponOutlook(mix, monFri, today)).toMatchObject({ count: 6, perDay: -3000, over: true })
+  })
+
+  it('exactly on budget, or under ₱1 a day left, is not "over" even though perDay is ₱0', () => {
+    expect(iponOutlook(days(10, 15000, 15000), monFri, today)).toMatchObject({ perDay: 0, over: false })
+    expect(iponOutlook(days(10, 15000, 14950), monFri, today)).toMatchObject({ perDay: 0, over: false }) // ₱0.50 left a day
+    expect(iponOutlook(days(10, 15000, 15050, 'over'), monFri, today)).toMatchObject({ over: true }) // ₱0.50 over a day (perDay is -0 there; never shown)
   })
 })
 

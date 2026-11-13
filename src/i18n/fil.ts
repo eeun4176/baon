@@ -862,6 +862,7 @@ export const FIL: Record<string, string> = {
   "{0} in 6 months": "{0} sa loob ng 6 na buwan",
   "Based on your last 4 weeks.": "Base sa huling 4 na linggo mo.",
   "Over budget lately. ₱20 less a day saves about {0} a month.": "Lampas sa budget nitong huli. ₱20 bawas kada araw = mga {0} kada buwan.",
+  "Right on budget. ₱20 less a day saves about {0} a month.": "Sakto sa budget. ₱20 bawas kada araw = mga {0} kada buwan.",
   "In Savings now: {0}": "Nasa Savings ngayon: {0}",
   "Tipid tip": "Tipid tip",
   "Another tip": "Iba pang tip",

@@ -4,7 +4,7 @@
  * Outlook: on each logged class day of the last 4 weeks, what was left of that day's budget
  * (budget − spent; negative when over). Its average, times the budget days in the next 30 days,
  * is "about ₱X a month if you keep this up". Needs 5 such days first, so a single lucky day
- * doesn't promise too much.
+ * doesn't promise too much. Under ₱1 a day left (or exactly on budget) is "Right on budget", not "over".
  *
  * Tips: one tip for the category the student spent most on in the last 7 days (lots of Food →
  * a baon-from-home tip), changing every day; "Another tip" moves to the next. General tips otherwise.
@@ -23,6 +23,7 @@ const LOOKBACK = 28
 export interface Outlook {
   count: number // logged class days with a saved budget in the last 4 weeks
   perDay: number // average left over per day (centavos, whole pesos; negative = over on average)
+  over: boolean // the real average (before cutting to whole pesos) is below ₱0; perDay 0 alone can't tell
   perMonth: number // perDay × budget days in the next 30 days
   sixMonths: number
   daysPerMonth: number // budget days in the next 30 days (for "₱20 less a day saves ₱X a month")
@@ -42,7 +43,7 @@ export function iponOutlook(days: Map<string, Day>, allowance: Allowance, today:
   for (let i = 0; i < 30; i++) if (counts(addDays(today, i), allowance)) daysPerMonth++
   const perDay = count ? Math.trunc(left / count / 100) * 100 : 0
   const perMonth = perDay * daysPerMonth
-  return { count, perDay, perMonth, sixMonths: perMonth * 6, daysPerMonth }
+  return { count, perDay, over: left < 0, perMonth, sixMonths: perMonth * 6, daysPerMonth }
 }
 
 /** A tip, for one category or (no category) for anyone. */

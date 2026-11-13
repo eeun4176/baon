@@ -10,6 +10,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router'
 import { Home } from './home/Home.tsx'
 import { AppShell } from './shell/AppShell.tsx'
+import { loadPage } from './loadPage.ts'
 import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
 import { firstName } from './home/greetings.ts'
@@ -23,15 +24,16 @@ import { tr } from './i18n/i18n.ts'
 
 // Pages other than Home download when first opened, so the first screen shows sooner.
 // Offline still works: the service worker saves every page file on the first visit.
-const BackupPanel = lazy(() => import('./backup/BackupPanel.tsx').then((m) => ({ default: m.BackupPanel })))
-const SyncSection = lazy(() => import('./sync/SyncSection.tsx').then((m) => ({ default: m.SyncSection })))
-const Help = lazy(() => import('./help/Help.tsx').then((m) => ({ default: m.Help })))
-const History = lazy(() => import('./history/History.tsx').then((m) => ({ default: m.History })))
-const Breakdown = lazy(() => import('./home/Breakdown.tsx').then((m) => ({ default: m.Breakdown })))
-const Me = lazy(() => import('./me/Me.tsx').then((m) => ({ default: m.Me })))
-const Onboarding = lazy(() => import('./onboarding/Onboarding.tsx').then((m) => ({ default: m.Onboarding })))
-const Plan = lazy(() => import('./plan/Plan.tsx').then((m) => ({ default: m.Plan })))
-const Streak = lazy(() => import('./streak/Streak.tsx').then((m) => ({ default: m.Streak })))
+// loadPage reloads once if a page's file is gone because a new version was deployed meanwhile.
+const BackupPanel = lazy(() => loadPage(import('./backup/BackupPanel.tsx')).then((m) => ({ default: m.BackupPanel })))
+const SyncSection = lazy(() => loadPage(import('./sync/SyncSection.tsx')).then((m) => ({ default: m.SyncSection })))
+const Help = lazy(() => loadPage(import('./help/Help.tsx')).then((m) => ({ default: m.Help })))
+const History = lazy(() => loadPage(import('./history/History.tsx')).then((m) => ({ default: m.History })))
+const Breakdown = lazy(() => loadPage(import('./home/Breakdown.tsx')).then((m) => ({ default: m.Breakdown })))
+const Me = lazy(() => loadPage(import('./me/Me.tsx')).then((m) => ({ default: m.Me })))
+const Onboarding = lazy(() => loadPage(import('./onboarding/Onboarding.tsx')).then((m) => ({ default: m.Onboarding })))
+const Plan = lazy(() => loadPage(import('./plan/Plan.tsx')).then((m) => ({ default: m.Plan })))
+const Streak = lazy(() => loadPage(import('./streak/Streak.tsx')).then((m) => ({ default: m.Streak })))
 
 type State =
   | { kind: 'loading' }

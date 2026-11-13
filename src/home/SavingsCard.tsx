@@ -65,7 +65,10 @@ export function SavingsCard({ t }: { t: Today }) {
           </span>
         </div>
       ) : (
-        <p className="text-sm font-bold">{tr('Over budget lately. ₱20 less a day saves about {0} a month.', formatPeso(2000 * o.daysPerMonth))}</p>
+        <p className="text-sm font-bold">
+          {o.over
+            ? tr('Over budget lately. ₱20 less a day saves about {0} a month.', formatPeso(2000 * o.daysPerMonth))
+            : tr('Right on budget. ₱20 less a day saves about {0} a month.', formatPeso(2000 * o.daysPerMonth))}</p>
       )}
       <p className="mt-auto text-xs leading-snug font-bold text-ink/80 lg:mt-0 lg:text-sm">
         {ready && o.perDay > 0 && <>{tr('{0} in 6 months', formatPeso(o.sixMonths))} · </>}
