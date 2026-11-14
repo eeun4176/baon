@@ -39,6 +39,8 @@ Every tool Baon uses and what it is for. Versions are in `package.json`.
 | **Vercel** | Hosting | Serves the app at baon-ph.vercel.app and sets the security headers (`vercel.json`) |
 | **Vercel function** (`api/auth.ts`) | A small piece of server code | Forwards sign-in to Neon so the sign-in cookie belongs to Baon's own address; phones drop cookies from other addresses |
 
+Older browsers: the Neon SDK uses `Response.json()`, which Safari only has from version 17. `src/auth/auth.ts` adds it when missing, so iPads that stop at iPadOS 16 (like the iPad 5th gen) can sign in and sync.
+
 ## Quality checks
 
 | Technology | What it is | What Baon uses it for |

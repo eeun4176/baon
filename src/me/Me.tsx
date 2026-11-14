@@ -125,7 +125,7 @@ function PhotoAvatar() {
   )
 }
 
-/** Profile tab: the sign-in email, display name, school, Senior high / College. */
+/** Profile tab: display name, sign-in email (read-only), school, Senior high / College. */
 function ProfileTab() {
   const { name, profile, rename, saveProfile, showToast } = useSession()
   const [draftName, setDraftName] = useState(name)
@@ -158,11 +158,14 @@ function ProfileTab() {
   return (
     <form onSubmit={save} noValidate>
       <h2 className="text-xl font-black">{tr('Profile')}</h2>
-      {/* Which email this account signs in with, so students use the same one on every device */}
-      {profile.email && <p className="mt-1 break-words font-semibold text-muted">{tr('Signed in as {0}', profile.email)}</p>}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className={label}>
           {tr('Display name')}<input value={draftName} maxLength={40} onChange={(e) => { setDraftName(e.target.value); setError('') }} className={field} />
+        </label>
+        {/* The sign-in email, so students use the same one on every device. Read-only: it comes from the sign-in. */}
+        <label className={label}>
+          {tr('Email')}
+          <input type="email" readOnly value={profile.email ?? ''} placeholder={tr('Shows when you’re online')} className={`${field} cursor-default text-muted`} />
         </label>
         <label className={label}>
           {tr('School')}{' '}<span className="font-semibold">{tr('(optional)')}</span>

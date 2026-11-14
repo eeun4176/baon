@@ -306,7 +306,7 @@ A limit is a reminder, never a block: "Just a reminder. You can still log anythi
 
 **Use case:** Olive changed schools and wants to update her profile and allowance.
 
-**How it works:** a profile card (photo, name, streak, level · school, device mode, Sign out or Lock), the dark "Your baon" card (amount, how often, next allowance, class days, Edit), and Wallets (total, Move money, Add wallet; tap a wallet to rename, remove, match its balance or set its interest). Then the tabs: Profile ("Signed in as …" with the account's email, so students sign in with the same one on other devices; name, school, Senior high / College), Security (device mode, storage, remove from this device, delete account in red), Backup and Preferences (theme, language, install). Phones end with a Help & privacy link, since they have no sidebar.
+**How it works:** a profile card (photo, name, streak, level · school, device mode, Sign out or Lock), the dark "Your baon" card (amount, how often, next allowance, class days, Edit), and Wallets (total, Move money, Add wallet; tap a wallet to rename, remove, match its balance or set its interest). Then the tabs: Profile (display name; Email, read-only, the one the account signs in with, so students use it on their other devices; school, Senior high / College), Security (device mode, storage, remove from this device, delete account in red), Backup and Preferences (theme, language, install). Phones end with a Help & privacy link, since they have no sidebar.
 
 **Code:** `src/me/Me.tsx`, `src/me/MeDialogs.tsx`
 

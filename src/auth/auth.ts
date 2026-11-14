@@ -8,6 +8,21 @@
  */
 import { createClient } from '@neon/neon-js'
 
+/**
+ * Adds Response.json() where the browser lacks it (Safari before 17, e.g. iPads stuck on iPadOS 16).
+ * The Neon SDK answers from its saved session with it; without it every reuse of the session crashed,
+ * so those iPads couldn't bring records or sync ("no internet"). Runs before the client is made.
+ */
+export function ensureResponseJson(): void {
+  if (typeof Response.json === 'function') return
+  Response.json = (data: unknown, init?: ResponseInit) => {
+    const headers = new Headers(init?.headers)
+    if (!headers.has('content-type')) headers.set('content-type', 'application/json')
+    return new Response(JSON.stringify(data), { ...init, headers })
+  }
+}
+ensureResponseJson()
+
 // Live site: sign-in goes through baon's own address (api/auth.ts), so phones keep the sign-in.
 // Known limit: the dev server and `vite preview` have no api/ functions, so on localhost they talk to Neon directly.
 const AUTH_URL = import.meta.env.PROD && location.hostname !== 'localhost' ? `${location.origin}/api/auth` : import.meta.env.VITE_NEON_AUTH_URL
