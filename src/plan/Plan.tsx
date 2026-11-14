@@ -272,7 +272,6 @@ function SchoolRow({ item, onOpen }: { item: SchoolExpense; onOpen: (o: Open) =>
       <Pill tone={chipTone} className="hidden h-[1.625rem] lg:inline-flex">{chipText}</Pill>
       <span className="hidden w-20 text-right text-[1.0625rem] font-black lg:block">{formatPeso(paid?.amountCentavos ?? item.estimatedCentavos)}</span>
       {action && <div className="grid lg:w-32 lg:justify-items-end">{action}</div>}
-      {!action && <span className="hidden lg:block lg:w-32" />}
     </li>
   )
 }

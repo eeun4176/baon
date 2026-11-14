@@ -211,8 +211,9 @@ export function History() {
           <div className="flex w-full items-center gap-2 sm:w-auto">
             <Segmented options={[['list', tr('List')], ['charts', tr('Charts')]] as const} value={view} onChange={setView} label={tr('View')} className="flex-1 sm:flex-none lg:hidden" />
             <Search value={query} onChange={setQuery} className="hidden w-72 lg:flex" />
-            <button type="button" onClick={() => setSharing(true)} aria-label={tr('Share your spending')} className="flex min-h-11 shrink-0 items-center gap-2 rounded-full bg-blue px-5 font-black text-white lg:min-h-12">
-              <Icon name="share" className="size-5" /> {tr('Share')}</button>
+            {/* Phone: round icon button (like Streak). Larger screens: blue "Share" pill. ! beats dark mode's lighter .text-blue. */}
+            <button type="button" onClick={() => setSharing(true)} aria-label={tr('Share your spending')} className="grid size-11 shrink-0 place-items-center rounded-full bg-card text-blue md:flex md:w-auto md:gap-2 md:bg-blue md:px-5 md:font-black md:text-white! lg:h-12">
+              <Icon name="share" className="size-5" /><span className="sr-only md:not-sr-only">{tr('Share')}</span></button>
           </div>
         }
       />

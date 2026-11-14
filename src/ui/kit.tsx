@@ -9,9 +9,9 @@
  */
 import type { ButtonHTMLAttributes, ReactNode } from 'react'
 import {
-  ArrowDown, ArrowRight, ArrowUp, Book, Bus, Calendar, ChartPie, Check, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
-  Ellipsis, Flame, HardDrive, History, House, Info, Lock, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pause, Pencil, PiggyBank, Plus, Printer,
-  Search, Share2, Shield, Tag, Smartphone, Sun, Ticket, Trash2, User, Users, Utensils, Wallet, X,
+  ArrowDown, ArrowRight, ArrowUp, Book, Bus, Calendar, ChartPie, Check, CircleCheck, ChevronDown, ChevronLeft, ChevronRight, ChevronUp, CircleHelp, CloudUpload, Coffee, Delete, Download,
+  Ellipsis, FileText, Flame, HardDrive, History, House, Info, Lock, LogOut, Mail, Monitor, Moon, PanelLeftClose, Pause, Pencil, PiggyBank, Plus, Printer,
+  Search, Share2, Shield, Star, Tag, Smartphone, Sun, Ticket, Trash2, Trophy, User, Users, Utensils, Wallet, X,
 } from 'lucide-react'
 import { formatPeso } from '../ledger/money.ts'
 
@@ -249,6 +249,10 @@ const ICONS = {
   ticket: Ticket,
   share: Share2,
   tag: Tag,
+  file: FileText,
+  trophy: Trophy,
+  star: Star,
+  'check-circle': CircleCheck,
   lock: Lock,
 } as const
 

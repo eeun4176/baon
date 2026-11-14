@@ -170,11 +170,12 @@ function TodayHero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
         </div>
       )}
 
-      <div className="mt-auto flex gap-2 lg:flex-wrap lg:gap-2.5">
-        <button type="button" onClick={() => open()} className="flex min-h-[3.125rem] flex-1 items-center justify-center gap-1.5 rounded-full bg-blue px-4 font-extrabold text-white hover:shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] lg:min-h-13 lg:flex-none lg:px-6">
-          <Icon name="plus" className="size-5" /> {tr('Add expense')}</button>
+      {/* Labels never break mid-phrase; if both can't fit (narrow phone, big system font) the second drops to its own full-width row. */}
+      <div className="mt-auto flex flex-wrap gap-2 lg:gap-2.5">
+        <button type="button" onClick={() => open()} className="flex min-h-[3.125rem] flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-blue px-3.5 font-extrabold text-white hover:shadow-[0_10px_24px_-8px_rgba(30,94,255,0.6)] lg:min-h-13 lg:flex-none lg:px-6">
+          <Icon name="plus" className="size-5 shrink-0" /> {tr('Add expense')}</button>
         {/* Phone: its own screen. Desktop: the sum opens right here. */}
-        <Link to="/breakdown" className="flex min-h-[3.125rem] flex-1 items-center justify-center rounded-full bg-pebble px-4 font-extrabold hover:bg-pebble-2 lg:hidden">{tr('How it’s counted')}</Link>
+        <Link to="/breakdown" className="flex min-h-[3.125rem] flex-1 items-center justify-center whitespace-nowrap rounded-full bg-pebble px-3.5 font-extrabold hover:bg-pebble-2 lg:hidden">{tr('How it’s counted')}</Link>
         <button type="button" aria-expanded={showHow} onClick={() => setShowHow((s) => !s)} className="hidden min-h-13 items-center rounded-full bg-pebble px-6 font-extrabold hover:bg-pebble-2 lg:flex">
           {tr('How it’s counted')}</button>
       </div>
