@@ -62,7 +62,7 @@ Online, each record is stored exactly as the phone stores it (scrambled), and th
 
 1. `App.tsx` reads the list of accounts on this device. An address Baon doesn't have (for example `/asdas`) shows "Page not found" before any other screen; its "Go to Home" button still goes through the steps below.
 2. No account: onboarding (sign in, device mode, allowance, money now).
-3. One account in My phone mode: it opens straight away. Shared phone mode: the lock screen.
+3. One account in My phone mode: it opens straight away, unless the student signed out; then "You're signed out", whose "Continue as …" signs in again before opening (so sync works). Shared phone mode: the lock screen.
 4. More than one account: the account picker ("Who's using Baon?").
 5. Once open, `SessionProvider` decrypts the records once and shares them with every screen. Saving a record updates every screen at once.
 

@@ -12,7 +12,7 @@ An offline-first budget app for students. Baon tells you how much is safe to spe
 
 - **Safe to spend today.** One number on Home, worked out from your wallets, what you set aside for school, and the days left.
 - **Quick logging.** One-tap buttons for the things you buy most, like a jeep fare or lunch.
-- **Wallets.** Cash, e-wallets, banks and savings, with moves between them.
+- **Wallets.** Cash, e-wallets, banks and savings, with moves between them. Match a wallet to your bank app's balance (interest, fees), and see about how much interest it earns a month.
 - **Plan.** Set money aside for school expenses, set category limits, and mark class days and breaks.
 - **History.** Search and filter your entries by day and category, with spending charts you can share.
 - **Streak.** Log every class day to keep your streak going; the flame changes as it grows.
@@ -55,6 +55,7 @@ npm run build    # type-check and production build
 
 | Doc | What it covers |
 |---|---|
+| [Features](docs/features.md) | Every feature with a use case, how it works (with worked examples) and where its code lives |
 | [Architecture](docs/architecture.md) | Where data lives, how it is locked, how sync works, and what each folder is for |
 | [Design system](docs/design-system.md) | Colors, type, shapes, motion, shared components and writing rules |
 | [Technologies](docs/technologies.md) | Every tool Baon uses and why |

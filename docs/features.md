@@ -36,7 +36,9 @@ If the account already has records online (from another device), Baon says "Welc
 
 **How it works:** each account has its own records and its own key. With more than one account, Baon opens on "Who's using Baon?". In Shared phone mode, Baon asks for the passphrase every time it opens, and again after a minute away. "Remove from this phone" (Me → Security) syncs every change first, then deletes the account from this phone only. If that upload fails, nothing is removed. Signing in on any phone brings the records back.
 
-**Code:** `src/lock/`, `src/App.tsx`
+**Signing out (My phone mode)** ends the online sign-in and shows "You're signed out"; the records stay on the phone. **"Continue as …" signs in again first** (Google or email code, same account only), so sync, which needs that sign-in, picks up again by itself. Without internet, "Continue without syncing" opens the records, and Me → Backup offers "Sign in again" later.
+
+**Code:** `src/lock/`, `src/lock/SignedOut.tsx`, `src/App.tsx`
 
 ---
 
@@ -98,7 +100,18 @@ Every answer can be undone.
 
 **Free pass:** +1 every Monday. A saved pass covers a forgotten class day by itself. You can save up to 1, up to 3 with a 10+ day streak, and up to 5 at 100+.
 
-Home's phone header shows the flame and the number. The streak card shows this week's ✓ row, the best streak and the passes. The Streak page adds a spending map (one square per day: darker blue = more of that day's budget used, dark = over) and "Share", which makes a story-size picture with no amounts and no name.
+Home's phone header shows the flame and the number. The streak card shows this week's ✓ row, the best streak and the passes.
+
+The **Streak page** adds:
+
+- **Progress to the next goal** (3, 7, 14, 30, 50, 100, 200, 365 days, then every 100): "5 more days to a 14-day streak". "Best!" shows when today's streak is the best one.
+- **This week:** ✓ for logged days, a dashed circle for no-class days, a ticket for a day a free pass covered.
+- **Best streak, free passes saved, on-budget days** (all time).
+- **Spending map**, 3 or 6 months: one square per day (darker blue = more of that day's budget used, dark = over). Tap a day to see what it meant, e.g. "Logged · 62% of that day's ₱150 budget" or "No class: doesn't affect your streak".
+- **This month so far:** logged days, spent, on budget, over budget.
+- **"Share"**, which makes a story-size picture with no amounts and no name.
+
+"Match my balance" entries never count as logging a day.
 
 **Code:** `src/streak/streak.ts`, `src/streak/Streak.tsx`, `src/streak/share.ts`
 
@@ -169,13 +182,13 @@ On phones the tip sits under the streak and Ipon cards; on desktop it's inside t
 
 ### Your money (bottom of Home)
 
+- **Wallets** (first, full width): biggest balance first, Savings last with a dashed border. Phones: the spendable total, Move, and a sideways row of every wallet. Desktop: a dark "All wallets" total, the top 3 wallets with "+N more" / "Less", and Move money above Manage on the right (from 1280px wide; below that, the total sits on top and the buttons underneath). A wallet with an interest rate shows "≈ +₱0.27/mo".
 - **Today's entries**, newest first.
 - **Spent per day:** the last 7 days as bars.
-- **Wallets:** the total and each wallet.
 - **Set aside for school:** what's reserved and what's next.
 - **Category limits:** the first two limits with their bars.
 
-**Code:** `src/home/MoneyCards.tsx`, `src/home/LimitsCard.tsx`
+**Code:** `src/home/MoneyCards.tsx`, `src/ui/WalletTile.tsx`, `src/home/LimitsCard.tsx`
 
 ### Reminders
 
@@ -218,7 +231,7 @@ On phones the tip sits under the streak and Ipon cards; on desktop it's inside t
 - **Search** the entries' text: note, category and wallet (Home's search box on desktop opens History with the results).
 - **Show:** All · Today · Yesterday · This week · This month, plus a category dropdown. The total and "By category" follow the filter.
 - **List or Charts:** day cards, or spent per day and spending by category.
-- Tap any entry to **edit or delete** it.
+- Tap any entry to **edit or delete** it. A "Balance adjusted" entry (from Match my balance) opens a small dialog with Delete instead; to change it, match the balance again.
 - **Share:** a story-size "receipt" of today's, this week's or this month's spending: the total, then what was bought, grouped ("Jeep ×5"), biggest first. It shows notes and amounts, so Baon says so before sharing.
 
 **Code:** `src/history/History.tsx`, `src/history/history.ts`, `src/history/shareSpending.ts`
@@ -293,9 +306,30 @@ A limit is a reminder, never a block: "Just a reminder. You can still log anythi
 
 **Use case:** Olive changed schools and wants to update her profile and allowance.
 
-**How it works:** profile (name, school, Senior high / College, photo), Security (device mode), Backup, Preferences (theme, language, install), plus "Your baon" (allowance) and Wallets (add, rename, remove, move money). Delete account is here too, in red.
+**How it works:** a profile card (photo, name, streak, level · school, device mode, Sign out or Lock), the dark "Your baon" card (amount, how often, next allowance, class days, Edit), and Wallets (total, Move money, Add wallet; tap a wallet to rename, remove, match its balance or set its interest). Then the tabs: Profile (name, school, Senior high / College), Security (device mode, storage, remove from this phone, delete account in red), Backup and Preferences (theme, language, install). Phones end with a Help & privacy link, since they have no sidebar.
 
-**Code:** `src/me/Me.tsx`
+**Code:** `src/me/Me.tsx`, `src/me/MeDialogs.tsx`
+
+### Match my balance and estimated interest
+
+**Use case:** Nina's GoTyme app shows ₱1,250.37, but Baon says ₱1,248.10. The bank added interest and Baon can't see that.
+
+**How it works:**
+
+- **Match my balance** (Me → a bank or e-wallet → "Doesn't match your app?"): type what the app shows. Baon saves the difference as one "Balance adjusted" entry: +₱2.27 here, or a minus for a fee. It isn't spending or money in, so charts, limits, Ipon outlook and the streak ignore it; only the wallet's balance (and, for a spending wallet, Safe to spend) changes. Undo works. Not offered on Cash (a difference there is usually an expense that should be logged) or Savings.
+- **Estimated interest:** a bank or e-wallet can have its yearly rate (optional, up to 20%). The wallet then shows about what it earns a month after the 20% tax on bank interest: balance × rate ÷ 12 × 0.8, rounded down to the centavo.
+
+**Example:** ₱10,000 at 4% → ₱33.33 a month → ₱26.66 after tax, shown as "≈ +₱26.66/mo". The estimate never changes the balance or the budget; what the bank really paid comes in with Match my balance.
+
+**Code:** `src/me/MeDialogs.tsx` (`WalletDialog`), `src/ledger/ledger.ts` (`adjust-up` / `adjust-down`, `monthlyInterest`), `src/add/AdjustmentDialog.tsx`
+
+### Help & privacy
+
+**Use case:** Rhea wants to know who can see her records, and why her streak didn't break when she went over.
+
+**How it works:** "Your privacy, in plain words" (what's scrambled, what Baon receives, backups, what it can't protect; RA 10173), the three policies, a "Still stuck?" email card, and common questions. Topic chips (All, Budget, Streak, Money, Phone & backup) filter the questions; one answer is open at a time. On desktop the questions sit in two columns with topic tags.
+
+**Code:** `src/help/Help.tsx`, `src/legal/`
 
 ### Sync
 

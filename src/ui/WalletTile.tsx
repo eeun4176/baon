@@ -19,9 +19,10 @@ const iconOf = (w: Wallet): IconName => (w.type === 'savings' ? 'piggy' : w.id =
 
 /** A button when it can be opened, else a plain box. */
 function Box({ wallet, amount, onClick, className, children }: { wallet: Wallet; amount: number; onClick?: () => void; className: string; children: ReactNode }) {
-  if (!onClick) return <div className={className}>{children}</div>
+  // relative: keeps the hidden screen-reader notes inside a scrolling row (else they widen the whole page)
+  if (!onClick) return <div className={`relative ${className}`}>{children}</div>
   return (
-    <button type="button" onClick={onClick} aria-label={tr('Edit {0}, {1}', wallet.name, formatPeso(amount))} className={`text-left ${className}`}>
+    <button type="button" onClick={onClick} aria-label={tr('Edit {0}, {1}', wallet.name, formatPeso(amount))} className={`relative text-left ${className}`}>
       {children}
     </button>
   )

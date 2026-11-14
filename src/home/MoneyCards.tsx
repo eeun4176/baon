@@ -92,7 +92,8 @@ export function WalletsCard() {
           <Link {...move} className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-blue-tint px-3 text-[0.8125rem] font-extrabold text-blue">
             <Icon name="arrow" className="size-4" />{tr('Move')}</Link>
         </div>
-        <ul className="flex gap-2 overflow-x-auto pr-3.5 [scrollbar-width:none]">
+        {/* tabIndex: the row scrolls sideways, so keyboard users must be able to reach it */}
+        <ul tabIndex={0} aria-label={tr('Wallets')} className="flex gap-2 overflow-x-auto rounded-r-[18px] pr-3.5 [scrollbar-width:none] focus-visible:outline-2 focus-visible:outline-blue">
           {shown.map((w) => <li key={w.id} className="shrink-0"><WalletChip wallet={w} amount={all.get(w.id)!} /></li>)}
         </ul>
       </div>

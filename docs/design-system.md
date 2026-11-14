@@ -35,6 +35,8 @@ Colors are tokens. Use the token (`bg-card`, `text-muted`), never a raw color, s
 
 Notes:
 - Blue text on dark cards uses a lighter blue (`#7ea2ff`) so it stays readable.
+- In light theme, `text-blue` on `bg-blue-tint` (same element) turns `#1442c4`, and `text-trend-down` on `bg-trend-down/10` turns `#11652f`: the plain tokens on their tints are just under 4.5:1. Rules in `src/index.css`.
+- Date fields draw Baon's own chevron (gray, light and dark) instead of each browser's icon, and the whole field opens the picker (`src/index.css`).
 - Theme choices: Light, Dark, or Device (follows the phone's setting).
 - Onboarding is a white page with gray fields, so inside `.onboarding` the `page` and `card` colors trade places.
 
@@ -85,6 +87,7 @@ In `src/ui/kit.tsx` unless noted. Reuse these before making a new one.
 | `Segmented` | Tabs inside a page |
 | `Icon` | Lucide icons; only the ones listed in `kit.tsx` are bundled |
 | `Modal` (`ui/Modal.tsx`) | Pop-up: a bottom sheet on phones, a centered dialog on desktop |
+| `WalletChip`, `WalletTile` (`ui/WalletTile.tsx`) | One wallet on Home and Me: a chip for the phones' sideways row, a tile with an icon on desktop. Savings has a dashed border; a wallet with an interest rate shows "≈ +₱X/mo" |
 | `Step` (`onboarding/Step.tsx`) | The frame around each onboarding step |
 
 Patterns:

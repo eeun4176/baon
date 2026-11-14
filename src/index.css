@@ -95,6 +95,23 @@
     color: #7ea2ff;
   }
 }
+/* Light theme: blue text on the light-blue tint (active nav, Move buttons, chips, tags) needs a deeper
+   blue: #1e5eff on #e8efff is 4.4:1, under AA's 4.5:1; #1442c4 is about 7:1. The dark rules above win. */
+.bg-blue-tint.text-blue {
+  color: #1442c4;
+}
+/* Same for green text on its 10% tint (Help's "Money" tag): deeper green in light, the token in dark. */
+.bg-trend-down\/10.text-trend-down {
+  color: #11652f;
+}
+:root[data-theme='dark'] .bg-trend-down\/10.text-trend-down {
+  color: var(--color-trend-down);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .bg-trend-down\/10.text-trend-down {
+    color: var(--color-trend-down);
+  }
+}
 
 /* Date fields look the same on every phone: each browser drew its own ▾ / calendar icon in its own
    place (Android Chrome pushed it out of the box in a narrow field), so it's hidden and Baon's chevron
