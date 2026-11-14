@@ -13,10 +13,10 @@ import { AppShell } from './shell/AppShell.tsx'
 import { loadPage } from './loadPage.ts'
 import { SessionProvider } from './shell/SessionProvider.tsx'
 import logoIcon from './assets/logo-icon.png'
-import { firstName } from './home/greetings.ts'
 import { HOME_TITLE, isKnownPath } from './pageTitle.ts'
 import { Button, Card, Page, PageHeader, Screen } from './ui/kit.tsx'
 import { LockScreen } from './lock/LockScreen.tsx'
+import { SignedOut } from './lock/SignedOut.tsx'
 import { AccountPicker } from './lock/AccountPicker.tsx'
 import type { DeviceAccount } from './db/db.ts'
 import { listDeviceAccounts, openVault, PassphraseNeeded, type Vault } from './vault/vault.ts'
@@ -91,34 +91,6 @@ async function openAccount(account: DeviceAccount, picked = false): Promise<Stat
     if (e instanceof PassphraseNeeded) return { kind: 'locked', userId: account.userId, name: account.label }
     throw e
   }
-}
-
-/** "You're signed out" screen: records stay on the device; continue reopens the vault. */
-function SignedOut({ name, onContinue, onSwitch }: { name: string; onContinue: () => void; onSwitch: () => void }) {
-  return (
-    <Screen
-      footer={
-        <>
-          <Button onClick={onContinue}>{tr('Continue as {0}', firstName(name))}</Button>
-          <button type="button" onClick={onSwitch} className="mt-2 min-h-11 w-full font-extrabold text-blue hover:underline">{tr('Use another account')}</button>
-        </>
-      }
-    >
-      <header className="flex items-center gap-2.5 text-[2.125rem] font-black tracking-tight">
-        <img src={logoIcon} alt="" className="size-10" />
-        {tr('Baon')}</header>
-      <div className="mt-16 animate-rise">
-        <h1 className="text-[2rem] leading-tight font-black">{tr('You’re signed out')}</h1>
-        <p className="mt-2 text-lg font-semibold text-muted">{tr('Your records are still here, encrypted on this device.')}</p>
-        <div className="mt-6 flex items-center gap-3 rounded-[28px] bg-card p-4">
-          <span className="grid size-12 place-items-center rounded-full bg-blue-tint text-lg font-black text-blue" aria-hidden="true">
-            {firstName(name).charAt(0).toUpperCase()}
-          </span>
-          <span className="font-black">{name}</span>
-        </div>
-      </div>
-    </Screen>
-  )
 }
 
 /** Shown for an address Baon doesn't have. Home goes through the normal checks (sign-in, lock). */
@@ -266,6 +238,7 @@ export default function App() {
       const { userId, name } = state
       return (
         <SignedOut
+          userId={userId}
           name={name}
           onContinue={() => {
             signedOutFlag(null)

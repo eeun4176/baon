@@ -773,6 +773,7 @@ export const FIL: Record<string, string> = {
   "Your account doesn’t have your records yet. Use your recovery code instead.": "Wala pa sa account mo ang records mo. Recovery code na lang ang gamitin.",
   "Type your passphrase.": "I-type ang passphrase mo.",
   "You’re offline. Connect to the internet to sign in again.": "Offline ka. Mag-connect sa internet para makapag-sign in ulit.",
+  "Continue without syncing": "Ituloy nang hindi nagsi-sync",
   "That key doesn’t open the records on this phone. Try your recovery code instead.": "Hindi nabubuksan ng key na ’yan ang records sa phone na ’to. Try ang recovery code mo.",
   "This phone is shared, so Baon asks for your passphrase.": "Shared ang phone na ’to, kaya hihingin ni Baon ang passphrase mo.",
   "Hi, {0}": "Hi, {0}",
