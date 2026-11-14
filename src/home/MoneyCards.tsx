@@ -2,19 +2,21 @@
  * MoneyCards.tsx — Home's "Your money" section (Home v2 design):
  *   EntriesCard     today's entries, newest first (phone: "See all N" link; desktop: total spent)
  *   SpentPerDayCard the last 7 days as bars (now on phones too)
- *   WalletsCard     total + each wallet (phone: 2-column tiles; desktop: a list with icons)
+ *   WalletsCard     total + each wallet (phone: sideways row; desktop: total box + top 4 tiles)
  *   SetAsideCard    money set aside for school and what's next (phone: the first item)
  */
+import { useState } from 'react'
 import { Link } from 'react-router'
 import { manilaDate } from '../budget/days.ts'
 import { SpentPerDay } from '../history/Charts.tsx'
 import { spentPerDay } from '../history/history.ts'
 import { TxRow } from '../history/TxRow.tsx'
-import { balances } from '../ledger/ledger.ts'
+import { balances, byBalance } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { setAsideTotal, sortForList, statusOf } from '../plan/school.ts'
 import { useSession } from '../session.ts'
 import { Pill, Icon } from '../ui/kit.tsx'
+import { WalletChip, WalletTile } from '../ui/WalletTile.tsx'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const dueDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
@@ -61,42 +63,66 @@ export function SpentPerDayCard({ today, budget, className = '' }: { today: stri
   )
 }
 
-/** Wallets: total and each one. */
+/**
+ * Wallets (full width, first in "Your money"). Phone: total, Move, and a sideways row of wallets.
+ * Desktop: a dark total box, the top 3 wallets in one row (+N more shows the rest, Less hides them),
+ * then Move money above Manage in a column on the right, all in one row (from 1280px wide; at 1024px
+ * there is no room, so the total box sits above the wallets and the two buttons sit side by side underneath).
+ */
 export function WalletsCard() {
   const { wallets, transactions } = useSession()
+  const [open, setOpen] = useState(false)
   const all = balances(wallets, transactions)
-  const shown = wallets.filter((w) => !w.archived)
-  const total = shown.filter((w) => w.type === 'spending').reduce((s, w) => s + all.get(w.id)!, 0)
+  const shown = byBalance(wallets.filter((w) => !w.archived), all)
+  const sum = (list: typeof shown) => list.reduce((s, w) => s + all.get(w.id)!, 0)
+  const spendable = sum(shown.filter((w) => w.type === 'spending'))
+  const TOP = 3
+  const hidden = shown.length - TOP
+  const move = { to: '?add=1&mode=transfer', state: { modal: true } }
+
   return (
-    <section aria-labelledby="wallets-title" className={`${moneyCard} gap-2.5 lg:gap-0`}>
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 id="wallets-title" className={title}>{tr('Wallets')}</h2>
-        <span className="text-lg font-black lg:hidden">{formatPeso(total)}</span>
-        <Link to="/me" className={`hidden lg:inline ${link}`}>{tr('Manage')}</Link>
+    <section aria-label={tr('Wallets')} className="animate-rise">
+      {/* Phone */}
+      <div className="flex flex-col gap-2.5 rounded-[26px] bg-card py-3.5 pl-3.5 lg:hidden">
+        <div className="flex items-center justify-between gap-2 pr-3.5">
+          <div className="flex min-w-0 items-baseline gap-2">
+            <h2 className="text-[0.9375rem] font-black">{tr('Wallets')}</h2>
+            <span key={spendable} className="animate-pop truncate text-xl font-black tracking-[-0.02em]">{formatPeso(spendable)}</span>
+          </div>
+          <Link {...move} className="flex h-8 shrink-0 items-center gap-1 rounded-full bg-blue-tint px-3 text-[0.8125rem] font-extrabold text-blue">
+            <Icon name="arrow" className="size-4" />{tr('Move')}</Link>
+        </div>
+        <ul className="flex gap-2 overflow-x-auto pr-3.5 [scrollbar-width:none]">
+          {shown.map((w) => <li key={w.id} className="shrink-0"><WalletChip wallet={w} amount={all.get(w.id)!} /></li>)}
+        </ul>
       </div>
-      <p key={total} className="hidden animate-pop pt-1.5 pb-2 text-[1.875rem] font-black tracking-tight lg:block">{formatPeso(total)}</p>
-      {/* Phone: tiles */}
-      <ul className="grid grid-cols-2 gap-2 lg:hidden">
-        {shown.map((w) => (
-          <li key={w.id} className="flex min-w-0 flex-col rounded-2xl bg-page px-3 py-2.5">
-            <span className="truncate text-xs font-extrabold text-muted">{w.type === 'savings' ? tr('{0} · not spendable', w.name) : w.name}</span>
-            <span className="font-black">{formatPeso(all.get(w.id)!)}</span>
-          </li>
-        ))}
-      </ul>
-      {/* Desktop: list */}
-      <ul className="hidden lg:block">
-        {shown.map((w) => (
-          <li key={w.id} className="flex min-h-12 items-center gap-3 border-t border-page">
-            <Icon name={w.type === 'savings' ? 'piggy' : w.id === 'cash' ? 'wallet' : 'phone'} className={`size-5 ${w.type === 'savings' ? 'text-muted' : 'text-blue'}`} />
-            <span className="flex flex-1 flex-col">
-              <span className="font-extrabold">{w.name}</span>
-              {w.type === 'savings' && <span className="text-xs font-bold text-muted">{tr('Not counted as spendable')}</span>}
-            </span>
-            <span className="font-black">{formatPeso(all.get(w.id)!)}</span>
-          </li>
-        ))}
-      </ul>
+
+      {/* Desktop */}
+      <div className="hidden gap-2.5 rounded-[28px] bg-card p-3.5 lg:grid xl:grid-cols-[12rem_minmax(0,1fr)_auto]">
+        <div className="flex flex-col justify-center gap-0.5 rounded-[20px] bg-hero px-[1.125rem] py-3.5 text-white">
+          <h2 className="text-[0.8125rem] font-extrabold text-white/75">{tr('All wallets')}</h2>
+          <p key={sum(shown)} className="animate-pop text-[1.75rem] leading-tight font-black tracking-[-0.03em]">{formatPeso(sum(shown))}</p>
+          <p className="text-xs font-bold text-white/75">{tr('{0} wallets · {1} spendable', shown.length, formatPeso(spendable))}</p>
+        </div>
+        {/* Closed: exactly 3 tiles + "+N more" in one row. Open: every wallet, as many per row as fit, then Less. */}
+        <ul className={`grid min-w-0 gap-2.5 ${open ? 'grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]' : hidden > 0 ? 'grid-cols-[repeat(3,minmax(0,1fr))_4.75rem]' : 'grid-flow-col auto-cols-fr'}`}>
+          {(open ? shown : shown.slice(0, TOP)).map((w) => <li key={w.id} className="min-w-0"><WalletTile wallet={w} amount={all.get(w.id)!} /></li>)}
+          {hidden > 0 && (
+            <li>
+              <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex h-full min-h-16 w-full flex-col items-center justify-center rounded-[20px] bg-blue-tint text-blue hover:brightness-95">
+                {open
+                  ? <span className="text-sm font-extrabold">{tr('Less|show fewer')}</span>
+                  : <><span className="text-[1.0625rem] font-black text-ink">+{hidden}</span><span className="text-xs font-extrabold">{tr('more|wallets')}</span></>}
+              </button>
+            </li>
+          )}
+        </ul>
+        <div className="col-span-full flex justify-end gap-2 xl:col-span-1 xl:flex-col xl:justify-center">
+          <Link {...move} className="flex h-11 items-center justify-center gap-1.5 rounded-full bg-blue-tint px-4 text-sm font-extrabold text-blue hover:brightness-95">
+            <Icon name="arrow" className="size-4" />{tr('Move money')}</Link>
+          <Link to="/me" className="flex h-11 items-center justify-center rounded-full bg-page px-4 text-sm font-extrabold hover:bg-pebble">{tr('Manage')}</Link>
+        </div>
+      </div>
     </section>
   )
 }

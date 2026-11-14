@@ -15,7 +15,8 @@ import { useEffect, useRef, useState } from 'react'
 import { afterAllowanceLogged } from '../budget/allowance.ts'
 import { spentThisCycle } from '../plan/limits.ts'
 import { addDays, manilaDate } from '../budget/days.ts'
-import { balances, SOURCE_LABEL, SOURCES, UTANG_KINDS, type Source, type Transaction } from '../ledger/ledger.ts'
+import { ADJUST_KINDS, balances, SOURCE_LABEL, SOURCES, UTANG_KINDS, type Source, type Transaction } from '../ledger/ledger.ts'
+import { AdjustmentDialog } from './AdjustmentDialog.tsx'
 import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Icon, Segmented, Switch } from '../ui/kit.tsx'
@@ -57,8 +58,14 @@ function dateLabel(day: string, today: string): string {
   return shortDate.format(new Date(`${day}T00:00:00Z`))
 }
 
-/** Add/edit dialog. `editId` pre-fills an existing entry; `startMode` ("?mode=transfer") picks the tab; `onClose` removes "?add" from the URL. */
-export function QuickAdd({ editId, startMode, onClose }: { editId: string | null; startMode?: string | null; onClose: () => void }) {
+/** Add/edit dialog; a "Balance adjusted" entry opens its own small dialog instead (AdjustmentDialog). */
+export function QuickAdd(props: { editId: string | null; startMode?: string | null; onClose: () => void }) {
+  const editing = useSession().transactions.find((t) => t.id === props.editId)
+  return editing && ADJUST_KINDS.has(editing.kind) ? <AdjustmentDialog tx={editing} onClose={props.onClose} /> : <AddDialog {...props} />
+}
+
+/** The Add/edit dialog. `editId` pre-fills an existing entry; `startMode` ("?mode=transfer") picks the tab; `onClose` removes "?add" from the URL. */
+function AddDialog({ editId, startMode, onClose }: { editId: string | null; startMode?: string | null; onClose: () => void }) {
   const { wallets, transactions, allowance, limits, addTransaction, removeTransaction, updateAllowance, showToast } = useSession()
   const today = manilaDate()
   const editing = transactions.find((t) => t.id === editId)

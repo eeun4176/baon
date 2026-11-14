@@ -34,6 +34,12 @@ describe('ledger repo', () => {
     expect(spendingTotal(wallets, txs)).toBe(63500)
   })
 
+  it('skips a record it doesn’t understand (e.g. a newer entry type synced from another device)', async () => {
+    await saveTransaction(vault, jeep, [cash])
+    await vault.put('transaction', 'future-1', { ...jeep, id: 'future-1', kind: 'something-new' })
+    expect(await loadTransactions(vault)).toEqual([jeep])
+  })
+
   it('returns transactions oldest first', async () => {
     const later = { ...jeep, id: 'jeep-2', occurredAt: '2026-11-10T17:30:00+08:00' }
     await saveTransaction(vault, later, [cash])
@@ -60,8 +66,9 @@ describe('ledger repo', () => {
     expect(spendingTotal(await loadWallets(vault), await loadTransactions(vault))).toBe(65000)
   })
 
-  it('rejects a stored record that no longer matches the schema', async () => {
+  it('leaves out a stored record that no longer matches the schema (it never reaches the math)', async () => {
+    await saveTransaction(vault, jeep, [cash])
     await vault.put('transaction', 'bad', { ...jeep, id: 'bad', amountCentavos: 'lots' })
-    await expect(loadTransactions(vault)).rejects.toThrow()
+    expect(await loadTransactions(vault)).toEqual([jeep])
   })
 })

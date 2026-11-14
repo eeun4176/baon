@@ -1,19 +1,21 @@
 /*
- * Me.tsx — Your account, money settings and data.
- *   Header: avatar (pen button: change / remove / Google photo), name, streak / school level / device mode chips,
- *           Sign out (Lock in Shared phone mode). Phones: centered stack; wider screens: one row.
+ * Me.tsx — Your account, money settings and data (Me v2 design).
+ *   Profile card: avatar (pen button: change / remove / Google photo), name, streak chip, level · school,
+ *     device mode. Sign out (Lock in Shared phone mode): a small pill by the title on phones, in this card wider.
+ *   "Your baon" (dark): amount, how often, next allowance and class days, Edit.
+ *   Wallets: total, Move money, Add wallet; phones a sideways row, desktop tiles. Each opens the wallet.
  *   Tabs: Profile (name, school, Senior high / College) · Security (device mode, lock/DeviceModeItems.tsx) ·
- *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, install, Help & privacy link — phones have no sidebar).
- *   Side cards: "Your baon" (allowance, Edit) and Wallets (add, rename, remove, Move money).
- * Phones show the side cards first, then the tabs; theme and sign out live here on phones.
+ *         Backup (export / restore, backup/BackupPanel.tsx) · Preferences (theme, language, install).
+ * Desktop: profile across the top, "Your baon" and Wallets (side by side from 1280px wide), then the tabs. Phones stack them and end
+ * with a Help & privacy link (no sidebar there).
  */
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link } from 'react-router'
 import { streakFlame } from '../streak/flame.ts'
 import { classDaysText, FREQUENCY_TEXT } from '../budget/allowance.ts'
 import { weekday } from '../budget/days.ts'
 import { promptInstall, useCanInstall } from '../install.ts'
-import { balances, type Wallet } from '../ledger/ledger.ts'
+import { balances, byBalance, type Wallet } from '../ledger/ledger.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { ThemePicker } from '../shell/ThemePicker.tsx'
@@ -23,7 +25,8 @@ import { DeviceModeItems } from '../lock/DeviceModeItems.tsx'
 import { RemoveFromPhone } from '../lock/RemoveFromPhone.tsx'
 import { SyncSection } from '../sync/SyncSection.tsx'
 import { useStreak } from '../streak/useStreak.ts'
-import { BigMoney, Card, Icon, Page, PageHeader, Segmented } from '../ui/kit.tsx'
+import { BigMoney, Card, Icon, Page, Segmented } from '../ui/kit.tsx'
+import { WalletChip, WalletTile } from '../ui/WalletTile.tsx'
 import { Avatar } from './Avatar.tsx'
 import { DeleteAccountDialog } from './DeleteAccount.tsx'
 import { AllowanceDialog, WalletDialog } from './MeDialogs.tsx'
@@ -38,12 +41,6 @@ const nextDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', month: 'short
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40 placeholder:text-muted/60'
 const label = 'block font-extrabold text-muted'
-
-/** Small rounded chip in the header (streak, level, device mode). */
-function Chip({ children, gold = false }: { children: ReactNode; gold?: boolean }) {
-  // gold: a 100+ day streak, a dark chip so its violet flame stands out
-  return <span className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-black ${gold ? 'bg-hero text-white' : 'bg-page'}`}>{children}</span>
-}
 
 /**
  * The header avatar with a small pen button at its bottom-right. The button opens a small
@@ -93,7 +90,7 @@ function PhotoAvatar() {
 
   return (
     <div ref={box} className="relative shrink-0">
-      <Avatar className="size-20 text-3xl" />
+      <Avatar className="size-16 text-[1.375rem]" />
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -106,7 +103,7 @@ function PhotoAvatar() {
         <Icon name="pencil" className="size-3 md:size-3.5" />
       </button>
       {open && (
-        <div id="photo-menu" className="absolute top-full left-1/2 z-30 mt-3 -ml-30 w-60 animate-rise sm:left-0 sm:ml-0 rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
+        <div id="photo-menu" className="absolute top-full left-0 z-30 mt-3 w-60 animate-rise rounded-2xl border border-pebble bg-card p-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.3)]">
           <label className={`${item} focus-within:ring-2 focus-within:ring-blue/40`}>
             <Icon name="pencil" className="size-5" /> {profile.photo ? tr('Change photo') : tr('Upload a photo')}
             <input type="file" accept="image/*" className="sr-only" onChange={(e) => { upload(e.target.files?.[0]); e.target.value = '' }} />
@@ -261,11 +258,6 @@ function PrefsTab() {
       <p className={`${label} mt-5 mb-1.5`}>{tr('Language')}</p>
       {/* Choosing reloads Baon in that language (every screen, dates included). */}
       <Segmented options={LANGUAGES} value={language} onChange={setLanguage} label={tr('Language')} className="max-w-md" />
-      <Link to="/help" className="mt-4 flex min-h-14 items-center gap-3 rounded-2xl bg-page px-4 font-black hover:bg-pebble">
-        <Icon name="help" className="size-5 shrink-0" />
-        <span className="flex-1">{tr('Help & privacy')}</span>
-        <Icon name="chevron-right" className="size-5 text-muted" />
-      </Link>
       {canInstall && (
         <button type="button" onClick={() => promptInstall()} className="mt-4 flex min-h-12 items-center gap-2 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2">
           <Icon name="download" className="size-5" /> {tr('Install Baon on this device')}</button>
@@ -274,52 +266,125 @@ function PrefsTab() {
   )
 }
 
-/** Wallet icon by kind. */
-const walletIcon = (w: Wallet) => (w.type === 'savings' ? 'piggy' : w.id === 'cash' ? 'wallet' : 'phone')
+/** Sign out (My phone mode) or Lock Baon (Shared phone mode). `compact`: the phone header's small pill. */
+function SignOutButton({ compact = false }: { compact?: boolean }) {
+  const { signOut, vault } = useSession()
+  const shared = vault.shared()
+  return (
+    <button type="button" onClick={signOut}
+      className={compact
+        ? 'flex h-10 shrink-0 items-center gap-1.5 rounded-full bg-card px-3.5 text-[0.8125rem] font-extrabold md:hidden'
+        : 'hidden h-11 shrink-0 items-center gap-2 rounded-full border-[1.5px] border-pebble-2 px-[1.125rem] text-sm font-extrabold hover:bg-page md:flex'}>
+      <Icon name={shared ? 'lock' : 'logout'} className="size-[1.125rem]" />
+      {compact ? (shared ? tr('Lock') : tr('Sign out')) : shared ? tr('Lock Baon') : tr('Sign out')}</button>
+  )
+}
 
 /** Me screen. */
 export function Me() {
-  const { name, profile, allowance, wallets, transactions, signOut, vault } = useSession()
+  const { name, profile, allowance, wallets, transactions, vault } = useSession()
   const streak = useStreak()
   const [tab, setTab] = useState<Tab>('profile')
   const [dialog, setDialog] = useState<{ kind: 'allowance' } | { kind: 'wallet'; wallet?: Wallet } | null>(null)
   const all = balances(wallets, transactions)
-  const active = wallets.filter((w) => !w.archived)
+  const active = byBalance(wallets.filter((w) => !w.archived), all)
   const ready = active.filter((w) => w.type === 'spending').reduce((s, w) => s + all.get(w.id)!, 0)
   const level = LEVELS.find(([id]) => id === profile.level)?.[1]
+  const about = [level, profile.school].filter(Boolean).join(' · ')
+  const device = vault.shared() ? tr('Shared phone mode') : tr('My phone mode')
   const close = () => setDialog(null)
+  const openWallet = (wallet?: Wallet) => setDialog({ kind: 'wallet', wallet })
+  const tile = 'flex min-w-0 flex-col rounded-[14px] bg-white/[0.08] px-3 py-2 lg:gap-0.5 lg:rounded-2xl lg:py-2.5'
 
   return (
     <Page>
-      <PageHeader title={tr('Me')} sub={tr('Your account, money settings and data.')} />
-
-      {/* Header card */}
-      {/* Phones: photo left, name + chips beside it, the button full width below. Wider screens: one row. */}
-      <Card className="relative z-20 grid animate-rise grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-4 sm:flex sm:gap-5">{/* above the cards below, so the photo menu isn’t covered */}
-        <PhotoAvatar />
-        <div className="min-w-0 sm:flex-1">
-          <p className="flex items-center gap-2">
-            <span className="min-w-0 truncate text-2xl font-black md:text-3xl">{name}</span>
-            {/* Phone mode: icon only, its name shows on hover and to screen readers */}
-            <span role="img" title={vault.shared() ? tr('Shared phone mode') : tr('My phone mode')} aria-label={vault.shared() ? tr('Shared phone mode') : tr('My phone mode')} className="grid size-8 shrink-0 place-items-center rounded-full bg-blue-tint text-blue">
-              <Icon name={vault.shared() ? 'users' : 'phone'} className="size-4" />
-            </span>
-          </p>
-          {/* One line under the name: streak chip, then level · school as plain text (cut with … if long; the full text is in Profile below) */}
-          <div className="mt-2 flex items-center gap-2.5">
-            <Chip gold={streak.current >= 100}><img src={streakFlame(streak.current, streak.pending)} alt="" className="size-4" /> {streak.current}<span className="sr-only">{tr('-day streak')}</span></Chip>
-            {(level || profile.school) && <span className="min-w-0 truncate text-sm font-bold text-muted">{[level, profile.school].filter(Boolean).join(' · ')}</span>}
-          </div>
+      {/* Phone: "Me" + a small Sign out / Lock pill. Wider: title + subtitle (the button sits in the profile card). */}
+      <header className="mb-3.5 flex items-center justify-between gap-3 px-1 md:mb-5 md:px-0">
+        <div>
+          <h1 className="text-[1.875rem] leading-tight font-black tracking-[-0.03em] md:text-[2.125rem]">{tr('Me')}</h1>
+          <p className="mt-1 hidden font-bold text-muted md:block">{tr('Your account, money settings and data.')}</p>
         </div>
-        <button type="button" onClick={signOut} className="col-span-2 flex min-h-12 w-full shrink-0 items-center justify-center gap-2 rounded-full border-2 border-pebble px-5 font-black hover:bg-page sm:w-auto">
-          <Icon name={vault.shared() ? 'lock' : 'logout'} className="size-5" /> {vault.shared() ? tr('Lock Baon') : tr('Sign out')}</button>
-      </Card>
+        <SignOutButton compact />
+      </header>
 
-      <div className="mt-4 grid gap-4 lg:mt-5 lg:grid-cols-12 lg:gap-5">
-        {/* Tabs */}
-        <div className="min-w-0 lg:col-span-7">
+      <div className="grid gap-3.5 lg:grid-cols-3 lg:gap-5">
+        {/* Profile: above the cards below (z-20), so the photo menu isn't covered */}
+        <section aria-label={tr('Profile')} className="relative z-20 flex animate-rise flex-wrap items-center gap-x-[1.125rem] gap-y-3.5 rounded-[26px] bg-card p-[1.125rem] md:rounded-[28px] md:px-5 md:py-4 lg:col-span-3">
+          <PhotoAvatar />
+          <div className="flex min-w-0 flex-[1_1_12rem] flex-col gap-1.5">
+            <p className="flex min-w-0 items-center gap-2">
+              <span className="min-w-0 truncate text-xl leading-tight font-black md:text-2xl md:tracking-[-0.02em]">{name}</span>
+              <span role="img" title={device} aria-label={device} className="hidden size-7 shrink-0 place-items-center rounded-full bg-blue-tint text-blue md:grid">
+                <Icon name={vault.shared() ? 'users' : 'phone'} className="size-4" />
+              </span>
+            </p>
+            {about && <p className="truncate text-[0.8125rem] font-bold text-muted md:hidden">{about}</p>}
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 md:gap-2">
+              <span className="inline-flex h-[1.625rem] shrink-0 items-center gap-1 rounded-full bg-amber-tint pr-2.5 pl-1.5 text-xs font-black text-amber md:text-[0.8125rem]">
+                <img src={streakFlame(streak.current, streak.pending)} alt="" className="size-4" />
+                {streak.current} {streak.current === 1 ? tr('day') : tr('days')}<span className="sr-only">{tr('-day streak')}</span>
+              </span>
+              <span className="inline-flex h-[1.625rem] shrink-0 items-center rounded-full bg-blue-tint px-2.5 text-xs font-extrabold text-blue md:hidden">{device}</span>
+              {about && <span className="hidden min-w-0 truncate text-[0.8125rem] font-extrabold text-ink/80 md:inline">{about}</span>}
+            </div>
+          </div>
+          <SignOutButton />
+        </section>
+
+        {/* Your baon */}
+        <section aria-labelledby="your-baon" className="flex animate-rise flex-col gap-3 rounded-[26px] bg-hero p-[1.125rem] text-white lg:col-span-3 lg:gap-3.5 lg:rounded-[32px] xl:col-span-1 lg:px-[1.625rem] lg:py-6">
+          <div className="flex items-center justify-between gap-3">
+            <h2 id="your-baon" className="text-sm font-black text-white/75 lg:text-[0.9375rem]">{tr('Your baon')}</h2>
+            <button type="button" onClick={() => setDialog({ kind: 'allowance' })} className="flex h-[2.125rem] items-center rounded-full bg-blue px-3.5 text-[0.8125rem] font-extrabold text-white lg:hidden">{tr('Edit')}</button>
+          </div>
+          <p className="flex flex-wrap items-baseline gap-x-2 tracking-[-0.04em]">
+            {allowance.amountCentavos
+              ? <BigMoney centavos={allowance.amountCentavos} className="text-[clamp(2.5rem,12vw,2.875rem)] lg:text-6xl" />
+              : <span className="text-4xl font-black">{tr('It varies')}</span>}
+            <span className="text-[0.9375rem] font-black tracking-normal text-white/75 lg:text-[1.0625rem]">{FREQUENCY_TEXT[allowance.frequency]}</span>
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <p className={tile}>
+              <span className="text-[11px] font-extrabold text-white/75 lg:text-xs">{allowance.frequency === 'irregular' ? tr('Make it last until') : tr('Next allowance')}</span>
+              <span className="text-sm leading-snug font-black lg:text-[0.9375rem]">{DAY_NAMES[weekday(allowance.nextDate)]}, {nextDay.format(new Date(`${allowance.nextDate}T00:00:00Z`))}</span>
+            </p>
+            <p className={tile}>
+              <span className="text-[11px] font-extrabold text-white/75 lg:text-xs">{tr('Class days')}</span>
+              <span className="text-sm leading-snug font-black lg:text-[0.9375rem]">{classDaysText(allowance)}</span>
+            </p>
+          </div>
+          <button type="button" onClick={() => setDialog({ kind: 'allowance' })} className="mt-auto hidden h-[2.875rem] items-center gap-2 self-start rounded-full bg-blue px-[1.375rem] font-extrabold text-white lg:flex">
+            <Icon name="pencil" className="size-[1.125rem]" />{tr('Edit allowance')}</button>
+        </section>
+
+        {/* Wallets: phone = sideways row of chips; desktop = tiles. Both open the wallet. */}
+        <section aria-labelledby="wallets-title" className="flex min-w-0 animate-rise flex-col gap-2.5 rounded-[26px] bg-card py-4 pl-4 lg:col-span-3 lg:gap-4 xl:col-span-2 lg:rounded-[32px] lg:px-[1.625rem] lg:py-6">
+          <div className="flex flex-wrap items-center justify-between gap-2 pr-4 lg:items-start lg:gap-3 lg:pr-0">
+            <div className="flex flex-col lg:gap-0.5">
+              <h2 id="wallets-title" className="text-sm font-black text-muted lg:text-[0.9375rem]">{tr('Wallets')}</h2>
+              <p key={ready} className="animate-pop text-2xl font-black tracking-[-0.02em] lg:text-[2.125rem] lg:leading-tight lg:tracking-[-0.03em]">{formatPeso(ready)}</p>
+              <p className="hidden text-[0.8125rem] font-bold text-muted lg:block">{tr('Ready to spend · Savings kept apart')}</p>
+            </div>
+            <div className="flex gap-1.5 lg:gap-2">
+              <Link to="?add=1&mode=transfer" state={{ modal: true }} className="flex h-[2.125rem] items-center gap-1.5 rounded-full bg-blue-tint px-3 text-[0.8125rem] font-extrabold text-blue hover:brightness-95 lg:h-[2.625rem] lg:px-4 lg:text-sm">
+                <Icon name="arrow" className="hidden size-4 lg:block" />
+                <span className="lg:hidden">{tr('Move')}</span><span className="hidden lg:inline">{tr('Move money')}</span></Link>
+              <button type="button" onClick={() => openWallet()} aria-label={tr('Add a wallet')} className="grid size-[2.125rem] place-items-center rounded-full bg-page hover:bg-pebble lg:flex lg:h-[2.625rem] lg:w-auto lg:gap-1.5 lg:px-4 lg:text-sm lg:font-extrabold">
+                <Icon name="plus" className="size-4" /><span className="hidden lg:inline">{tr('Add wallet')}</span></button>
+            </div>
+          </div>
+          <ul className="flex gap-2 overflow-x-auto pr-4 [scrollbar-width:none] lg:hidden">
+            {active.map((w) => <li key={w.id} className="shrink-0"><WalletChip wallet={w} amount={all.get(w.id)!} onClick={() => openWallet(w)} /></li>)}
+          </ul>
+          <ul className="mt-auto hidden grid-cols-[repeat(auto-fit,minmax(min(11rem,100%),1fr))] gap-2.5 lg:grid">
+            {active.map((w) => <li key={w.id} className="min-w-0"><WalletTile wallet={w} amount={all.get(w.id)!} showKind onClick={() => openWallet(w)} /></li>)}
+          </ul>
+        </section>
+
+        {/* Settings tabs */}
+        <div className="min-w-0 lg:col-span-3">
           <Segmented options={TABS} value={tab} onChange={setTab} label={tr('Me sections')} />
-          <Card key={tab} className="mt-4 animate-rise">
+          <Card key={tab} className="mt-3 animate-rise lg:rounded-[28px] lg:px-[1.625rem] lg:py-6">
             {tab === 'profile' && <ProfileTab key={name} />}{/* a name synced from another device refreshes the form */}
             {tab === 'security' && <SecurityTab />}
             {tab === 'backup' && (
@@ -332,48 +397,12 @@ export function Me() {
           </Card>
         </div>
 
-        {/* Side cards (first on phones) */}
-        <div className="order-first min-w-0 space-y-4 lg:order-none lg:col-span-5 lg:space-y-5">
-          <section className="animate-rise rounded-3xl bg-hero p-4 sm:rounded-[28px] sm:p-6 text-white" aria-labelledby="your-baon">
-            <h2 id="your-baon" className="font-extrabold text-white/80">{tr('Your baon')}</h2>
-            <p className="mt-1">
-              {allowance.amountCentavos ? <BigMoney centavos={allowance.amountCentavos} className="text-[2.5rem] sm:text-5xl" /> : <span className="text-4xl font-black">{tr('It varies')}</span>}
-            </p>
-            <p className="mt-3 font-semibold text-white/80">
-              {FREQUENCY_TEXT[allowance.frequency]} · {allowance.frequency === 'irregular' ? tr('Make it last until') : tr('Next on')} {DAY_NAMES[weekday(allowance.nextDate)]}, {nextDay.format(new Date(`${allowance.nextDate}T00:00:00Z`))}
-            </p>
-            <p className="font-semibold text-white/80">{allowance.countClassDays ? tr('Counts class days: {0}', classDaysText(allowance)) : tr('Counts every day')}</p>
-            <button type="button" onClick={() => setDialog({ kind: 'allowance' })} className="mt-5 min-h-12 rounded-full bg-blue px-6 font-black text-white">
-              {tr('Edit allowance')}</button>
-          </section>
-
-          <Card className="animate-rise">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="text-xl font-black">{tr('Wallets')}</h2>
-              <button type="button" onClick={() => setDialog({ kind: 'wallet' })} aria-label={tr('Add a wallet')} className="grid size-11 place-items-center rounded-full bg-blue-tint text-blue hover:bg-blue hover:text-white">
-                <Icon name="plus" className="size-5" />
-              </button>
-            </div>
-            <p key={ready} className="mt-1 animate-pop text-[2rem] font-black sm:text-4xl">{formatPeso(ready)}</p>
-            <p className="text-sm font-semibold text-muted">{tr('Ready to spend · Savings kept apart')}</p>
-            <ul className="mt-3 divide-y divide-page border-t border-page">
-              {active.map((w) => (
-                <li key={w.id}>
-                  <button type="button" onClick={() => setDialog({ kind: 'wallet', wallet: w })} className="flex w-full items-center gap-3 rounded-xl py-3 text-left hover:bg-page/60" aria-label={tr('Edit {0}, {1}', w.name, formatPeso(all.get(w.id)!))}>
-                    <Icon name={walletIcon(w)} className="size-5 shrink-0 text-blue" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-black">{w.name}</span>
-                      {w.type === 'savings' && <span className="block text-sm font-semibold text-muted">{tr('Not counted as spendable')}</span>}
-                    </span>
-                    <span className="font-black">{formatPeso(all.get(w.id)!)}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-            <Link to="?add=1&mode=transfer" state={{ modal: true }} className="mt-2 flex min-h-12 items-center justify-center rounded-full bg-pebble font-black hover:bg-pebble-2">
-              {tr('Move money')}</Link>
-          </Card>
-        </div>
+        {/* Phones have no sidebar, so Help & privacy is linked here */}
+        <Link to="/help" className="flex min-h-[3.75rem] animate-rise items-center gap-3 rounded-[22px] bg-card px-4 font-black hover:bg-pebble md:hidden">
+          <Icon name="help" className="size-5 shrink-0 text-blue" />
+          <span className="flex-1 text-[0.9375rem]">{tr('Help & privacy')}</span>
+          <Icon name="chevron-right" className="size-5 text-muted" />
+        </Link>
       </div>
 
       {dialog?.kind === 'allowance' && <AllowanceDialog onClose={close} />}

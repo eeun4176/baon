@@ -1,11 +1,11 @@
 /*
  * Home.tsx — Today at a glance (Home v2 design).
  * Phone: logo + avatar, date line, greeting; the "Today" card; streak and Ipon outlook side by side;
- *   a tipid tip; One-tap add; then "Your money": today's entries, spent per day, wallets,
+ *   a tipid tip; One-tap add; then "Your money": wallets (sideways row), today's entries, spent per day,
  *   set aside for school, category limits.
  * Desktop: greeting row with a search box (matches show under it; Enter opens History); the "Today"
  *   card and One-tap add on the left, the dark streak card and Ipon outlook (with its tip) on the
- *   right; "Your money": spent per day beside today's entries, then wallets, set aside, limits.
+ *   right; "Your money": a full-width wallets strip, spent per day beside today's entries, then set aside and limits.
  * The "Today" card: what's safe to spend (or "over" / "spent"), Left until · Class days left ·
  *   This week (with a green ↓ / red ↑ against last week), and a split bar of "left to spend"
  *   vs "held back" (school, utang, money for later), drawn like Plan's.
@@ -359,13 +359,13 @@ export function Home() {
         <span className="h-px flex-1 bg-pebble-2" />
       </div>
 
+      <WalletsCard />
       {/* Phone: entries, then spent per day. Desktop: spent per day (wide) beside entries. */}
-      <div className="grid gap-3.5 lg:grid-cols-3 lg:gap-5">
+      <div className="mt-3.5 grid gap-3.5 lg:mt-5 lg:grid-cols-3 lg:gap-5">
         <EntriesCard today={today} spent={t.result.spentToday} />
         <SpentPerDayCard today={today} budget={t.result.dailyBudget} className="lg:order-first lg:col-span-2" />
       </div>
-      <div className="mt-3.5 grid gap-3.5 md:grid-cols-2 lg:mt-5 lg:grid-cols-3 lg:gap-5">
-        <WalletsCard />
+      <div className="mt-3.5 grid gap-3.5 md:grid-cols-2 lg:mt-5 lg:gap-5">
         <SetAsideCard />
         <LimitsCard />
       </div>

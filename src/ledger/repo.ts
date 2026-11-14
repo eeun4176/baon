@@ -28,9 +28,17 @@ export async function saveTransaction(vault: Vault, tx: Transaction, wallets: Wa
   await vault.put('transaction', parsed.id, parsed)
 }
 
-/** Loads and validates every transaction, oldest first. */
+/**
+ * Loads and validates every transaction, oldest first. A record that fails the check is left out
+ * (and stays stored untouched), so an entry type from a newer Baon synced from another device,
+ * or one bad record, can't stop the app from opening; it never reaches the math either way.
+ */
 export async function loadTransactions(vault: Vault): Promise<Transaction[]> {
-  const txs = z.array(TransactionSchema).parse(await vault.list('transaction'))
+  const txs: Transaction[] = []
+  for (const record of await vault.list('transaction')) {
+    const parsed = TransactionSchema.safeParse(record)
+    if (parsed.success) txs.push(parsed.data)
+  }
   return txs.sort((a, b) => Date.parse(a.occurredAt) - Date.parse(b.occurredAt))
 }
 

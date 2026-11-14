@@ -16,7 +16,10 @@
  *   repay     wallet −amount          (paying utang back; not spending)
  *   lend      wallet −amount          (a friend owes you; not spending)
  *   collect   wallet +amount          (the friend paid you back)
+ *   adjust-up    wallet +amount     ("Match my balance": bank interest, or money never logged)
+ *   adjust-down  wallet −amount     ("Match my balance": bank fees, tax, or spending never logged)
  * repay/collect point to their borrow/lend entry (linkedId); see utang.ts.
+ * Adjustments are neither spending nor income: they only make Baon's balance match the real one.
  */
 // zod/mini: same checks as full Zod at ~6 KB instead of ~30+ KB (plan C4: small bundle).
 // Rules are written as .check(...) instead of chained methods.
@@ -27,12 +30,25 @@ import { tr } from '../i18n/i18n.ts'
 /** A non-empty id string. */
 const id = () => z.string().check(z.minLength(1))
 
+export const MAX_RATE = 20 // % a year; no student account pays more, so a bigger number is a typo
+const INTEREST_TAX = 0.2 // PH final tax on bank interest, taken before it's credited
+
+/**
+ * About how much a wallet earns in a month at `rate` % a year, after the 20% tax (centavos, rounded down).
+ * Only an estimate shown on the wallet: real interest is added with "Match my balance".
+ */
+export function monthlyInterest(balanceCentavos: number, rate: number | undefined): number {
+  if (!rate || balanceCentavos <= 0) return 0
+  return Math.floor(((balanceCentavos * rate) / 100 / 12) * (1 - INTEREST_TAX))
+}
+
 /** Spending wallets count toward safe-to-spend; savings wallets never do. */
 export const WalletSchema = z.object({
   id: id(),
   name: z.string().check(z.trim(), z.minLength(1), z.maxLength(40)),
   type: z.enum(['spending', 'savings']),
   openingCentavos: z.int().check(z.minimum(0)), // what the student had when the wallet was added
+  interestRate: z.optional(z.number().check(z.positive(), z.maximum(MAX_RATE))), // % a year, banks/e-wallets only: for the estimate, never the balance
   archived: z.boolean(),
 })
 export type Wallet = z.infer<typeof WalletSchema>
@@ -52,7 +68,7 @@ export const SOURCE_LABEL: Record<Source, string> = {
 
 export const TransactionSchema = z.object({
   id: id(),
-  kind: z.enum(['expense', 'refund', 'income', 'transfer', 'save', 'withdraw', 'borrow', 'repay', 'lend', 'collect']),
+  kind: z.enum(['expense', 'refund', 'income', 'transfer', 'save', 'withdraw', 'borrow', 'repay', 'lend', 'collect', 'adjust-up', 'adjust-down']),
   amountCentavos: z.int().check(z.positive()),
   walletId: id(), // the wallet money leaves (or arrives in, for income/refund/borrow/collect)
   toWalletId: z.optional(id()), // only for transfer/save/withdraw
@@ -70,6 +86,9 @@ export type Transaction = z.infer<typeof TransactionSchema>
 /** Utang entries: never spending, never income. */
 export const UTANG_KINDS = new Set<Transaction['kind']>(['borrow', 'repay', 'lend', 'collect'])
 
+/** "Match my balance" entries: never spending, never income, never a streak log. */
+export const ADJUST_KINDS = new Set<Transaction['kind']>(['adjust-up', 'adjust-down'])
+
 /** True for money in that is the allowance (old entries have no source). */
 export const isAllowance = (tx: Transaction) => tx.kind === 'income' && (tx.source ?? 'allowance') === 'allowance'
 
@@ -77,6 +96,12 @@ export const isAllowance = (tx: Transaction) => tx.kind === 'income' && (tx.sour
 export function sortWallets(wallets: Wallet[]): Wallet[] {
   const rank = (w: Wallet) => (w.id === 'cash' ? 0 : w.type === 'spending' ? 1 : 2)
   return [...wallets].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name))
+}
+
+/** Home and Me wallet order: biggest balance first, savings last (ties keep the order above). */
+export function byBalance(wallets: Wallet[], all: Map<string, number>): Wallet[] {
+  const isSavings = (w: Wallet) => Number(w.type === 'savings')
+  return sortWallets(wallets).sort((a, b) => isSavings(a) - isSavings(b) || (all.get(b.id) ?? 0) - (all.get(a.id) ?? 0))
 }
 
 /** Kinds that move money between two of the student's own wallets. */
@@ -130,8 +155,8 @@ export function balances(wallets: Wallet[], txs: Transaction[]): Map<string, num
   }
 
   for (const tx of txs) {
-    if (tx.kind === 'expense' || tx.kind === 'repay' || tx.kind === 'lend') add(tx.walletId, -tx.amountCentavos)
-    else if (tx.kind === 'income' || tx.kind === 'refund' || tx.kind === 'borrow' || tx.kind === 'collect') add(tx.walletId, tx.amountCentavos)
+    if (tx.kind === 'expense' || tx.kind === 'repay' || tx.kind === 'lend' || tx.kind === 'adjust-down') add(tx.walletId, -tx.amountCentavos)
+    else if (tx.kind === 'income' || tx.kind === 'refund' || tx.kind === 'borrow' || tx.kind === 'collect' || tx.kind === 'adjust-up') add(tx.walletId, tx.amountCentavos)
     else {
       add(tx.walletId, -tx.amountCentavos)
       add(tx.toWalletId, tx.amountCentavos)

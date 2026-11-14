@@ -135,7 +135,7 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
           <label className={label}>
             {tr('What for?')}<input value={title} maxLength={60} onChange={(e) => { setTitle(e.target.value); setError('') }} placeholder={tr('e.g. Thesis printing')} className={`${field} text-ink placeholder:text-muted/60`} />
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-3">
             <AmountInput value={amount} onChange={(v) => { setAmount(v); setError('') }} />
             <label className={label}>
               {tr('Due')}<input type="date" value={due} onChange={(e) => setDue(e.target.value)} className={`${field} text-ink`} />

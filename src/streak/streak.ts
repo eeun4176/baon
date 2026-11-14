@@ -18,7 +18,7 @@ import * as z from 'zod/mini'
 import { breakOn, type Allowance } from '../budget/allowance.ts'
 import { addDays, manilaDate, weekday } from '../budget/days.ts'
 import { counts } from '../budget/safeToSpend.ts'
-import type { Transaction } from '../ledger/ledger.ts'
+import { ADJUST_KINDS, type Transaction } from '../ledger/ledger.ts'
 import type { Vault } from '../vault/vault.ts'
 
 export const DaySnapshotSchema = z.object({
@@ -53,6 +53,7 @@ export function streakSummary(input: { today: string; snapshots: DaySnapshot[]; 
   const snaps = new Map(input.snapshots.map((s) => [s.date, s]))
   const logged = new Map<string, number>() // day → net spending (present = something was logged)
   for (const tx of input.transactions) {
+    if (ADJUST_KINDS.has(tx.kind)) continue // matching a balance isn't logging the day
     const day = manilaDate(tx.occurredAt)
     const delta = tx.kind === 'expense' ? tx.amountCentavos : tx.kind === 'refund' ? -tx.amountCentavos : 0
     logged.set(day, (logged.get(day) ?? 0) + delta)

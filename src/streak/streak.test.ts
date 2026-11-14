@@ -78,6 +78,11 @@ describe('streak', () => {
     expect(run('2026-11-06', week1).pending).toBe(false) // logged today
   })
 
+  it('matching a balance is not logging the day', () => {
+    const adjust: Transaction = { id: 'adj', kind: 'adjust-up', amountCentavos: 227, walletId: 'cash', occurredAt: '2026-11-09T12:00:00+08:00' }
+    expect(run('2026-11-09', [...week1, adjust]).pending).toBe(true)
+  })
+
   it('"No spending today" counts as logged', () => {
     const snaps = [...['2026-11-02', '2026-11-03'].map((d) => snap(d)), snap('2026-11-04', { noSpend: true })]
     expect(run('2026-11-04', week1.slice(0, 2), { snaps }).current).toBe(3)

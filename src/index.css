@@ -96,6 +96,40 @@
   }
 }
 
+/* Date fields look the same on every phone: each browser drew its own ▾ / calendar icon in its own
+   place (Android Chrome pushed it out of the box in a narrow field), so it's hidden and Baon's chevron
+   is drawn instead. The hidden picker button covers the whole field, so a tap anywhere opens the picker.
+   Unlayered, so the room for the chevron wins over the fields' px-4. (.sr-only date inputs are left alone.) */
+input[type='date']:not(.sr-only) {
+  position: relative;
+  min-width: 0;
+  appearance: none;
+  padding-right: 2.75rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235f6361' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-position: right 1rem center;
+  background-size: 1.25rem;
+  background-repeat: no-repeat;
+}
+input[type='date']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 0;
+  cursor: pointer;
+}
+input[type='date']::-webkit-date-and-time-value {
+  text-align: left;
+}
+:root[data-theme='dark'] input[type='date']:not(.sr-only) {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a5aaa7' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) input[type='date']:not(.sr-only) {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a5aaa7' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  }
+}
+
 /* ── Scale ──────────────────────────────────────────────────────────
  * Everything sized in rem follows the root size. Phones/tablets: 15px body (16px felt
  * oversized on phones; buttons stay 41px+ tall). Laptops (≥ 1024px): 14px, normal web

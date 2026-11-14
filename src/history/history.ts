@@ -53,6 +53,10 @@ export function describe(tx: Transaction, wallets: Wallet[]): { title: string; d
       return { title: tx.note || 'Saved', detail: `${name(tx.walletId)} → Savings`, amount: money, tone: 'move' }
     case 'withdraw':
       return { title: tx.note || 'From savings', detail: `Savings → ${name(tx.toWalletId)}`, amount: money, tone: 'move' }
+    // "Match my balance": gray like moves, since it's neither spending nor money in.
+    case 'adjust-up':
+    case 'adjust-down':
+      return { title: tx.note || tr('Balance adjusted'), detail: `${tr('Balance adjusted')} · ${name(tx.walletId)}`, amount: `${tx.kind === 'adjust-up' ? '+' : '−'}${money}`, tone: 'move' }
   }
 }
 

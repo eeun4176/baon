@@ -88,7 +88,7 @@ export function NewUtangDialog({ onClose }: { onClose: () => void }) {
             {kind === 'borrow' ? tr('Borrowed from') : tr('Lent to')}
             <input value={person} maxLength={40} onChange={(e) => { setPerson(e.target.value); setError('') }} placeholder={tr('e.g. Mia')} className={`${field} placeholder:text-muted/60`} />
           </label>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-4 sm:grid-cols-2 sm:gap-3">
             <AmountInput value={amount} onChange={(v) => { setAmount(v); setError('') }} />
             <label className={label}>
               {tr('Pay back by')}<input type="date" value={due} min={manilaDate()} onChange={(e) => setDue(e.target.value)} className={field} />

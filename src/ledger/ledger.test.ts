@@ -4,7 +4,7 @@
  * sample student: Cash ₱650 + GCash ₱400 = ₱1,050, Savings ₱0. Run: npm test
  */
 import { describe, expect, it } from 'vitest'
-import { balances, checkTransaction, isAllowance, sortWallets, spendingTotal, type Transaction, type Wallet } from './ledger.ts'
+import { balances, checkTransaction, isAllowance, monthlyInterest, sortWallets, spendingTotal, type Transaction, type Wallet } from './ledger.ts'
 import { dueStatus, owedTotal, utangList } from './utang.ts'
 
 describe('utang due chip', () => {
@@ -27,6 +27,14 @@ let n = 0
 function tx(kind: Transaction['kind'], amountCentavos: number, walletId: string, extra: Partial<Transaction> = {}): Transaction {
   return { id: `t${++n}`, kind, amountCentavos, walletId, occurredAt: '2026-11-10T08:00:00+08:00', ...extra }
 }
+
+describe('estimated interest', () => {
+  it('a month at the yearly rate, after 20% tax, rounded down; nothing without a rate or money', () => {
+    expect(monthlyInterest(1_000_000, 4)).toBe(2666) // ₱10,000 at 4%: ₱33.33 a month, ₱26.66 after tax
+    expect(monthlyInterest(10_000, 4)).toBe(26) // ₱100 → 26 centavos
+    expect([monthlyInterest(1_000_000, undefined), monthlyInterest(0, 4), monthlyInterest(-500, 4)]).toEqual([0, 0, 0])
+  })
+})
 
 describe('balances', () => {
   it('starts from opening balances (design: ₱1,050 in wallets)', () => {
@@ -63,6 +71,13 @@ describe('balances', () => {
     ]
     expect(balances(wallets, txs).get('savings')).toBe(6000)
     expect(spendingTotal(wallets, txs)).toBe(99000)
+  })
+
+  it('match my balance: interest adds to the wallet, a fee takes away, even on Savings; nothing else moves', () => {
+    const txs = [tx('adjust-up', 227, 'savings'), tx('adjust-down', 1500, 'gcash')]
+    expect(checkTransaction(txs[0], wallets)).toBeNull()
+    const b = balances(wallets, txs)
+    expect([b.get('savings'), b.get('gcash'), b.get('cash')]).toEqual([227, 38500, 65000])
   })
 
   it('a refund gives money back to its wallet', () => {
