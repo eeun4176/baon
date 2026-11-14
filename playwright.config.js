@@ -1,13 +1,14 @@
 // @ts-check
 /*
- * playwright.config.js — End-to-end tests in tests/ against the real app in a browser.
- * Starts the Vite dev server itself (HTTPS with a self-made certificate, hence ignoreHTTPSErrors).
+ * playwright.config.js — End-to-end tests in tests/ against the real production build
+ * (`npm run build` + `vite preview` on :4173), so they test what students get, offline service
+ * worker included. Not the dev server: it sends ~110 separate files and Safari timed out on it.
  * Phone sizes only: Baon is a phone app, and desktop skips the Welcome screen.
  * Run: npm run e2e   (report: npx playwright show-report)
  */
 import { defineConfig, devices } from '@playwright/test';
 
-const URL = 'https://localhost:5173';
+const URL = 'http://localhost:4173';
 
 export default defineConfig({
   testDir: './tests',
@@ -18,17 +19,19 @@ export default defineConfig({
   reporter: 'html',
   use: {
     baseURL: URL,
-    ignoreHTTPSErrors: true,
     trace: 'on-first-retry',
   },
   projects: [
     { name: 'Mobile Chrome', use: { ...devices['Pixel 5'] } },
-    { name: 'Mobile Safari', use: { ...devices['iPhone 13'] } }, // WebKit: where the iPad sign-in bugs showed up
+    // WebKit: where the iPad sign-in bugs showed up. Service worker off: in WebKit, Playwright can't
+    // fake requests from a page the worker controls, so the fake Neon went unseen (offline is tested in Chrome).
+    { name: 'Mobile Safari', use: { ...devices['iPhone 13'], serviceWorkers: 'block' } },
   ],
   webServer: {
-    command: 'npx vite --port 5173 --strictPort',
+    // Always rebuilt, never reused, so the tests can't pass on an old build.
+    command: 'npm run build && npx vite preview --port 4173 --strictPort',
     url: URL,
-    ignoreHTTPSErrors: true,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
+    timeout: 180_000,
   },
 });

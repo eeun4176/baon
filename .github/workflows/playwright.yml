@@ -1,3 +1,6 @@
+# playwright.yml — Runs the Playwright tests (tests/) on every push and pull request to main,
+# on the production build with a fake Neon, so nothing reaches the real database.
+# Report: the run's "playwright-report" artifact on GitHub (download, then npx playwright show-report <folder>).
 name: Playwright Tests
 on:
   push:
@@ -13,12 +16,17 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+        cache: npm
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
+      run: npx playwright install --with-deps chromium webkit
     - name: Run Playwright tests
       run: npx playwright test
+      # The build only needs addresses to exist; the tests fake every request to them.
+      env:
+        VITE_NEON_AUTH_URL: https://example.invalid/auth
+        VITE_NEON_DATA_API_URL: https://example.invalid/data
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
