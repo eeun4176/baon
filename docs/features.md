@@ -21,12 +21,12 @@ Money is in whole centavos in the code. The examples use pesos.
 **How it works:**
 
 1. Welcome (phones only) → **Sign in** with Google or a 6-digit email code. This is the only step that needs internet.
-2. **Whose phone?** "Just me" (My phone mode) or "Shared with family or classmates" (Shared phone mode, which adds "Make a passphrase").
+2. **Whose device?** "Just me" (My device mode) or "Shared with family or classmates" (Shared device mode, which adds "Make a passphrase").
 3. **Your baon:** how much, how often (Daily, Weekly, Every 2 weeks, Monthly or Irregular), when the next one comes, and which days are class days.
 4. **Your money now:** what's in each wallet today.
 5. Home opens.
 
-If the account already has records online (from another device), Baon says "Welcome back" and downloads them instead of asking again. "Restore a backup" on "Whose phone?" fills Baon from a backup file.
+If the account already has records online (from another device), Baon says "Welcome back" and downloads them instead of asking again. If Baon can't check (no internet, server trouble), it also goes to "Welcome back", which says what went wrong with Try again, so an existing account never gets the setup questions by mistake; only an account with nothing online is asked them. "Restore a backup" on "Whose device?" fills Baon from a backup file.
 
 **Code:** `src/onboarding/Onboarding.tsx`
 
@@ -34,9 +34,9 @@ If the account already has records online (from another device), Baon says "Welc
 
 **Use case:** Ben and his sister share one phone. Each wants their own records, and neither should see the other's.
 
-**How it works:** each account has its own records and its own key. With more than one account, Baon opens on "Who's using Baon?". In Shared phone mode, Baon asks for the passphrase every time it opens, and again after a minute away. "Remove from this phone" (Me → Security) syncs every change first, then deletes the account from this phone only. If that upload fails, nothing is removed. Signing in on any phone brings the records back.
+**How it works:** each account has its own records and its own key. With more than one account, Baon opens on "Who's using Baon?". In Shared device mode, Baon asks for the passphrase every time it opens, and again after a minute away. "Remove from this device" (Me → Security) syncs every change first, then deletes the account from this device only. If that upload fails, nothing is removed. Signing in on any phone brings the records back.
 
-**Signing out (My phone mode)** ends the online sign-in and shows "You're signed out"; the records stay on the phone. **"Continue as …" signs in again first** (Google or email code, same account only), so sync, which needs that sign-in, picks up again by itself. Without internet, "Continue without syncing" opens the records, and Me → Backup offers "Sign in again" later.
+**Signing out (My device mode)** ends the online sign-in and shows "You're signed out"; the records stay on the phone. **"Continue as …" signs in again first** (Google or email code, same account only), so sync, which needs that sign-in, picks up again by itself. Without internet, "Continue without syncing" opens the records, and Me → Backup offers "Sign in again" later.
 
 **Code:** `src/lock/`, `src/lock/SignedOut.tsx`, `src/App.tsx`
 
@@ -306,7 +306,7 @@ A limit is a reminder, never a block: "Just a reminder. You can still log anythi
 
 **Use case:** Olive changed schools and wants to update her profile and allowance.
 
-**How it works:** a profile card (photo, name, streak, level · school, device mode, Sign out or Lock), the dark "Your baon" card (amount, how often, next allowance, class days, Edit), and Wallets (total, Move money, Add wallet; tap a wallet to rename, remove, match its balance or set its interest). Then the tabs: Profile (name, school, Senior high / College), Security (device mode, storage, remove from this phone, delete account in red), Backup and Preferences (theme, language, install). Phones end with a Help & privacy link, since they have no sidebar.
+**How it works:** a profile card (photo, name, streak, level · school, device mode, Sign out or Lock), the dark "Your baon" card (amount, how often, next allowance, class days, Edit), and Wallets (total, Move money, Add wallet; tap a wallet to rename, remove, match its balance or set its interest). Then the tabs: Profile ("Signed in as …" with the account's email, so students sign in with the same one on other devices; name, school, Senior high / College), Security (device mode, storage, remove from this device, delete account in red), Backup and Preferences (theme, language, install). Phones end with a Help & privacy link, since they have no sidebar.
 
 **Code:** `src/me/Me.tsx`, `src/me/MeDialogs.tsx`
 

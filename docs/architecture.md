@@ -35,8 +35,8 @@ There is no Baon server that holds business logic. The only server code is one s
 
 | Mode | How the key is locked | What the student sees |
 |---|---|---|
-| My phone | By a device key stored beside it | Baon opens right away |
-| Shared phone | By a key made from the student's passphrase (PBKDF2-SHA256, 600,000 rounds). The passphrase is never stored | Baon asks for the passphrase every time it opens, and again after a minute away |
+| My device | By a device key stored beside it | Baon opens right away |
+| Shared device | By a key made from the student's passphrase (PBKDF2-SHA256, 600,000 rounds). The passphrase is never stored | Baon asks for the passphrase every time it opens, and again after a minute away |
 
 **One database per account.** A phone can hold several accounts. Each one has its own database (`sbt_<userId>`) and its own key, so one account cannot read another's records. A separate small database (`sbt_device`) holds only the list of accounts on the phone.
 
@@ -62,7 +62,7 @@ Online, each record is stored exactly as the phone stores it (scrambled), and th
 
 1. `App.tsx` reads the list of accounts on this device. An address Baon doesn't have (for example `/asdas`) shows "Page not found" before any other screen; its "Go to Home" button still goes through the steps below.
 2. No account: onboarding (sign in, device mode, allowance, money now).
-3. One account in My phone mode: it opens straight away, unless the student signed out; then "You're signed out", whose "Continue as …" signs in again before opening (so sync works). Shared phone mode: the lock screen.
+3. One account in My device mode: it opens straight away, unless the student signed out; then "You're signed out", whose "Continue as …" signs in again before opening (so sync works). Shared device mode: the lock screen.
 4. More than one account: the account picker ("Who's using Baon?").
 5. Once open, `SessionProvider` decrypts the records once and shares them with every screen. Saving a record updates every screen at once.
 

@@ -71,7 +71,7 @@ export function DeviceModeItems() {
           <li className={item}>
             <Icon name="lock" className="mt-0.5 size-5 shrink-0 text-blue" />
             <span>
-              <span className="block font-black">{tr('Shared phone mode · On')}</span>
+              <span className="block font-black">{tr('Shared device mode · On')}</span>
               <span className="block font-semibold text-muted">{tr('Baon asks for your passphrase every time it opens.')}</span>
               <span className="flex flex-wrap gap-2">
                 <button type="button" onClick={() => setDialog('change')} className={`${pill} bg-blue text-white`}>{tr('Change passphrase')}</button>
@@ -89,15 +89,15 @@ export function DeviceModeItems() {
           <li className={item}>
             <Icon name="phone" className="mt-0.5 size-5 shrink-0 text-blue" />
             <span>
-              <span className="block font-black">{tr('My phone mode · On')}</span>
-              <span className="block font-semibold text-muted">{tr('Baon opens right away, so keep your phone’s screen lock on.')}</span>
+              <span className="block font-black">{tr('My device mode · On')}</span>
+              <span className="block font-semibold text-muted">{tr('Baon opens right away, so keep your device’s screen lock on.')}</span>
             </span>
           </li>
           <li className={item}>
             <Icon name="users" className="mt-0.5 size-5 shrink-0 text-muted" />
             <span>
-              <span className="block font-black">{tr('Shared phone mode')}</span>
-              <span className="block font-semibold text-muted">{tr('Sharing this phone? Baon will ask for a passphrase every time it opens.')}</span>
+              <span className="block font-black">{tr('Shared device mode')}</span>
+              <span className="block font-semibold text-muted">{tr('Sharing this device? Baon will ask for a passphrase every time it opens.')}</span>
               <button type="button" onClick={() => setDialog('on')} className={`${pill} bg-blue text-white`}>{tr('Turn on')}</button>
             </span>
           </li>
@@ -105,8 +105,8 @@ export function DeviceModeItems() {
       )}
 
       {dialog === 'on' && (
-        <Modal title={tr('Turn on shared phone mode')} onClose={close}>
-          <NewPassphrase submitLabel={tr('Turn on')} onSave={(p) => save(p, tr('Shared phone mode is on'))} />
+        <Modal title={tr('Turn on shared device mode')} onClose={close}>
+          <NewPassphrase submitLabel={tr('Turn on')} onSave={(p) => save(p, tr('Shared device mode is on'))} />
         </Modal>
       )}
       {dialog === 'change' && (
@@ -117,9 +117,9 @@ export function DeviceModeItems() {
         </Modal>
       )}
       {dialog === 'off' && (
-        <Modal title={tr('Turn off shared phone mode')} onClose={close}>
-          <p className="mb-4 font-semibold text-muted">{tr('Baon will open without a passphrase. Do this only if the phone is yours alone.')}</p>
-          <CurrentPassphrase submitLabel={tr('Turn off')} onOk={() => save(null, tr('Shared phone mode is off'))} />
+        <Modal title={tr('Turn off shared device mode')} onClose={close}>
+          <p className="mb-4 font-semibold text-muted">{tr('Baon will open without a passphrase. Do this only if the device is yours alone.')}</p>
+          <CurrentPassphrase submitLabel={tr('Turn off')} onOk={() => save(null, tr('Shared device mode is off'))} />
         </Modal>
       )}
     </>

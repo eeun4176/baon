@@ -15,7 +15,7 @@ export function WhosePhone({ mode, onMode, onContinue, onRestore }: { mode: Devi
   return (
     <Step
       n={2}
-      title={tr('Whose phone is this?')}
+      title={tr('Whose device is this?')}
       sub={tr('This sets how your records are locked. Change it anytime.')}
       footer={<Button onClick={onContinue}>{tr('Continue')}</Button>}
     >
@@ -25,7 +25,7 @@ export function WhosePhone({ mode, onMode, onContinue, onRestore }: { mode: Devi
         <label className={option('my-phone')}>
           <span className={badge('my-phone')}><Icon name="phone" /></span>
           <span className="flex-1">
-            <span className="block text-lg font-black">{tr('My own phone')}</span>
+            <span className="block text-lg font-black">{tr('My own device')}</span>
             <span className="block font-semibold text-muted">{tr('Opens right away.')}</span>
           </span>
           <input type="radio" name="mode" checked={mode === 'my-phone'} onChange={() => onMode('my-phone')} className="size-6 shrink-0 accent-blue" />
@@ -42,7 +42,7 @@ export function WhosePhone({ mode, onMode, onContinue, onRestore }: { mode: Devi
       </fieldset>
 
       <button type="button" onClick={onRestore} className="mt-4 flex min-h-12 w-full items-center justify-center gap-2 rounded-full font-extrabold text-blue hover:underline">
-        {tr('Moving from another phone? Restore a backup')}</button>
+        {tr('Moving from another device? Restore a backup')}</button>
     </Step>
   )
 }

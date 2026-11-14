@@ -53,7 +53,9 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
   const checked = useRef('')
   const [passphrase, setPassphrase] = useState<string | null>(null)
   const [afterPass, setAfterPass] = useState<Step>('baon') // where Make a passphrase continues to
-  const [hasCloud, setHasCloud] = useState(false) // the account has records online: bring them instead of asking
+  // Records online? null = not known yet or the check failed: then go to Welcome back, which retries
+  // and shows the error, instead of quietly asking the setup questions for an account that exists.
+  const [hasCloud, setHasCloud] = useState<boolean | null>(null)
 
   // Coming back from Google (or reopening mid-setup): if already signed in, skip ahead.
   useEffect(() => {
@@ -80,11 +82,10 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
     Promise.all([import('../sync/sync.ts'), import('../sync/neonRemote.ts')])
       .then(([sync, { neonRemote }]) => sync.cloudHasAccount(neonRemote(user.id)))
       .then((has) => {
-        if (!has) return
-        setHasCloud(true)
-        setStep((s) => (s === 'baon' ? 'join' : s)) // already past Whose phone? before the check finished
+        setHasCloud(has)
+        if (has) setStep((s) => (s === 'baon' ? 'join' : s)) // already past Whose phone? before the check finished
       })
-      .catch(() => {}) // offline or sync not set up: normal setup
+      .catch(() => {}) // stays null: Welcome back tries again and explains what's wrong
   }, [user])
 
   /** Moves to a step and clears the previous step's error. */
@@ -131,7 +132,7 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
       const vault = await setupAccount({ userId: user.id, name: user.name, allowance, ...balances })
       await done(vault, user.name)
     } catch {
-      setError(tr('Couldn’t save on this phone. Check that storage isn’t full, then try again.'))
+      setError(tr('Couldn’t save on this device. Check that storage isn’t full, then try again.'))
       setBusy(false)
     }
   }
@@ -139,10 +140,10 @@ export function Onboarding({ adding = false, onDone, onCancel, onExisting }: {
   const screens: Record<Step, ReactNode> = {
     welcome: <Welcome onStart={() => go(user ? 'phone' : 'signin')} onBack={onCancel} />,
     signin: <SignIn onBack={wide ? onCancel : () => go('welcome')} onSignedIn={(u) => { setUser(u); go('phone') }} />,
-    phone: <WhosePhone mode={mode} onMode={setMode} onContinue={() => afterPhone(hasCloud ? 'join' : 'baon')} onRestore={() => afterPhone('restore')} />,
+    phone: <WhosePhone mode={mode} onMode={setMode} onContinue={() => afterPhone(hasCloud === false ? 'baon' : 'join')} onRestore={() => afterPhone('restore')} />,
     pass: (
       <StepFrame n={2} onBack={() => go('phone')} title={tr('Make a passphrase')} sub={tr('Baon asks for it every time it opens.')}>
-        <NewPassphrase submitLabel={tr('Continue')} onSave={async (p) => { setPassphrase(p); go(afterPass === 'baon' && hasCloud ? 'join' : afterPass) }} />
+        <NewPassphrase submitLabel={tr('Continue')} onSave={async (p) => { setPassphrase(p); go(afterPass === 'baon' && hasCloud !== false ? 'join' : afterPass) }} />
       </StepFrame>
     ),
     join: user && <JoinSync user={user} onDone={done} onSkip={() => go('baon')} />,

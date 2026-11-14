@@ -24,11 +24,13 @@ function problem(error: unknown, status?: number): SyncError {
   return new SyncError('server', message)
 }
 
-/** Runs one Data API request; throws SyncError on failure. */
-async function run<T>(request: PromiseLike<{ data: T; error: unknown; status: number }>): Promise<T> {
+type Request<T> = () => PromiseLike<{ data: T; error: unknown; status: number }>
+
+/** Sends one Data API request; throws SyncError on failure. */
+async function once<T>(request: Request<T>): Promise<T> {
   let result: { data: T; error: unknown; status: number }
   try {
-    result = await request
+    result = await request()
   } catch (e) {
     throw problem(e)
   }
@@ -36,10 +38,32 @@ async function run<T>(request: PromiseLike<{ data: T; error: unknown; status: nu
   return result.data
 }
 
+/**
+ * Gets a fresh sign-in session from the server, skipping the SDK's 60-second copy: right after
+ * signing in on a new device that copy can lack the database pass, so the first requests were
+ * refused and Baon showed the setup questions instead of the account's records.
+ */
+async function refreshPass(): Promise<void> {
+  // shortcut: "X-Force-Fetch" is @neon/auth 0.8's internal way to skip its cache; switch to a public refresh if the SDK adds one.
+  const getSession = neon.auth.getSession as (options: { fetchOptions: { headers: Record<string, string> } }) => Promise<unknown>
+  await getSession({ fetchOptions: { headers: { 'X-Force-Fetch': '1' } } }).catch(() => {})
+}
+
+/** Runs one Data API request; if the sign-in pass is refused, refreshes it once and tries again. */
+async function run<T>(request: Request<T>): Promise<T> {
+  try {
+    return await once(request)
+  } catch (e) {
+    if (!(e instanceof SyncError) || e.problem !== 'signin') throw e
+    await refreshPass()
+    return once(request)
+  }
+}
+
 /** The cloud for one signed-in user. */
 export function neonRemote(userId: string): Remote {
   /** The account key online, or null. */
-  const getKey = async () => (await run(neon.from('sync_keys').select(KEY_COLUMNS).eq('user_id', userId).maybeSingle())) as CloudKey | null
+  const getKey = async () => (await run(() => neon.from('sync_keys').select(KEY_COLUMNS).eq('user_id', userId).maybeSingle())) as CloudKey | null
   return {
     async signedInAs() {
       if (!navigator.onLine) throw new SyncError('offline')
@@ -49,24 +73,26 @@ export function neonRemote(userId: string): Remote {
     },
     async push(rows) {
       if (!rows.length) return
-      await run(neon.from('sync_records').upsert(rows.map((r) => ({ ...r, user_id: userId })), { onConflict: 'user_id,id' }))
+      await run(() => neon.from('sync_records').upsert(rows.map((r) => ({ ...r, user_id: userId })), { onConflict: 'user_id,id' }))
     },
     async pull(after, limit) {
-      let query = neon.from('sync_records').select(RECORD_COLUMNS).eq('user_id', userId)
-      if (after) query = query.or(`updated_at.gt."${after.at}",and(updated_at.eq."${after.at}",id.gt."${after.id}")`)
-      return (await run(query.order('updated_at').order('id').limit(limit))) as CloudRecord[]
+      return (await run(() => {
+        let query = neon.from('sync_records').select(RECORD_COLUMNS).eq('user_id', userId)
+        if (after) query = query.or(`updated_at.gt."${after.at}",and(updated_at.eq."${after.at}",id.gt."${after.id}")`)
+        return query.order('updated_at').order('id').limit(limit)
+      })) as CloudRecord[]
     },
     getKey,
     async claimKey(key) {
       // Insert only if missing: two devices syncing for the first time at once end up with one key.
-      await run(neon.from('sync_keys').upsert({ ...key, user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true }))
+      await run(() => neon.from('sync_keys').upsert({ ...key, user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true }))
       const now = await getKey()
       if (!now) throw new SyncError('server', 'account key missing right after saving it')
       return now
     },
     async deleteAll() {
-      await run(neon.from('sync_records').delete().eq('user_id', userId))
-      await run(neon.from('sync_keys').delete().eq('user_id', userId))
+      await run(() => neon.from('sync_records').delete().eq('user_id', userId))
+      await run(() => neon.from('sync_keys').delete().eq('user_id', userId))
     },
   }
 }

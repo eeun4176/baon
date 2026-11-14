@@ -125,7 +125,7 @@ function PhotoAvatar() {
   )
 }
 
-/** Profile tab: display name, school, Senior high / College. */
+/** Profile tab: the sign-in email, display name, school, Senior high / College. */
 function ProfileTab() {
   const { name, profile, rename, saveProfile, showToast } = useSession()
   const [draftName, setDraftName] = useState(name)
@@ -158,6 +158,8 @@ function ProfileTab() {
   return (
     <form onSubmit={save} noValidate>
       <h2 className="text-xl font-black">{tr('Profile')}</h2>
+      {/* Which email this account signs in with, so students use the same one on every device */}
+      {profile.email && <p className="mt-1 break-words font-semibold text-muted">{tr('Signed in as {0}', profile.email)}</p>}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className={label}>
           {tr('Display name')}<input value={draftName} maxLength={40} onChange={(e) => { setDraftName(e.target.value); setError('') }} className={field} />
@@ -211,8 +213,8 @@ function StorageItem() {
         <span className="block font-semibold text-muted">
           {storage.persisted
             ? tr('The browser won’t delete Baon’s records to free up space.{0}', used)
-            : tr('If your phone runs low on space, the browser may clear Baon’s data. Installing Baon helps.{0}', used)}
-          {isStorageLow(storage) && tr(' Your phone is almost full.')}
+            : tr('If your device runs low on space, the browser may clear Baon’s data. Installing Baon helps.{0}', used)}
+          {isStorageLow(storage) && tr(' Your device is almost full.')}
         </span>
         {!storage.persisted && (
           <button type="button" onClick={keep} className="mt-3 min-h-11 rounded-full bg-blue px-5 font-black text-white">{tr('Keep my records')}</button>
@@ -236,7 +238,7 @@ function SecurityTab() {
       <RemoveFromPhone />
       <div className="mt-6 border-t border-pebble pt-5">
         <h3 className="font-black">{tr('Delete account')}</h3>
-        <p className="mt-1 font-semibold text-muted">{tr('Deletes your account and your records, online and on this phone. This can’t be undone.')}</p>
+        <p className="mt-1 font-semibold text-muted">{tr('Deletes your account and your records, online and on this device. This can’t be undone.')}</p>
         <button type="button" onClick={() => setDeleting(true)} className="mt-3 flex min-h-12 items-center gap-2 rounded-full bg-red px-5 font-black text-white hover:brightness-110">
           <Icon name="trash" className="size-5" /> {tr('Delete account')}</button>
       </div>
@@ -291,7 +293,7 @@ export function Me() {
   const ready = active.filter((w) => w.type === 'spending').reduce((s, w) => s + all.get(w.id)!, 0)
   const level = LEVELS.find(([id]) => id === profile.level)?.[1]
   const about = [level, profile.school].filter(Boolean).join(' · ')
-  const device = vault.shared() ? tr('Shared phone mode') : tr('My phone mode')
+  const device = vault.shared() ? tr('Shared device mode') : tr('My device mode')
   const close = () => setDialog(null)
   const openWallet = (wallet?: Wallet) => setDialog({ kind: 'wallet', wallet })
   const tile = 'flex min-w-0 flex-col rounded-[14px] bg-white/[0.08] px-3 py-2 lg:gap-0.5 lg:rounded-2xl lg:py-2.5'

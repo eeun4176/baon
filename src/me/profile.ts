@@ -1,7 +1,8 @@
 /*
  * profile.ts — Optional profile details from Me → Profile: school,
- * "I'm in Senior high / College" and the profile photo (synced from Google or uploaded,
- * kept as a small JPEG so it shows offline). Stored encrypted as one settings record.
+ * "I'm in Senior high / College", the profile photo (synced from Google or uploaded,
+ * kept as a small JPEG so it shows offline) and the sign-in email (shown on Me → Profile).
+ * Stored encrypted as one settings record.
  * The display name itself lives in the device's account list (vault.renameAccount)
  * because the sign-in and lock screens need it before anything is decrypted.
  */
@@ -15,6 +16,7 @@ export const ProfileSchema = z.object({
   photo: z.optional(z.string().check(z.startsWith('data:image/'), z.maxLength(400_000))), // 256×256 JPEG data URL
   photoFrom: z.optional(z.enum(['google', 'custom'])), // 'custom' = the student chose (or removed) it: stop syncing
   googlePhotoUrl: z.optional(z.string()), // the Google photo we copied, to notice when it changes
+  email: z.optional(z.string().check(z.maxLength(254))), // the sign-in email, copied when online (photo.ts) so Me shows it offline
 })
 export type Profile = z.infer<typeof ProfileSchema>
 

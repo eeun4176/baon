@@ -54,11 +54,11 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
 
   if (done) {
     return (
-      <Modal title={done === 'all' ? tr('Your account is deleted') : tr('Deleted from this phone')} onClose={() => location.replace('/')}>
+      <Modal title={done === 'all' ? tr('Your account is deleted') : tr('Deleted from this device')} onClose={() => location.replace('/')}>
         <p className="font-semibold text-muted">
           {done === 'all'
-            ? tr('Your account, your online copies and everything on this phone are gone.')
-            : tr('Everything on this phone is gone, but your online account couldn’t be removed from here. Message the Baon team and we’ll remove it.')}
+            ? tr('Your account, your online copies and everything on this device are gone.')
+            : tr('Everything on this device is gone, but your online account couldn’t be removed from here. Message the Baon team and we’ll remove it.')}
         </p>
         <button type="button" onClick={() => location.replace('/')} className={`${pill} mt-5 w-full bg-blue text-white`}>{tr('OK')}</button>
       </Modal>
@@ -69,7 +69,7 @@ export function DeleteAccountDialog({ onClose }: { onClose: () => void }) {
     <Modal title={tr('Delete your account?')} onClose={onClose}>
       <form onSubmit={remove} noValidate>
         <p className="font-semibold text-muted">
-          {tr('This deletes your account and online copies, and removes everything Baon saved on this phone. Other devices keep their records, and backups you saved aren’t touched. It can’t be undone.')}</p>
+          {tr('This deletes your account and online copies, and removes everything Baon saved on this device. Other devices keep their records, and backups you saved aren’t touched. It can’t be undone.')}</p>
         <Link to="/backup" className="mt-3 inline-block font-extrabold text-blue hover:underline">{tr('Make a backup first')}</Link>
         <label className="mt-4 block font-extrabold text-muted">
           {tr('Type DELETE to confirm')}<input

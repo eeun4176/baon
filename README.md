@@ -18,7 +18,7 @@ An offline-first budget app for students. Baon tells you how much is safe to spe
 - **Streak.** Log every class day to keep your streak going; the flame changes as it grows.
 - **Works offline.** After the first sign-in, everything works without internet and installs like an app.
 - **Syncs across devices.** Sign in with Google or an email code and your records follow you.
-- **Private.** Records are encrypted on your device. Shared phone mode adds a passphrase, and several students can use one phone without seeing each other's records.
+- **Private.** Records are encrypted on your device. Shared device mode adds a passphrase, and several students can use one device without seeing each other's records.
 - **English and Filipino**, with light and dark themes.
 
 ## Built with

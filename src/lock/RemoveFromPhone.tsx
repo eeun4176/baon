@@ -39,13 +39,13 @@ export function RemoveFromPhone() {
 
   return (
     <div className="mt-6 border-t border-pebble pt-5">
-      <h3 className="font-black">{tr('Remove Baon from this phone')}</h3>
-      <p className="mt-1 font-semibold text-muted">{tr('For a phone that isn’t yours. Your records stay in your account.')}</p>
+      <h3 className="font-black">{tr('Remove Baon from this device')}</h3>
+      <p className="mt-1 font-semibold text-muted">{tr('For a device that isn’t yours. Your records stay in your account.')}</p>
       <button type="button" onClick={() => setOpen(true)} className="mt-3 min-h-12 rounded-full border-2 border-red px-5 font-black text-red hover:bg-red hover:text-white">
-        {tr('Remove from this phone')}</button>
+        {tr('Remove from this device')}</button>
       {open && (
-        <Modal title={tr('Remove Baon from this phone?')} onClose={() => !busy && setOpen(false)}>
-          <p className="font-semibold text-muted">{tr('Your latest entries are saved to your account first, then removed from this phone.')}</p>
+        <Modal title={tr('Remove Baon from this device?')} onClose={() => !busy && setOpen(false)}>
+          <p className="font-semibold text-muted">{tr('Your latest entries are saved to your account first, then removed from this device.')}</p>
           {error && <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{error}</p>}
           <div className="mt-5 flex gap-2.5">
             <button type="button" disabled={busy} onClick={() => setOpen(false)} className="min-h-12 flex-1 rounded-full bg-pebble px-5 font-black hover:bg-pebble-2 disabled:opacity-60">{tr('Cancel')}</button>

@@ -88,7 +88,7 @@ export async function keyFromRecoveryCode(userId: string, code: string): Promise
   const db = openAccountDb(userId)
   try {
     const recovery = (await db.meta.get('vault'))?.recovery
-    if (!recovery) throw new Error(tr('No recovery code was made on this phone. Sign in again instead.'))
+    if (!recovery) throw new Error(tr('No recovery code was made on this device. Sign in again instead.'))
     const key = await recoveryKey(code, recovery.salt) // throws its own message for a mistyped code
     try {
       return await unwrapDek(recovery, key, true)
@@ -207,7 +207,7 @@ export async function restoreBackup(file: BackupFile, code: string, userId: stri
     const existing = await deviceDb.accounts.get(userId)
     await deviceDb.accounts.put({ userId, label: name, deviceMode: lock.deviceMode, enrolledAt: existing?.enrolledAt ?? new Date().toISOString() })
   } catch {
-    throw new Error(tr('Couldn’t save on this phone. Check that storage isn’t full, then try again.'))
+    throw new Error(tr('Couldn’t save on this device. Check that storage isn’t full, then try again.'))
   } finally {
     db.close()
   }

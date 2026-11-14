@@ -107,7 +107,7 @@ export function LockScreen({ userId, name, onUnlocked, onSwitch }: { userId: str
     try {
       onUnlocked(await openVault(userId, passphrase))
     } catch (err) {
-      setError(err instanceof WrongPassphrase ? tr('That passphrase isn’t right. Try again.') : tr('Baon couldn’t open its storage on this phone. Close the app and open it again.'))
+      setError(err instanceof WrongPassphrase ? tr('That passphrase isn’t right. Try again.') : tr('Baon couldn’t open its storage on this device. Close the app and open it again.'))
       setBusy(false)
     }
   }
@@ -148,7 +148,7 @@ export function LockScreen({ userId, name, onUnlocked, onSwitch }: { userId: str
     try {
       onUnlocked(await resetPassphrase(userId, dek.current!, next))
     } catch (e) {
-      throw new Error(e instanceof WrongPassphrase ? tr('That key doesn’t open the records on this phone. Try your recovery code instead.') : tr('Couldn’t save. Try again.'), { cause: e })
+      throw new Error(e instanceof WrongPassphrase ? tr('That key doesn’t open the records on this device. Try your recovery code instead.') : tr('Couldn’t save. Try again.'), { cause: e })
     }
   }
 
@@ -163,7 +163,7 @@ export function LockScreen({ userId, name, onUnlocked, onSwitch }: { userId: str
       <div className="mt-12 animate-rise">
         {view === 'lock' && (
           <>
-            <Title sub={tr('This phone is shared, so Baon asks for your passphrase.')}>{tr('Hi, {0}', firstName(name))}</Title>
+            <Title sub={tr('This device is shared, so Baon asks for your passphrase.')}>{tr('Hi, {0}', firstName(name))}</Title>
             <form onSubmit={unlock} noValidate>
               <label className={label}>
                 {tr('Passphrase')}<input type="password" autoComplete="current-password" autoFocus value={passphrase} onChange={(e) => { setPassphrase(e.target.value); setError('') }} className={field} />

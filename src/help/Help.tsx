@@ -19,7 +19,7 @@ const PRIVACY: { icon: IconName; title: string; text: string; warn?: boolean }[]
   {
     icon: 'shield',
     title: tr('Your records are scrambled'),
-    text: tr('Your records are scrambled (encrypted) on this phone. A scrambled copy online follows you to every device you sign in on.'),
+    text: tr('Your records are scrambled (encrypted) on this device. A scrambled copy online follows you to every device you sign in on.'),
   },
   {
     icon: 'user',
@@ -34,13 +34,13 @@ const PRIVACY: { icon: IconName; title: string; text: string; warn?: boolean }[]
   {
     icon: 'phone',
     title: tr('What it can’t protect'),
-    text: tr('Anyone who can open Baon on your phone can see your records. Keep your screen lock on, or turn on shared phone mode (Me → Security). Keep your Google or email account safe too.'),
+    text: tr('Anyone who can open Baon on your device can see your records. Keep your screen lock on, or turn on shared device mode (Me → Security). Keep your Google or email account safe too.'),
     warn: true,
   },
 ]
 
 type Topic = 'budget' | 'streak' | 'money' | 'phone'
-const TOPICS: [Topic | 'all', string][] = [['all', tr('All')], ['budget', tr('Budget')], ['streak', tr('Streak')], ['money', tr('Money')], ['phone', tr('Phone & backup')]]
+const TOPICS: [Topic | 'all', string][] = [['all', tr('All')], ['budget', tr('Budget')], ['streak', tr('Streak')], ['money', tr('Money')], ['phone', tr('Device & backup')]]
 const TOPIC_LABEL = Object.fromEntries(TOPICS) as Record<Topic, string>
 const TAG_CLASS: Record<Topic, string> = {
   budget: 'bg-blue-tint text-blue',
@@ -60,8 +60,8 @@ const FAQ: { topic: Topic; q: string; a: string; more?: ReactNode }[] = [
   { topic: 'budget', q: tr('No classes for a while?'), a: tr('Set a break on Plan → Class days. Every day counts and your streak is frozen.') },
   { topic: 'phone', q: tr('Does Baon work without internet?'), a: tr('Yes. After the first sign-in, everything works offline and syncs when you’re back online.') },
   { topic: 'phone', q: tr('Can I use Baon on more than one device?'), a: tr('Yes. Sign in with the same account and your records sync by themselves.') },
-  { topic: 'phone', q: tr('I share or borrow a phone. Is that okay?'), a: tr('Yes. Turn on shared phone mode in Me → Security. On a phone that isn’t yours, tap Remove from this phone when you’re done.') },
-  { topic: 'phone', q: tr('What if my phone breaks or gets reset?'), a: tr('Sign in on the new phone with the same account and your records come back.') },
+  { topic: 'phone', q: tr('I share or borrow a device. Is that okay?'), a: tr('Yes. Turn on shared device mode in Me → Security. On a device that isn’t yours, tap Remove from this device when you’re done.') },
+  { topic: 'phone', q: tr('What if my device breaks or gets reset?'), a: tr('Sign in on the new device with the same account and your records come back.') },
   { topic: 'phone', q: tr('I lost my recovery code.'), a: tr('On Backup, tap “Lost it? Make a new code”, then export a new backup. Backups made before still need the old code.') },
   { topic: 'phone', q: tr('How do I install Baon?'), a: tr('Android (Chrome): menu ⋮ → Install app. iPhone (Safari): Share → Add to Home Screen. On a computer: the install icon in the address bar.') },
 ]

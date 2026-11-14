@@ -86,7 +86,7 @@ export function BackupPanel() {
       )}
       {dialog === 'restore' && (
         <Modal title={tr('Restore from a file')} onClose={() => setDialog(null)}>
-          <p className="mb-4 rounded-2xl bg-pebble p-3 font-bold">{tr('This replaces the records on this phone. Anything added after that backup will be gone.')}</p>
+          <p className="mb-4 rounded-2xl bg-pebble p-3 font-bold">{tr('This replaces the records on this device. Anything added after that backup will be gone.')}</p>
           <RestoreForm userId={vault.userId} fallbackName={name} current={vault} onRestored={() => { vault.lock(); location.reload() }} />{/* lock: the old key must not write into the restored records */}
         </Modal>
       )}
@@ -143,7 +143,7 @@ export function RecoveryKitDialog({ replacing, onClose, onSaved }: { replacing: 
             <p className="mb-3 rounded-2xl bg-blue-tint p-3 font-bold text-blue">
               {tr('New backups open with this code. Old backups still need the old one, so a fresh backup is exported next.')}</p>
           )}
-          <p className="font-semibold text-muted">{tr('Only this code opens your backup. Keep it outside this phone, like in a notebook.')}</p>
+          <p className="font-semibold text-muted">{tr('Only this code opens your backup. Keep it outside this device, like in a notebook.')}</p>
           <ol className="mt-4 grid grid-cols-5 gap-1.5 rounded-2xl bg-page p-2.5 sm:gap-2 sm:p-3" aria-label={tr('Recovery code')}>
             {groups.map((g, i) => (
               <li key={i} className="rounded-xl bg-card py-2 text-center text-sm font-black min-[360px]:text-base min-[360px]:tracking-wide sm:text-xl sm:tracking-wider tabular-nums sm:text-xl">

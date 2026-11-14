@@ -2,8 +2,9 @@
  * photo.ts — Profile photo helpers.
  *   imageToDataUrl()       shrinks any picture to a 256×256 JPEG (center crop) so it's small
  *                          enough to keep encrypted in the vault and shows offline
- *   useGooglePhotoSync()   when online and signed in with Google, copies the Google photo
- *                          (again if it changed) — unless the student picked or removed one
+ *   useGooglePhotoSync()   when online and signed in, copies the sign-in email (shown on
+ *                          Me → Profile) and the Google photo (again if it changed) — unless
+ *                          the student picked or removed a photo
  * Only the photo is downloaded from Google; nothing is ever uploaded.
  */
 import { useEffect, useRef } from 'react'
@@ -30,7 +31,17 @@ export function googlePhotoAtSize(url: string): string {
   return url.replace(/=s\d+(-c)?$/, `=s${SIZE}-c`)
 }
 
-/** Copies the Google profile photo into the encrypted profile (runs once per app open). */
+/** Downloads the Google photo as a small JPEG; null if Google is unreachable or the image unreadable. */
+async function googlePhoto(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(googlePhotoAtSize(url))
+    return response.ok ? await imageToDataUrl(await response.blob()) : null
+  } catch {
+    return null
+  }
+}
+
+/** Copies the sign-in email and the Google photo into the encrypted profile (runs once per app open, online). */
 export function useGooglePhotoSync(): void {
   const { vault, profile, saveProfile } = useSession()
   const latest = useRef(profile)
@@ -39,21 +50,23 @@ export function useGooglePhotoSync(): void {
   }, [profile])
 
   useEffect(() => {
-    if (profile.photoFrom === 'custom' || !navigator.onLine) return
+    if (!navigator.onLine) return
     let cancelled = false
     ;(async () => {
       const { currentUser } = await import('../auth/auth.ts')
       const user = await currentUser()
-      // Only the account that owns this vault; skip if the photo is already copied.
-      if (cancelled || !user?.image || user.id !== vault.userId) return
-      if (user.image === latest.current.googlePhotoUrl && latest.current.photo) return
-      const response = await fetch(googlePhotoAtSize(user.image))
-      if (!response.ok) return
-      const photo = await imageToDataUrl(await response.blob())
-      if (!cancelled) await saveProfile({ ...latest.current, photo, photoFrom: 'google', googlePhotoUrl: user.image })
-    })().catch(() => {}) // offline, Google unreachable, or an unreadable image: keep the initial
+      if (cancelled || !user || user.id !== vault.userId) return // only the account that owns this vault
+      let next = latest.current
+      if (user.email && user.email !== next.email) next = { ...next, email: user.email }
+      // The photo: unless the student picked or removed one, or it's already copied.
+      if (user.image && next.photoFrom !== 'custom' && !(user.image === next.googlePhotoUrl && next.photo)) {
+        const photo = await googlePhoto(user.image)
+        if (photo) next = { ...next, photo, photoFrom: 'google', googlePhotoUrl: user.image }
+      }
+      if (!cancelled && next !== latest.current) await saveProfile(next)
+    })().catch(() => {}) // offline or not signed in: keep what's saved
     return () => {
       cancelled = true
     }
-  }, [vault, profile.photoFrom, profile.googlePhotoUrl, saveProfile])
+  }, [vault, profile.photoFrom, profile.googlePhotoUrl, profile.email, saveProfile])
 }

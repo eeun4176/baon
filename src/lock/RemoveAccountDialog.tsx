@@ -47,9 +47,9 @@ export function RemoveAccountDialog({ account, onClose, onRemoved }: { account: 
   }
 
   return (
-    <Modal title={tr('Remove {0} from this phone?', name)} onClose={() => !busy && onClose()}>
+    <Modal title={tr('Remove {0} from this device?', name)} onClose={() => !busy && onClose()}>
       <form onSubmit={remove} noValidate>
-        <p className="font-semibold text-muted">{tr('Removed from this phone only. {0}’s records stay in their account.', name)}</p>
+        <p className="font-semibold text-muted">{tr('Removed from this device only. {0}’s records stay in their account.', name)}</p>
         {shared && (
           <label className={`${label} mt-4`}>
             {tr('{0}’s passphrase', name)}<input type="password" autoComplete="current-password" autoFocus value={passphrase} onChange={(e) => { setPassphrase(e.target.value); setError('') }} className={field} />

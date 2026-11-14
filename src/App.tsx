@@ -256,7 +256,7 @@ export default function App() {
       return (
         <Screen>
           <p role="alert" className="mt-10 text-lg font-bold">
-            {tr('Baon couldn’t open its storage on this phone. Close the app and open it again.')}</p>
+            {tr('Baon couldn’t open its storage on this device. Close the app and open it again.')}</p>
         </Screen>
       )
   }

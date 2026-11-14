@@ -36,7 +36,7 @@ export function AccountPicker({ accounts, onPick, onAdd, onRemoved }: { accounts
                 </span>
                 <Icon name={a.deviceMode === 'shared' ? 'lock' : 'chevron-right'} className="size-5 shrink-0 text-muted" />
               </button>
-              <button type="button" onClick={() => setRemoving(a)} aria-label={tr('Remove {0} from this phone', a.label)} className="grid size-11 shrink-0 place-items-center rounded-full text-red hover:bg-red/10">
+              <button type="button" onClick={() => setRemoving(a)} aria-label={tr('Remove {0} from this device', a.label)} className="grid size-11 shrink-0 place-items-center rounded-full text-red hover:bg-red/10">
                 <Icon name="x" className="size-5" />
               </button>
             </li>
