@@ -1,8 +1,8 @@
 /*
  * PlanDialogs.tsx — Pop-ups on the Plan tab:
- *   ItemDialog  add / edit a school expense (template, title, amount, due date, set aside now)
+ *   ItemDialog  add / edit a school expense (template, title, amount, due date, repeats, set aside now)
  *   PayDialog   "Mark paid": creates the real expense (prefilled amount, editable) which
- *               releases the reservation in the same step
+ *               releases the reservation in the same step; a repeating item gets its next copy
  * Everything saves through the session, so Home's safe-to-spend updates at once, with Undo.
  */
 import { useState, type FormEvent } from 'react'
@@ -13,7 +13,7 @@ import { formatPeso, parsePeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Icon, Switch } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
-import { paidWith, TEMPLATES, templateLabel, type SchoolExpense } from './school.ts'
+import { nextRepeat, paidWith, TEMPLATES, templateLabel, type SchoolExpense } from './school.ts'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const paidDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', weekday: 'short', month: 'short', day: 'numeric' })
@@ -46,7 +46,10 @@ export function ErrorLine({ text }: { text: string }) {
   return text ? <p role="alert" className="mt-4 rounded-2xl bg-pebble p-3 text-center font-bold">{text}</p> : null
 }
 
-const mainButton = 'min-h-13 flex-1 rounded-full bg-blue px-6 text-lg font-black text-white disabled:opacity-60'
+/** "Repeats" choices in the item dialog. */
+const REPEATS: [SchoolExpense['repeat'], string][] = [[undefined, tr('Once')], ['weekly', tr('Every week')], ['monthly', tr('Every month')]]
+
+const mainButton ='min-h-13 flex-1 rounded-full bg-blue px-6 text-lg font-black text-white disabled:opacity-60'
 const grayButton = 'min-h-13 rounded-full bg-pebble px-6 text-lg font-black hover:bg-pebble-2'
 
 /** Add or edit a school expense. `template` pre-picks a template for a new item. */
@@ -59,6 +62,7 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
   const [amount, setAmount] = useState(item ? centavosToText(item.estimatedCentavos) : '')
   const [due, setDue] = useState(item?.dueDate ?? addDays(today, 7))
   const [setAside, setSetAside] = useState(item ? item.status === 'setAside' : true)
+  const [repeat, setRepeat] = useState<SchoolExpense['repeat']>(item?.repeat)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -82,6 +86,7 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
       estimatedCentavos: centavos,
       dueDate: due,
       status: setAside ? 'setAside' : 'planned',
+      ...(repeat ? { repeat } : {}),
     }
     setBusy(true)
     try {
@@ -141,6 +146,24 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
               {tr('Due')}<input type="date" value={due} onChange={(e) => setDue(e.target.value)} className={`${field} text-ink`} />
             </label>
           </div>
+          {/* Load promo, subscription, rent: paying it adds the next one. */}
+          <div>
+            <p className={label}>{tr('Repeats')}</p>
+            <div className="mt-1.5 flex flex-wrap gap-2" role="radiogroup" aria-label={tr('Repeats')}>
+              {REPEATS.map(([value, text]) => (
+                <button
+                  key={text}
+                  type="button"
+                  role="radio"
+                  aria-checked={repeat === value}
+                  onClick={() => setRepeat(value)}
+                  className={`min-h-11 rounded-full px-4 font-extrabold ${repeat === value ? 'bg-ink text-card' : 'bg-pebble hover:bg-pebble-2'}`}
+                >
+                  {text}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {paid ? (
@@ -174,19 +197,20 @@ export function ItemDialog({ item, template, onClose }: { item?: SchoolExpense; 
 
 /** "Mark paid": logs the real expense (amount editable) linked to the item. */
 export function PayDialog({ item, onClose }: { item: SchoolExpense; onClose: () => void }) {
-  const { wallets, transactions, addTransaction, removeTransaction, showToast } = useSession()
+  const { wallets, transactions, addTransaction, removeTransaction, saveSchoolExpense, removeSchoolExpense, showToast } = useSession()
   const spending = wallets.filter((w) => w.type === 'spending' && !w.archived)
   const [amount, setAmount] = useState(centavosToText(item.estimatedCentavos))
   const [walletId, setWalletId] = useState(() => lastUsedWalletId(transactions, spending[0]?.id ?? 'cash'))
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
 
-  /** Saves the expense; the item turns "Paid" because the expense links to it. */
+  /** Saves the expense; the item turns "Paid" because the expense links to it. A repeating item gets its next copy. */
   async function pay(e: FormEvent) {
     e.preventDefault()
     const centavos = parsePeso(amount)
     if (!centavos) return setError(tr('Enter how much you paid.'))
     const id = crypto.randomUUID()
+    const next = nextRepeat(item)
     setBusy(true)
     try {
       await addTransaction({
@@ -199,12 +223,20 @@ export function PayDialog({ item, onClose }: { item: SchoolExpense; onClose: () 
         note: item.title,
         linkedId: item.id,
       })
+      if (next) await saveSchoolExpense(next)
     } catch (err) {
       setBusy(false)
       return setError(err instanceof Error ? err.message : tr('Couldn’t save. Try again.'))
     }
     onClose()
-    showToast({ message: tr('Paid {0} · {1}', formatPeso(centavos), item.title), undo: () => removeTransaction(id) })
+    const message = tr('Paid {0} · {1}', formatPeso(centavos), item.title)
+    showToast({
+      message: next ? `${message} · ${tr('Next one due {0}', paidDay.format(new Date(`${next.dueDate}T12:00:00+08:00`)))}` : message,
+      undo: async () => {
+        await removeTransaction(id)
+        if (next) await removeSchoolExpense(next.id)
+      },
+    })
   }
 
   return (

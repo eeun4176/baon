@@ -49,6 +49,9 @@ export const WalletSchema = z.object({
   type: z.enum(['spending', 'savings']),
   openingCentavos: z.int().check(z.minimum(0)), // what the student had when the wallet was added
   interestRate: z.optional(z.number().check(z.positive(), z.maximum(MAX_RATE))), // % a year, banks/e-wallets only: for the estimate, never the balance
+  goalName: z.optional(z.string().check(z.trim(), z.minLength(1), z.maxLength(40))), // savings only: what it's for, e.g. "Laptop"
+  goalCentavos: z.optional(z.int().check(z.positive(), z.maximum(999_999_999))), // savings only: "Laptop ₱20,000" (Plan → Savings goals)
+  goalDate: z.optional(z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}$/))), // savings only: reach it by (optional)
   archived: z.boolean(),
 })
 export type Wallet = z.infer<typeof WalletSchema>

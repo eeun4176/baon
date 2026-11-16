@@ -8,6 +8,7 @@
  *
  * Tips: one tip for the category the student spent most on in the last 7 days (lots of Food →
  * a baon-from-home tip), changing every day; "Another tip" moves to the next. General tips otherwise.
+ * topSpending: that same top category as a line above the tip ("Food took ₱820 of your ₱1,200").
  */
 import { addDays, daysBetween } from '../budget/days.ts'
 import type { Allowance } from '../budget/allowance.ts'
@@ -71,6 +72,29 @@ export const TIPS: Tip[] = [
   { text: tr('Set a limit for the category you spend most on. Plan → Category limits.') },
   { text: tr('Coins and ₱20 bills go fast. Keep only what you need today in your wallet.') },
 ]
+
+/**
+ * What the student spent most on in the last 7 days (the tip card's "usual expense" line):
+ * the top category, its total, everything spent, and its share in whole percent. null = nothing spent.
+ */
+export function topSpending(transactions: Transaction[], today: string): { label: string; spent: number; total: number; percent: number } | null {
+  const rows = spentByCategory(transactions, addDays(today, -6), today)
+  if (!rows.length) return null
+  const total = rows.reduce((s, r) => s + r.spent, 0)
+  return { label: rows[0].label, spent: rows[0].spent, total, percent: Math.round((rows[0].spent / total) * 100) }
+}
+
+/**
+ * Home's "Usual expenses" donut: spending per category in the last 7 days, biggest first, as the top 4
+ * plus "Others" for the rest (so 5 slices at most). Percents are whole and of everything spent.
+ */
+export function usualExpenses(transactions: Transaction[], today: string): { total: number; rows: { label: string; spent: number; percent: number }[] } {
+  const all = spentByCategory(transactions, addDays(today, -6), today)
+  const total = all.reduce((s, r) => s + r.spent, 0)
+  const rest = all.slice(4).reduce((s, r) => s + r.spent, 0)
+  const rows = [...all.slice(0, 4), ...(rest ? [{ label: tr('Others'), spent: rest }] : [])]
+  return { total, rows: rows.map((r) => ({ label: r.label, spent: r.spent, percent: Math.round((r.spent / total) * 100) })) }
+}
 
 /** Today's tip: from the top category of the last 7 days if it has tips, else a general one. `offset`: "Another tip". */
 export function pickTip(transactions: Transaction[], today: string, offset = 0): string {

@@ -59,16 +59,16 @@ export function WalletChip({ wallet, amount, onClick }: { wallet: Wallet; amount
   )
 }
 
-/** Desktop tile: icon box, name, amount; `showKind` adds "Spendable" / "Not spendable". */
-export function WalletTile({ wallet, amount, showKind = false, onClick }: { wallet: Wallet; amount: number; showKind?: boolean; onClick?: () => void }) {
+/** Desktop tile: icon box, name, amount; `showKind` adds "Spendable" / "Not spendable"; `stacked` puts the icon on top (Home). */
+export function WalletTile({ wallet, amount, showKind = false, stacked = false, onClick }: { wallet: Wallet; amount: number; showKind?: boolean; stacked?: boolean; onClick?: () => void }) {
   const savings = wallet.type === 'savings'
   return (
     <Box wallet={wallet} amount={amount} onClick={onClick}
-      className={`flex h-full w-full min-w-0 items-center gap-3 rounded-[20px] ${savings ? 'border-2 border-dashed border-bar bg-card px-3 py-2.5' : 'bg-page px-3.5 py-3'} ${onClick ? 'hover:bg-pebble' : ''}`}>
-      <span className={`grid size-10 shrink-0 place-items-center rounded-[14px] ${savings ? 'bg-page text-muted' : 'bg-card text-blue'}`}>
+      className={`flex h-full w-full min-w-0 rounded-[20px] ${stacked ? 'flex-col items-start gap-2' : 'items-center gap-3'} ${savings ? 'border-2 border-dashed border-bar bg-card px-3 py-2.5' : 'bg-page px-3.5 py-3'} ${onClick ? 'hover:bg-pebble' : ''}`}>
+      <span className={`grid shrink-0 place-items-center ${stacked ? 'size-[2.125rem] rounded-xl' : 'size-10 rounded-[14px]'} ${savings ? 'bg-page text-muted' : 'bg-card text-blue'}`}>
         <Icon name={iconOf(wallet)} className="size-5" />
       </span>
-      <span className="flex min-w-0 flex-col">
+      <span className={`flex min-w-0 flex-col ${stacked ? 'w-full' : ''}`}>
         <span className="truncate text-[0.8125rem] font-extrabold text-muted">{wallet.name}</span>
         <span className="text-[1.1875rem] font-black tracking-[-0.02em] whitespace-nowrap">{formatPeso(amount)}</span>
         {monthlyInterest(amount, wallet.interestRate) > 0

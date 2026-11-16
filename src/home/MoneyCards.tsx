@@ -1,13 +1,15 @@
 /*
- * MoneyCards.tsx — Home's "Your money" section (Home v2 design):
- *   EntriesCard     today's entries, newest first (phone: "See all N" link; desktop: total spent)
+ * MoneyCards.tsx — Home's money cards (Home v2 design): wallets near the top, the rest under "Activity & plans":
+ *   EntriesCard     today's entries, newest first, under a daily summary line (phone: "See all N" link)
  *   SpentPerDayCard the last 7 days as bars (now on phones too)
- *   WalletsCard     total + each wallet (phone: sideways row; desktop: total box + top 4 tiles)
+ *   WalletsCard     total + each wallet (phone: sideways row; desktop: header row + top 4 tiles)
  *   SetAsideCard    money set aside for school and what's next (phone: the first item)
  */
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { Link } from 'react-router'
 import { manilaDate } from '../budget/days.ts'
+import type { SafeToSpend } from '../budget/safeToSpend.ts'
+import { daySummary } from './summary.ts'
 import { SpentPerDay } from '../history/Charts.tsx'
 import { spentPerDay } from '../history/history.ts'
 import { TxRow } from '../history/TxRow.tsx'
@@ -21,22 +23,22 @@ import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const dueDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 
-/** White section card used by every "Your money" card. */
+/** White section card used by every money card. */
 const moneyCard ='flex animate-rise flex-col rounded-[26px] bg-card p-[1.125rem] lg:rounded-[32px] lg:p-6'
 const title = 'text-base font-black lg:text-lg'
 const link = 'text-[0.8125rem] font-extrabold text-blue hover:underline lg:text-sm'
 
-/** Today's entries. */
-export function EntriesCard({ today, spent }: { today: string; spent: number }) {
+/** Today's entries, with the daily summary line under the title. */
+export function EntriesCard({ today, result }: { today: string; result: SafeToSpend }) {
   const { transactions, wallets } = useSession()
   const list = transactions.filter((tx) => manilaDate(tx.occurredAt) === today).reverse()
   return (
     <section aria-labelledby="entries-title" className={moneyCard}>
-      <div className="flex items-baseline justify-between gap-3 pb-1">
+      <div className="flex items-baseline justify-between gap-3">
         <h2 id="entries-title" className={title}>{tr('Today’s entries')}</h2>
-        {list.length > 0 && <span className="hidden text-sm font-extrabold text-muted lg:inline">{tr('{0} spent', formatPeso(spent))}</span>}
         {list.length > 5 && <Link to="/history" className={`${link} lg:hidden`}>{tr('See all {0}', list.length)}</Link>}
       </div>
+      {list.length > 0 && <p className="pb-1 text-sm font-extrabold text-muted">{daySummary(result, transactions)}</p>}
       {list.length ? (
         <ul className="-mx-2 divide-y divide-page">
           {list.slice(0, 5).map((tx, i) => <TxRow key={tx.id} tx={tx} wallets={wallets} index={i} />)}
@@ -52,10 +54,11 @@ export function EntriesCard({ today, spent }: { today: string; spent: number }) 
 /** Spent per day, last 7 days. */
 export function SpentPerDayCard({ today, budget, className = '' }: { today: string; budget: number; className?: string }) {
   const { transactions } = useSession()
+  const id = useId() // Home renders this card twice (phone / desktop spot), so ids must differ
   return (
-    <section aria-labelledby="spd-title" className={`${moneyCard} gap-1 ${className}`}>
+    <section aria-labelledby={id} className={`${moneyCard} gap-1 ${className}`}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id="spd-title" className={title}>{tr('Spent per day')}</h2>
+        <h2 id={id} className={title}>{tr('Spent per day')}</h2>
         <Link to="/history" className={link}>{tr('Open history')}</Link>
       </div>
       <SpentPerDay days={spentPerDay(transactions, today)} today={today} budget={budget} />
@@ -64,10 +67,9 @@ export function SpentPerDayCard({ today, budget, className = '' }: { today: stri
 }
 
 /**
- * Wallets (full width, first in "Your money"). Phone: total, Move, and a sideways row of wallets.
- * Desktop: a dark total box, the top 3 wallets in one row (+N more shows the rest, Less hides them),
- * then Move money above Manage in a column on the right, all in one row (from 1280px wide; at 1024px
- * there is no room, so the total box sits above the wallets and the two buttons sit side by side underneath).
+ * Wallets (under One-tap add, in the left column on desktop). Phone: total, Move, and a sideways row of wallets.
+ * Desktop: "Wallets", the total, the wallet count and spendable money, Move money and Manage in one row;
+ * under it the top 4 wallets as tiles (+N more shows the rest, Less hides them).
  */
 export function WalletsCard() {
   const { wallets, transactions } = useSession()
@@ -76,7 +78,7 @@ export function WalletsCard() {
   const shown = byBalance(wallets.filter((w) => !w.archived), all)
   const sum = (list: typeof shown) => list.reduce((s, w) => s + all.get(w.id)!, 0)
   const spendable = sum(shown.filter((w) => w.type === 'spending'))
-  const TOP = 3
+  const TOP = 4
   const hidden = shown.length - TOP
   const move = { to: '?add=1&mode=transfer', state: { modal: true } }
 
@@ -98,16 +100,23 @@ export function WalletsCard() {
         </ul>
       </div>
 
-      {/* Desktop */}
-      <div className="hidden gap-2.5 rounded-[28px] bg-card p-3.5 lg:grid xl:grid-cols-[12rem_minmax(0,1fr)_auto]">
-        <div className="flex flex-col justify-center gap-0.5 rounded-[20px] bg-hero px-[1.125rem] py-3.5 text-white">
-          <h2 className="text-[0.8125rem] font-extrabold text-white/75">{tr('All wallets')}</h2>
-          <p key={sum(shown)} className="animate-pop text-[1.75rem] leading-tight font-black tracking-[-0.03em]">{formatPeso(sum(shown))}</p>
-          <p className="text-xs font-bold text-white/75">{tr('{0} wallets · {1} spendable', shown.length, formatPeso(spendable))}</p>
+      {/* Desktop (web Home v2): header row with the total and buttons, then the top 4 tiles + "+N more". */}
+      <div className="hidden flex-col gap-3.5 rounded-[32px] bg-card px-[1.375rem] py-5 lg:flex">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="text-lg font-black">{tr('Wallets')}</h2>
+            <p key={sum(shown)} className="animate-pop text-[1.625rem] leading-tight font-black tracking-[-0.03em]">{formatPeso(sum(shown))}</p>
+            <p className="text-[0.8125rem] font-bold text-muted">{tr('{0} wallets · {1} spendable', shown.length, formatPeso(spendable))}</p>
+          </div>
+          <div className="flex gap-2">
+            <Link {...move} className="flex h-10 items-center justify-center gap-1.5 rounded-full bg-blue-tint px-3.5 text-sm font-extrabold text-blue hover:brightness-95">
+              <Icon name="arrow" className="size-4" />{tr('Move money')}</Link>
+            <Link to="/me" className="flex h-10 items-center justify-center rounded-full bg-page px-3.5 text-sm font-extrabold hover:bg-pebble">{tr('Manage')}</Link>
+          </div>
         </div>
-        {/* Closed: exactly 3 tiles + "+N more" in one row. Open: every wallet, as many per row as fit, then Less. */}
-        <ul className={`grid min-w-0 gap-2.5 ${open ? 'grid-cols-[repeat(auto-fill,minmax(10rem,1fr))]' : hidden > 0 ? 'grid-cols-[repeat(3,minmax(0,1fr))_4.75rem]' : 'grid-flow-col auto-cols-fr'}`}>
-          {(open ? shown : shown.slice(0, TOP)).map((w) => <li key={w.id} className="min-w-0"><WalletTile wallet={w} amount={all.get(w.id)!} /></li>)}
+        {/* Closed: the top 4 tiles + "+N more" in one row. Open: every wallet, as many per row as fit, then Less. */}
+        <ul className={`grid min-w-0 gap-2.5 ${open ? 'grid-cols-[repeat(auto-fill,minmax(9.375rem,1fr))]' : hidden > 0 ? 'grid-cols-[repeat(4,minmax(0,1fr))_4.75rem]' : 'grid-flow-col auto-cols-fr'}`}>
+          {(open ? shown : shown.slice(0, TOP)).map((w) => <li key={w.id} className="min-w-0"><WalletTile wallet={w} amount={all.get(w.id)!} stacked /></li>)}
           {hidden > 0 && (
             <li>
               <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="flex h-full min-h-16 w-full flex-col items-center justify-center rounded-[20px] bg-blue-tint text-blue hover:brightness-95">
@@ -118,25 +127,21 @@ export function WalletsCard() {
             </li>
           )}
         </ul>
-        <div className="col-span-full flex justify-end gap-2 xl:col-span-1 xl:flex-col xl:justify-center">
-          <Link {...move} className="flex h-11 items-center justify-center gap-1.5 rounded-full bg-blue-tint px-4 text-sm font-extrabold text-blue hover:brightness-95">
-            <Icon name="arrow" className="size-4" />{tr('Move money')}</Link>
-          <Link to="/me" className="flex h-11 items-center justify-center rounded-full bg-page px-4 text-sm font-extrabold hover:bg-pebble">{tr('Manage')}</Link>
-        </div>
       </div>
     </section>
   )
 }
 
 /** Set aside for school: the total and what's due next. */
-export function SetAsideCard() {
+export function SetAsideCard({ className = '' }: { className?: string }) {
+  const id = useId() // Home renders this card twice (phone / desktop spot), so ids must differ
   const { schoolExpenses, transactions } = useSession()
   const total = setAsideTotal(schoolExpenses, transactions)
   const upcoming = sortForList(schoolExpenses, transactions).filter((i) => statusOf(i, transactions) !== 'paid')
   return (
-    <section aria-labelledby="setaside-title" className={`${moneyCard} gap-3 lg:gap-0`}>
+    <section aria-labelledby={id} className={`${moneyCard} gap-3 lg:gap-0 ${className}`}>
       <div className="flex items-baseline justify-between gap-3">
-        <h2 id="setaside-title" className={title}>{tr('Set aside for school')}</h2>
+        <h2 id={id} className={title}>{tr('Set aside for school')}</h2>
         <span className="text-lg font-black lg:hidden">{formatPeso(total)}</span>
         <Link to="/plan" className={`hidden lg:inline ${link}`}>{tr('See all')}</Link>
       </div>

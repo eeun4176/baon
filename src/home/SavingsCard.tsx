@@ -1,37 +1,17 @@
 /*
  * SavingsCard.tsx — Home's "Ipon outlook" (Home v2 design): about how much the student could save in
  * a month (and 6 months) if they keep spending like the last 4 weeks, and what's in Savings now.
- * Phone: a compact card beside the streak card, with the tipid tip below both (TipBox).
- * Desktop: one taller card with the tip inside. The math is in savings.ts.
+ * Phone: a compact card beside the streak card. Desktop: a taller card in the right column.
+ * The tipid tip now lives in the Usual expenses card (UsualExpenses.tsx). The math is in savings.ts.
  */
-import { useState } from 'react'
-import { manilaDate } from '../budget/days.ts'
 import { balances } from '../ledger/ledger.ts'
 import { useStreak } from '../streak/useStreak.ts'
 import { formatPeso } from '../ledger/money.ts'
 import { useSession } from '../session.ts'
 import { Icon } from '../ui/kit.tsx'
-import { iponOutlook, MIN_DAYS, pickTip } from './savings.ts'
+import { iponOutlook, MIN_DAYS } from './savings.ts'
 import type { Today } from './useToday.ts'
 import { tr } from '../i18n/i18n.ts'
-
-/**
- * Tipid tip: the tip picked from what the student spends most on, and "Another tip".
- * `className` places it (phone: its own row; desktop: inside the outlook card).
- */
-export function TipBox({ className = '' }: { className?: string }) {
-  const { transactions } = useSession()
-  const [offset, setOffset] = useState(0)
-  const today = manilaDate()
-  return (
-    <section aria-label={tr('Tipid tip')} className={`flex animate-rise flex-col gap-1.5 rounded-[20px] bg-card px-4 py-3.5 lg:bg-page ${className}`}>
-      <h3 className="text-xs font-black tracking-[0.06em] text-blue uppercase">{tr('Tipid tip')}</h3>
-      <p key={offset} className="animate-fade text-sm leading-snug font-bold" aria-live="polite">{pickTip(transactions, today, offset)}</p>
-      <button type="button" onClick={() => setOffset((n) => n + 1)} className="min-h-8 self-start text-sm font-extrabold text-blue hover:underline">
-        {tr('Another tip')}</button>
-    </section>
-  )
-}
 
 /** Ipon outlook card. */
 export function SavingsCard({ t }: { t: Today }) {
@@ -73,9 +53,7 @@ export function SavingsCard({ t }: { t: Today }) {
       <p className="mt-auto text-xs leading-snug font-bold text-ink/80 lg:mt-0 lg:text-sm">
         {ready && o.perDay > 0 && <>{tr('{0} in 6 months', formatPeso(o.sixMonths))} · </>}
         {tr('In Savings now: {0}', formatPeso(inSavings))}</p>
-
-      <TipBox className="mt-auto hidden lg:flex" />
-      {ready && <p className="hidden text-xs font-bold text-muted lg:block">{tr('Based on your last 4 weeks.')}</p>}
+      {ready &&<p className="hidden text-xs font-bold text-muted lg:block">{tr('Based on your last 4 weeks.')}</p>}
     </section>
   )
 }

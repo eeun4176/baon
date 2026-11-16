@@ -27,11 +27,13 @@ export function SpentPerDay({ days, today, budget }: { days: { day: string; spen
           ))}
         </div>
         {/* Bars area: the dashed budget line is positioned inside it, so it lines up exactly. */}
-        <div className="relative mt-1.5 grid min-h-32 flex-1 grid-cols-7 items-end gap-2">
+        {/* Columns stretch to the row and each bar is absolute from the bottom: a % height inside a
+            stretched grid item made iPad Safari 16 draw bars far taller than the card. */}
+        <div className="relative mt-1.5 grid min-h-32 flex-1 grid-cols-7 gap-2">
           {days.map((d, i) => (
-            <span key={d.day} className="mx-auto flex h-full w-full max-w-12 items-end overflow-hidden rounded-xl bg-page">
+            <span key={d.day} className="relative mx-auto w-full max-w-12 overflow-hidden rounded-xl bg-page">
               <span
-                className={`w-full origin-bottom animate-grow-y rounded-xl ${d.day === today ? 'bg-blue' : 'bg-bar'}`}
+                className={`absolute inset-x-0 bottom-0 origin-bottom animate-grow-y rounded-xl ${d.day === today ? 'bg-blue' : 'bg-bar'}`}
                 style={{ height: `${(d.spent / top) * 100}%`, animationDelay: `${i * 50}ms` }}
               />
             </span>

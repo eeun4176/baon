@@ -40,6 +40,7 @@
   --color-map-2: #86a8ff;
   --color-map-3: #1e5eff;
   --color-map-over: #1d1f1e;
+  --color-chart-amber: #ffb020; /* Usual expenses donut: 4th slice (reads on white and on dark cards) */
 }
 
 /* ── Dark theme (plan C11) ──────────────────────────────────────────

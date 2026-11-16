@@ -31,3 +31,16 @@ export function formatPeso(centavos: number): string {
   const text = abs % 100 === 0 ? pesoWhole.format(abs / 100) : pesoExact.format(abs / 100)
   return `${centavos < 0 ? '−' : ''}₱${text}`
 }
+
+const pesoShort = new Intl.NumberFormat('en-PH', { notation: 'compact', maximumFractionDigits: 1 })
+
+/**
+ * Short amount for tight spots (the Usual expenses donut's middle): exact under ₱10,000 ("₱8,697.50"),
+ * whole pesos under ₱100,000 ("₱99,999"), then short ("₱123.5K", "₱1.2M"). Never longer than 8 characters.
+ */
+export function formatPesoShort(centavos: number): string {
+  const pesos = Math.abs(centavos) / 100
+  if (pesos < 10_000) return formatPeso(centavos)
+  const text = pesos < 100_000 ? pesoWhole.format(Math.round(pesos)) : pesoShort.format(pesos)
+  return `${centavos < 0 ? '−' : ''}₱${text}`
+}

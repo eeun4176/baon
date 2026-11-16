@@ -111,6 +111,10 @@ Use cases and worked examples for every feature are in [Features](features.md).
 
 Part payments add up. An utang with payments can't be deleted until its payments are deleted, so no payment points at nothing.
 
+**Split the bill** (Add → Expense) adds no new entry type: the student's share is an `expense` and each friend's share is a `lend`, saved together (`src/add/split.ts`).
+
+**Optional fields added later** (older records simply don't have them): a Savings wallet's goal (`goalName`, `goalCentavos`, `goalDate`, see `src/plan/goals.ts`) and a school expense's `repeat` (`weekly` / `monthly`). An older Baon drops fields it doesn't know when it reads a record, so editing that wallet or item on an old version would remove them.
+
 **Record versions.** Each saved record carries the version of Baon that wrote it (`SCHEMA_VERSION` in `src/vault/vault.ts`, now 2). An older Baon skips records from a newer one while syncing, instead of failing on entries it can't read. After it updates, its next sync downloads everything again to pick them up.
 
 ## Folders

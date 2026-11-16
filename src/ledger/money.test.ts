@@ -3,7 +3,7 @@
  * integer centavos; no floating-point totals). Run: npm test
  */
 import { describe, expect, it } from 'vitest'
-import { formatPeso, parsePeso } from './money.ts'
+import { formatPeso, formatPesoShort, parsePeso } from './money.ts'
 
 describe('parsePeso', () => {
   it.each([
@@ -40,5 +40,20 @@ describe('formatPeso', () => {
     [-1550, '−₱15.50'],
   ])('%i → %s', (centavos, expected) => {
     expect(formatPeso(centavos)).toBe(expected)
+  })
+})
+
+describe('formatPesoShort (tight spots like the donut middle)', () => {
+  it.each([
+    [869750, '₱8,697.50'], // under ₱10,000: exact
+    [999999, '₱9,999.99'],
+    [1000000, '₱10,000'], // under ₱100,000: whole pesos
+    [9999999, '₱100,000'], // ₱99,999.99 rounds up; still 8 characters
+    [12345678, '₱123.5K'],
+    [123456789, '₱1.2M'],
+    [999999999, '₱10M'], // the largest single entry
+    [-1234567800, '−₱12.3M'],
+  ])('%i → %s', (centavos, expected) => {
+    expect(formatPesoShort(centavos)).toBe(expected)
   })
 })

@@ -6,10 +6,12 @@
  *     Home's "How it's counted".
  *   Class days: Su–Sa toggles, "Count only class days", and "No classes" breaks.
  *   School expenses: Upcoming / Paid tabs; Set it aside, Mark paid; tap a row to edit; quick-add chips.
+ *     An item can repeat every week / month (load promo, subscription, rent).
+ *   Savings goals (GoalsCard.tsx): a goal on each Savings wallet and the pace to reach it.
  *   Category limits: every limit with its bar; Edit / Add a limit open the limits pop-up.
  *   Utang (UtangCard.tsx): what's owed is held back like a set-aside.
- * Phone order: hero → School expense / Utang buttons → school expenses → utang → class days → limits.
- * Desktop: hero + class days, then school expenses + limits, then utang (full width).
+ * Phone order: hero → School expense / Utang buttons → school expenses → savings goals → utang → class days → limits.
+ * Desktop: hero + class days, then school expenses + limits, then utang, then savings goals (full width).
  */
 import { useMemo, useState } from 'react'
 import { breakOn } from '../budget/allowance.ts'
@@ -22,6 +24,7 @@ import { Icon, Page, Pill, SplitBar, Switch } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
 import { limitStatuses } from './limits.ts'
 import { LimitsDialog } from './LimitsDialog.tsx'
+import { GoalsCard } from './GoalsCard.tsx'
 import { ItemDialog, PayDialog } from './PlanDialogs.tsx'
 import { paidWith, setAsideTotal, sortForList, statusOf, TEMPLATES, type SchoolExpense } from './school.ts'
 import { NewUtangDialog, UtangCard } from './UtangCard.tsx'
@@ -261,7 +264,9 @@ function SchoolRow({ item, onOpen }: { item: SchoolExpense; onOpen: (o: Open) =>
         </span>
         <span className={`flex min-w-0 flex-1 flex-col lg:gap-0.5 ${status === 'paid' ? 'text-ink/60' : ''}`}>
           <span className="truncate font-black lg:text-base">{item.title}</span>
-          <span className="text-xs font-bold text-muted lg:text-[0.8125rem]">{whenText(item, paid?.occurredAt, manilaDate())}</span>
+          <span className="text-xs font-bold text-muted lg:text-[0.8125rem]">
+            {whenText(item, paid?.occurredAt, manilaDate())}
+            {item.repeat && ` · ${item.repeat === 'weekly' ? tr('every week') : tr('every month')}`}</span>
         </span>
         {/* Phone: amount above the chip */}
         <span className="flex flex-col items-end gap-1 lg:hidden">
@@ -269,7 +274,8 @@ function SchoolRow({ item, onOpen }: { item: SchoolExpense; onOpen: (o: Open) =>
           <Pill tone={chipTone}>{chipText}</Pill>
         </span>
       </button>
-      <Pill tone={chipTone} className="hidden h-[1.625rem] lg:inline-flex">{chipText}</Pill>
+      {/* Wrapped: Pill's own inline-flex beat a "hidden" passed to it, so phones showed a second, full-width chip. */}
+      <span className="hidden lg:block"><Pill tone={chipTone} className="h-[1.625rem]">{chipText}</Pill></span>
       <span className="hidden w-20 text-right text-[1.0625rem] font-black lg:block">{formatPeso(paid?.amountCentavos ?? item.estimatedCentavos)}</span>
       {action && <div className="grid lg:w-32 lg:justify-items-end">{action}</div>}
     </li>
@@ -355,7 +361,7 @@ export function Plan() {
       <header className="mb-3.5 flex flex-wrap items-end justify-between gap-3 px-1 lg:mb-5 lg:px-0">
         <div>
           <h1 className="text-[1.875rem] leading-tight font-black tracking-tight lg:text-[2.125rem]">{tr('Plan')}</h1>
-          <p className="text-sm font-bold text-muted lg:text-base">{tr('Set money aside so your daily budget stays honest.')}</p>
+          <p className="text-sm font-bold text-muted lg:text-base">{tr('Plan ahead so your budget stays honest.')}</p>
         </div>
         <div className="hidden gap-2.5 lg:flex">
           <button type="button" onClick={addUtang} className={`${button} bg-card`}><Icon name="plus" className="size-[1.125rem]" /> {tr('Utang')}</button>
@@ -363,7 +369,7 @@ export function Plan() {
         </div>
       </header>
 
-      {/* Phone: hero, buttons, school, utang, class days, limits. Desktop: rows of 2 + 1, utang last. */}
+      {/* Phone: hero, buttons, school, goals, utang, class days, limits. Desktop: rows of 2 + 1, utang and goals last. */}
       <div className="grid gap-3.5 lg:grid-cols-3 lg:gap-5">
         <div className="lg:col-span-2 lg:row-start-1"><KeptHero /></div>
         {/* School expense takes the room Utang doesn't need, so its label stays on one line even at 320px. */}
@@ -372,6 +378,7 @@ export function Plan() {
           <button type="button" onClick={addUtang} className={`${button} bg-card`}><Icon name="plus" className="size-4 shrink-0" /> {tr('Utang')}</button>
         </div>
         <SchoolCard onOpen={setOpen} className="lg:col-span-2 lg:row-start-2" />
+        <GoalsCard className="lg:col-span-3 lg:row-start-4" />
         <UtangCard onAdd={addUtang} className="lg:col-span-3 lg:row-start-3" />
         <ClassDaysCard className="lg:col-start-3 lg:row-start-1" />
         <PlanLimitsCard onEdit={() => setOpen({ kind: 'limits' })} className="lg:col-start-3 lg:row-start-2" />

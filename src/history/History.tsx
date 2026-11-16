@@ -119,8 +119,8 @@ export function History() {
   const t = useToday()
   const { open } = useAddDialog()
   const today = manilaDate()
-  const [view, setView] = useState<'list' | 'charts'>('list')
   const [params] = useSearchParams()
+  const [view, setView] = useState<'list' | 'charts'>(() => (params.get('view') === 'charts' ? 'charts' : 'list')) // Home's tip card opens Charts
   const [query, setQuery] = useState(() => params.get('q') ?? '') // Home's search opens History with its text
   const [range, setRange] = useState<Range>('all')
   const [categoryId, setCategoryId] = useState<string | null>(null)

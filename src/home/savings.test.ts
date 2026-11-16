@@ -6,7 +6,7 @@ import type { Allowance } from '../budget/allowance.ts'
 import { addDays } from '../budget/days.ts'
 import type { Transaction } from '../ledger/ledger.ts'
 import type { Day } from '../streak/streak.ts'
-import { iponOutlook, MIN_DAYS, pickTip, TIPS } from './savings.ts'
+import { iponOutlook, MIN_DAYS, pickTip, TIPS, topSpending, usualExpenses } from './savings.ts'
 
 const monFri: Allowance = { amountCentavos: 150000, frequency: 'weekly', nextDate: '2026-11-22', countClassDays: true, classWeekdays: [1, 2, 3, 4, 5] }
 const today = '2026-11-16' // Monday
@@ -59,5 +59,36 @@ describe('tipid tips', () => {
 
   it('general tips when nothing was spent this week', () => {
     expect(general).toContain(pickTip([food('2026-11-01')], today))
+  })
+})
+
+describe('usual expense line', () => {
+  const spend = (id: string, categoryId: string, pesos: number, day = '2026-11-14'): Transaction =>
+    ({ id, kind: 'expense', amountCentavos: pesos * 100, walletId: 'cash', categoryId, occurredAt: `${day}T12:00:00+08:00` })
+
+  it('the top category of the last 7 days, its share of everything spent', () => {
+    const txs = [spend('a', 'food', 820), spend('b', 'fare', 300), spend('c', 'load', 80), spend('old', 'fun', 5000, '2026-11-01')]
+    expect(topSpending(txs, today)).toEqual({ label: 'Food', spent: 82000, total: 120000, percent: 68 })
+  })
+
+  it('nothing spent → no line', () => {
+    expect(topSpending([], today)).toBeNull()
+  })
+})
+
+describe('usual expenses donut', () => {
+  const spend = (id: string, categoryId: string, pesos: number): Transaction =>
+    ({ id, kind: 'expense', amountCentavos: pesos * 100, walletId: 'cash', categoryId, occurredAt: '2026-11-15T12:00:00+08:00' })
+
+  it('top 4 categories, then the rest as Others; percents of everything spent', () => {
+    const txs = [spend('a', 'food', 500), spend('b', 'fare', 200), spend('c', 'load', 100), spend('d', 'school', 100), spend('e', 'fun', 60), spend('f', 'snacks', 40)]
+    const u = usualExpenses(txs, today)
+    expect(u.total).toBe(100000)
+    expect(u.rows.map((r) => [r.label, r.spent, r.percent])).toEqual([['Food', 50000, 50], ['Fare', 20000, 20], ['Load', 10000, 10], ['School', 10000, 10], ['Others', 10000, 10]])
+  })
+
+  it('4 categories or fewer: no Others; nothing spent: no rows', () => {
+    expect(usualExpenses([spend('a', 'food', 30), spend('b', 'fare', 10)], today).rows.map((r) => r.label)).toEqual(['Food', 'Fare'])
+    expect(usualExpenses([], today)).toEqual({ total: 0, rows: [] })
   })
 })

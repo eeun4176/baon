@@ -7,6 +7,8 @@
  * to "last until" a date. Taking out more than a wallet holds offers two choices: add the
  * missing money as money in first (the usual cause is money in that was never logged), or save anyway.
  * Utang entries are added on Plan; here they can only be fixed (amount, wallet, date, note).
+ * A new expense can be split with friends (split.ts): the student's share is the expense, each
+ * friend's share is a "Lent" utang, all saved together and undone together.
  * Opened from anywhere with the URL "?add=1" (and "&edit=<id>" to fix an entry),
  * so the phone's Back button closes it. Uses the native <dialog> element, which
  * traps focus and handles Esc for keyboard and screen-reader users.
@@ -22,6 +24,7 @@ import { useSession } from '../session.ts'
 import { Icon, Segmented, Switch } from '../ui/kit.tsx'
 import { byMostUsed, categoryLabel, lastUsedWalletId } from './categories.ts'
 import { acceptTyped, centavosToText, displayAmount, pressKey, type Key } from './keypad.ts'
+import { MAX_SPLIT, parseNames, splitBill } from './split.ts'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
 type Mode = 'expense' | 'income' | 'transfer' | 'save'
@@ -90,6 +93,9 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
   const [source, setSource] = useState<Source>(editing?.source ?? 'allowance')
   const [spread, setSpread] = useState(!!editing?.spreadUntil)
   const [until, setUntil] = useState(() => editing?.spreadUntil ?? addDays(today, 29))
+  // "Split the bill" (new expenses only): friends' names, comma-separated.
+  const [splitOn, setSplitOn] = useState(false)
+  const [splitText, setSplitText] = useState('')
   // Taking out more than the wallet holds: what it has now and how much is missing (shows two choices).
   const [short, setShort] = useState<{ has: number; missing: number; name: string } | null>(null)
   const [error, setError] = useState('')
@@ -100,9 +106,12 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
   const amountInput = useRef<HTMLInputElement>(null)
 
   const copy = utang ? { question: tr('How much?'), action: tr('Save changes') } : COPY[mode]
-  // Category limit for this allowance cycle: what's left after this entry (if the category has one).
+  const canSplit = mode === 'expense' && !editing
+  const friends = canSplit && splitOn ? parseNames(splitText) : []
+  const shares = friends.length ? splitBill(parsePeso(amount) ?? 0, friends.length) : null
+  // Category limit for this allowance cycle: what's left after this entry (if the category has one). A split counts only the student's share.
   const limit = mode === 'expense' && !utang ? limits[categoryId] : undefined
-  const limitLeft = limit ? limit - (spentThisCycle(transactions, editing?.id).get(categoryId) ?? 0) - (parsePeso(amount) ?? 0) : 0
+  const limitLeft = limit ? limit - (spentThisCycle(transactions, editing?.id).get(categoryId) ?? 0) - (shares?.own ?? parsePeso(amount) ?? 0) : 0
   const to = mode === 'save' ? savings : spending.find((w) => w.id === toWalletId)
   const isMove = mode === 'transfer' || mode === 'save'
 
@@ -130,6 +139,11 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
     const centavos = parsePeso(amount)
     if (!centavos) return setError(tr('Enter an amount first.'))
     if (mode === 'transfer' && spending.length < 2) return setError(tr('Add another wallet in Me to move money between wallets.'))
+    if (canSplit && splitOn) {
+      if (!friends.length) return setError(tr('Type who you’re splitting with, e.g. Mia, Carlo'))
+      if (friends.length > MAX_SPLIT) return setError(tr('Split with up to {0} friends at a time.', MAX_SPLIT))
+      if (!shares) return setError(tr('That’s too little to split.'))
+    }
 
     const keepTime = editing && manilaDate(editing.occurredAt) === day
     const occurredAt = keepTime ? editing.occurredAt : day === today ? new Date().toISOString() : `${day}T12:00:00+08:00`
@@ -141,7 +155,7 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
       : {
           id: editing?.id ?? crypto.randomUUID(),
           kind: mode,
-          amountCentavos: centavos,
+          amountCentavos: shares?.own ?? centavos, // split: only the student's share is spending
           walletId,
           ...(isMove ? { toWalletId: to?.id } : {}),
           ...(mode === 'expense' ? { categoryId } : {}),
@@ -164,15 +178,28 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
       ? { id: crypto.randomUUID(), kind: 'income', source: 'other', amountCentavos: short.missing, walletId, occurredAt, note: tr('Not logged before') }
       : null
 
+    // Split: each friend's share is a "Lent" utang from the same wallet (shows on Plan until they pay back).
+    const lends: Transaction[] = shares
+      ? friends.map((person) => ({ id: crypto.randomUUID(), kind: 'lend', amountCentavos: shares.each, walletId, occurredAt, person, note: tr('Split: {0}', note.trim() || categoryLabel(categoryId)).slice(0, 200) }))
+      : []
+
     // Logging the allowance here answers "Did your baon arrive?" when Baon is asking or waiting.
     const moved = tx.kind === 'income' && source === 'allowance' && !editing ? afterAllowanceLogged(allowance, today) : null
     setBusy(true)
     try {
       if (topUp) await addTransaction(topUp)
+      const added: string[] = []
       try {
         await addTransaction(tx)
+        added.push(tx.id)
+        for (const lend of lends) {
+          await addTransaction(lend)
+          added.push(lend.id)
+        }
       } catch (e) {
-        if (topUp) await removeTransaction(topUp.id) // never leave the money in without the entry it was for
+        // Never leave half a split, or money in without the entry it was for.
+        for (const id of added) await removeTransaction(id)
+        if (topUp) await removeTransaction(topUp.id)
         throw e
       }
       if (moved) await updateAllowance(moved)
@@ -180,9 +207,11 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
       setBusy(false)
       return setError(e instanceof Error ? e.message : tr('Couldn’t save. Try again.'))
     }
-    const money = formatPeso(centavos)
+    const money = formatPeso(tx.amountCentavos)
     const saved = editing
       ? tr('Changes saved')
+      : shares
+        ? tr('Saved your {0} · {1} owe you {2} each', money, friends.join(', '), formatPeso(shares.each))
       : {
           expense: tr('Saved {0} · {1}', money, note.trim() || categoryLabel(categoryId)),
           income: tr('Added {0} to {1}', money, from),
@@ -194,6 +223,7 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
     const undo = async () => {
       if (editing) await addTransaction(editing)
       else await removeTransaction(tx.id)
+      for (const lend of lends) await removeTransaction(lend.id)
       if (topUp) await removeTransaction(topUp.id)
       if (moved) await updateAllowance(allowance)
     }
@@ -350,6 +380,35 @@ function AddDialog({ editId, startMode, onClose }: { editId: string | null; star
               </p>
             )}
           </fieldset>
+        )}
+
+        {/* Split the bill: the student paid for friends too; their shares become "Lent" utang. */}
+        {canSplit && (
+          <div className="mt-3 rounded-3xl bg-card p-4 md:bg-page">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-black">{tr('Split the bill')}</p>
+                <p className="text-sm font-semibold text-muted">{tr('Paid for friends? They’ll owe you their share.')}</p>
+              </div>
+              <Switch label={tr('Split the bill')} checked={splitOn} onChange={(on) => { setSplitOn(on); setError('') }} />
+            </div>
+            {splitOn && (
+              <>
+                <input
+                  maxLength={300}
+                  placeholder={tr('Friends’ names, e.g. Mia, Carlo')}
+                  aria-label={tr('Who are you splitting with?')}
+                  value={splitText}
+                  onChange={(e) => { setSplitText(e.target.value); setError('') }}
+                  className="mt-3 min-h-12 w-full rounded-2xl bg-pebble px-4 font-bold outline-blue placeholder:text-muted md:bg-card"
+                />
+                {shares && (
+                  <p aria-live="polite" className="mt-2 text-sm font-bold text-muted">
+                    {tr('Your share {0} · {1} each for {2}', formatPeso(shares.own), formatPeso(shares.each), friends.join(', '))}</p>
+                )}
+              </>
+            )}
+          </div>
         )}
 
         {/* Wallet(s), date, note */}

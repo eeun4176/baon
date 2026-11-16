@@ -44,6 +44,13 @@ If the account already has records online (from another device), Baon says "Welc
 
 ## Home
 
+**Layout (Home v2):**
+
+- **Phones**, one column: Today card → One-tap add → Wallets → Streak + Ipon outlook (side by side) → Usual expenses (with the tipid tip) → reminders → **Activity & plans**: today's entries, spent per day, set aside for school, category limits.
+- **Desktop**, two columns: left = Today, One-tap add, Wallets, Spent per day; right = Streak, Ipon outlook, Usual expenses, Set aside for school. Then reminders, and under **Activity & plans**, today's entries beside category limits.
+- Spent per day and Set aside are drawn in both places, and one copy is always hidden. The columns can't grow wider than the screen, so a long wallet row scrolls inside its card instead of pushing the page sideways (the Playwright test adds 5 wallets to check this).
+- The phone header has the logo, the streak pill and the profile picture.
+
 ### Safe to spend today
 
 **Use case:** Carlo has ₱1,500 until his next baon on Saturday. He wants to know how much he can spend today without running out before then.
@@ -168,9 +175,21 @@ Each day's budget is the one Baon saved when it was opened that day, so editing 
 
 Everyone with the same top category sees the same tip on the same day. With only 1 tip (Shopping, Fun), "Another tip" shows the same tip again.
 
-On phones the tip sits under the streak and Ipon cards; on desktop it's inside the Ipon card.
+The tip sits at the bottom of the **Usual expenses** card (below).
 
-**Code:** `TIPS` and `pickTip` in `src/home/savings.ts`, `TipBox` in `src/home/SavingsCard.tsx`
+**Code:** `TIPS` and `pickTip` in `src/home/savings.ts`, shown by `src/home/UsualExpenses.tsx`
+
+### Usual expenses
+
+**Use case:** Gio wants to see at a glance what eats most of his baon.
+
+**How it works:** a donut of the last 7 days' spending by category: the top 4 categories, plus **Others** for the rest (5 slices at most), biggest first. Each legend row shows its share as a whole percent. Tapping a row shows that category's amount and share in the donut's center and grays out the other slices; tapping it again shows the total.
+
+**Big amounts:** the donut's middle uses a short amount so it always fits (`formatPesoShort` in `src/ledger/money.ts`): exact under ₱10,000 ("₱8,697.50"), whole pesos under ₱100,000 ("₱99,999"), then "₱123.5K" or "₱1.2M". The sentence under the donut and screen readers get the exact amount. A share that rounds to 0 shows as "<1%".
+
+Under the donut, the top category in words: **Example:** Gio spent ₱820 on Food out of ₱1,200 → "Food took ₱820 of your ₱1,200 in the last 7 days (68%)." Tapping it opens History → Charts (`/history?view=charts`). Then the tipid tip for that category. With nothing spent in the last 7 days, the card says so and still shows a tip.
+
+**Code:** `usualExpenses` and `topSpending` in `src/home/savings.ts`, `src/home/UsualExpenses.tsx`
 
 ### One-tap add
 
@@ -180,10 +199,10 @@ On phones the tip sits under the streak and Ipon cards; on desktop it's inside t
 
 **Code:** `src/home/OneTapAdd.tsx`, `src/add/presets.ts`
 
-### Your money (bottom of Home)
+### Wallets and "Activity & plans"
 
-- **Wallets** (first, full width): biggest balance first, Savings last with a dashed border. Phones: the spendable total, Move, and a sideways row of every wallet. Desktop: a dark "All wallets" total, the top 3 wallets with "+N more" / "Less", and Move money above Manage on the right (from 1280px wide; below that, the total sits on top and the buttons underneath). A wallet with an interest rate shows "≈ +₱0.27/mo".
-- **Today's entries**, newest first.
+- **Wallets** (under One-tap add): biggest balance first, Savings last with a dashed border. Phones: the spendable total, Move, and a sideways row of every wallet. Desktop: one row with "Wallets", the total, "8 wallets · ₱760 spendable", Move money and Manage; under it the top 4 wallets as tiles (icon on top) and "+N more" / "Less". A wallet with an interest rate shows "≈ +₱0.27/mo".
+- **Today's entries**, newest first, under a **daily summary** line: what was spent, how it compares with today's budget, and any money that came in today. Examples: "₱135 spent · ₱15 under budget · ₱500 came in", "₱170 spent · ₱20 over budget", and on a day off, "₱135 spent · no class today". (`daySummary` in `src/home/summary.ts`)
 - **Spent per day:** the last 7 days as bars.
 - **Set aside for school:** what's reserved and what's next.
 - **Category limits:** the first two limits with their bars.
@@ -196,8 +215,24 @@ On phones the tip sits under the streak and Ipon cards; on desktop it's inside t
 |---|---|---|
 | Backup reminder | No backup yet and 3+ entries, **or** the last backup is 7+ days old and there are newer entries | After a backup, or "Later" (hidden 3 days on this browser) |
 | Storage warning | The phone is almost out of space | When there's space again (it points to a backup meanwhile) |
+| Due soon | A school expense or repeating item (load promo, subscription, rent) is unpaid and due within 3 days, or overdue | When it's paid (Plan → Mark paid) or moved to a later date |
 
-**Code:** `src/backup/BackupReminder.tsx` (`backupDue` in `src/backup/backup.ts`), `src/home/StorageWarning.tsx`
+**Code:** `src/backup/BackupReminder.tsx` (`backupDue` in `src/backup/backup.ts`), `src/home/StorageWarning.tsx`, `src/home/DueSoon.tsx` (`dueSoon` in `src/plan/school.ts`)
+
+### Update notice
+
+**Use case:** Joy keeps Baon open for days. She should know when a new version is in, and what's new after an update, without being nagged.
+
+**How it works:** a dark bar fixed at the bottom of the screen, in the same spot as the "Saved ₱15 · Undo" toast (above the nav on phones, bottom center on desktop). It hides while a toast is showing.
+
+| Case | Shows when | Buttons | Comes back? |
+|---|---|---|---|
+| **New version ready** | A new version took over while Baon was open (the service worker changed) | **Refresh** reloads; ✕ hides it | Not this visit; the next visit opens the new version anyway |
+| **Baon just updated** | This device hasn't seen this release's news, and the student has entries from before the release (so new students aren't told about "new" things) | **What's new** opens a pop-up listing the new features and where to find them; ✕ closes | **Never**: any tap saves it as seen on this device |
+
+For a new release, change `RELEASE` and the `NEWS` list in `src/home/UpdateNotice.tsx`. If the browser can't save (private window), the news may show again next time.
+
+**Code:** `src/home/UpdateNotice.tsx`
 
 ---
 
@@ -219,6 +254,21 @@ On phones the tip sits under the streak and Ipon cards; on desktop it's inside t
 - **"Save anyway"**: the wallet goes below ₱0, and Home says how much more was spent than there was.
 
 **Code:** `src/add/QuickAdd.tsx`, `src/ledger/ledger.ts`
+
+### Split the bill
+
+**Use case:** Bea pays ₱600 for a group-project lunch for herself, Mia and Carlo, and wants her friends' shares tracked until they pay her back.
+
+**How it works:** in Add → Expense (new entries only), turn on **Split the bill** and type the friends' names, separated by commas. The bill is split equally:
+
+- **Bea's share** is saved as the expense (it counts as spending and toward category limits).
+- **Each friend's share** is saved as a **Lent** utang from the same wallet, with the note "Split: Food" (or Bea's note). It shows on Plan → Utang as "Owed to you" until they pay back.
+- All the entries are saved together; if one fails, none stay. One Undo removes them all.
+- Leftover centavos go to Bea's share, so the parts always add up to the bill. Up to 10 friends; repeated names count once.
+
+**Example:** ₱600 with Mia, Carlo → Bea's expense ₱200, Mia lent ₱200, Carlo lent ₱200. The wallet goes down ₱600. ₱100 with two friends → ₱33.34 for Bea, ₱33.33 each.
+
+**Code:** `src/add/split.ts`, `src/add/QuickAdd.tsx`
 
 ---
 
@@ -251,8 +301,29 @@ The top of Plan shows what's **kept out of the daily budget**: school set-asides
 - Only **Set aside** items are subtracted from "Safe to spend". The money stays in the wallet.
 - **Mark paid** creates the expense and releases the set-aside in one step, so it's never counted twice. Deleting that expense in History puts the item back to "Set aside".
 - Quick-add chips: Printing, Project materials, Org / class fee, Uniform / PE, Field trip, Thesis / research, Other.
+- **Repeats:** Once, Every week or Every month, for things like a load promo, a subscription or dorm rent. Marking a repeating item paid adds the next copy with the next due date (same name, amount and status), and the toast says when it's due. One Undo removes the payment and the next copy. Monthly items keep the day of the month, or the month's last day when it's shorter (Jan 31 → Feb 28).
+- Items due within 3 days (or overdue) show on Home as **Due soon**.
 
-**Code:** `src/plan/school.ts`, `src/plan/Plan.tsx`
+**Code:** `src/plan/school.ts`, `src/plan/Plan.tsx`, `src/plan/PlanDialogs.tsx`
+
+### Savings goals
+
+**Use case:** Paolo is saving ₱20,000 for a laptop by March 1 and wants to know how much to put away each week.
+
+**How it works:** Plan → Savings goals lists each Savings wallet. "Set a goal" asks what it's for, how much, and (optionally) by when. The goal is stored on the wallet, so it syncs, and the progress is the wallet's real balance: Add → Save moves money toward it, a withdrawal moves it back.
+
+| Situation | Card says |
+|---|---|
+| With a date | "₱1,334 a week to reach it by Mar 1, 2027" |
+| No date | "₱15,000 to go" |
+| Reached | "Goal reached! 🎉" |
+| The date passed | "₱5,000 to go · the date passed. Pick a new one?" |
+
+**Weekly amount** = what's left ÷ weeks left (days ÷ 7, rounded up, at least 1), rounded **up** to whole pesos so it's always enough. **Example:** ₱15,000 left, 10 weeks → ₱1,500 a week.
+
+Removing a goal keeps the money in the wallet.
+
+**Code:** `src/plan/goals.ts`, `src/plan/GoalsCard.tsx`
 
 ### Utang
 
@@ -345,7 +416,9 @@ A limit is a reminder, never a block: "Just a reminder. You can still log anythi
 
 **How it works:** a backup is an encrypted file the student saves. Only their recovery code opens it, and Baon never uploads it. "Lost it? Make a new code" makes a new code; older backups still need the old one.
 
-**Code:** `src/backup/`
+**Spreadsheet (CSV):** Me → Backup → "Download as a spreadsheet" saves every entry as `baon-entries-<date>.csv` for Excel, Google Sheets or Numbers. Columns: Date, Time (Manila), Type, Category, Wallet, To wallet, Amount (₱), Person, Note. Unlike a backup it is **not scrambled and can't be restored**, and the app says so. A note that starts with `=`, `+`, `-` or `@` gets a leading apostrophe, so a spreadsheet shows it as text instead of running it as a formula.
+
+**Code:** `src/backup/` (`csv.ts` for the spreadsheet)
 
 ### Offline and install
 

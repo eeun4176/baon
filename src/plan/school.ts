@@ -6,8 +6,11 @@
  *   - "Paid" is NOT stored: an item is paid when an expense points to it (linkedId).
  *     So paying creates the expense and releases the reservation in one step, it can
  *     never be counted twice, and deleting that expense in History puts it back to "Set aside".
+ * Repeating items (every week / every month: load promo, subscription, dorm rent): paying one adds
+ * the next copy with the next due date. Items due within 3 days show on Home ("Due soon").
  */
 import * as z from 'zod/mini'
+import { addDays, addMonth } from '../budget/days.ts'
 import type { Transaction } from '../ledger/ledger.ts'
 import type { Vault } from '../vault/vault.ts'
 import { tr } from '../i18n/i18n.ts'
@@ -29,9 +32,23 @@ export const SchoolExpenseSchema = z.object({
   estimatedCentavos: z.int().check(z.positive()),
   dueDate: z.string().check(z.regex(/^\d{4}-\d{2}-\d{2}$/)),
   status: z.enum(['planned', 'setAside']), // "paid" is derived, see paidWith()
+  repeat: z.optional(z.enum(['weekly', 'monthly'])), // load promo, subscription, rent: paying it adds the next one
 })
 export type SchoolExpense = z.infer<typeof SchoolExpenseSchema>
 export type Status = SchoolExpense['status'] | 'paid'
+
+/** The next copy of a repeating item, due a week or a month after this one (null if it doesn't repeat). */
+export function nextRepeat(item: SchoolExpense): SchoolExpense | null {
+  if (!item.repeat) return null
+  const dueDate = item.repeat === 'weekly' ? addDays(item.dueDate, 7) : addMonth(item.dueDate)
+  return { ...item, id: crypto.randomUUID(), dueDate }
+}
+
+/** Unpaid items due within `days` days (or overdue), soonest first: Home's "Due soon" reminder. */
+export function dueSoon(items: SchoolExpense[], txs: Transaction[], today: string, days = 3): SchoolExpense[] {
+  const until = addDays(today, days)
+  return sortForList(items, txs).filter((i) => statusOf(i, txs) !== 'paid' && i.dueDate <= until)
+}
 
 /** Template label for an id, e.g. "Org / class fee". */
 export function templateLabel(id: SchoolExpense['template']): string {

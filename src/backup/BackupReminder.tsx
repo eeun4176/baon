@@ -45,7 +45,7 @@ export function BackupReminder({ className = '' }: { className?: string }) {
       <div className="min-w-48 flex-1">
         <h2 id="backup-reminder" className="text-lg font-black">{due === 'never' ? tr('Not backed up yet') : tr('Last backup was {0} days ago', days)}</h2>
         <p className="font-semibold text-muted">
-          {due === 'never' ? tr('Save a copy so you don’t lose your records if your device breaks.') : tr('You’ve added entries since then. Save a fresh copy.')}
+          {due === 'never' ? tr('Save a copy in case your device breaks.') : tr('You’ve added entries since then. Save a fresh copy.')}
         </p>
       </div>
       <div className="flex w-full gap-2 sm:w-auto">

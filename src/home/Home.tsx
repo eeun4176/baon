@@ -1,11 +1,13 @@
 /*
  * Home.tsx — Today at a glance (Home v2 design).
- * Phone: logo + avatar, date line, greeting; the "Today" card; streak and Ipon outlook side by side;
- *   a tipid tip; One-tap add; then "Your money": wallets (sideways row), today's entries, spent per day,
- *   set aside for school, category limits.
- * Desktop: greeting row with a search box (matches show under it; Enter opens History); the "Today"
- *   card and One-tap add on the left, the dark streak card and Ipon outlook (with its tip) on the
- *   right; "Your money": a full-width wallets strip, spent per day beside today's entries, then set aside and limits.
+ * Phone: logo, streak pill + avatar, date line, greeting; the "Today" card; One-tap add; wallets (sideways row);
+ *   streak and Ipon outlook side by side; Usual expenses (donut + tipid tip); reminders (backup,
+ *   storage, due soon); then "Activity & plans": today's entries (with the day's summary), spent per
+ *   day, set aside for school, category limits.
+ * Desktop: greeting row with a search box (matches show under it; Enter opens History); two columns:
+ *   left = Today, One-tap add, Wallets, Spent per day; right = streak, Ipon outlook, Usual expenses,
+ *   Set aside; then reminders and "Activity & plans": today's entries beside category limits.
+ * UpdateNotice: "New version ready" / what's new, at the bottom.
  * The "Today" card: what's safe to spend (or "over" / "spent"), Left until · Class days left ·
  *   This week (with a green ↓ / red ↑ against last week), and a split bar of "left to spend"
  *   vs "held back" (school, utang, money for later), drawn like Plan's.
@@ -26,17 +28,21 @@ import { useStreak } from '../streak/useStreak.ts'
 import { Pill, Icon, Page, SplitBar, type IconName } from '../ui/kit.tsx'
 import { BackupReminder } from '../backup/BackupReminder.tsx'
 import { AllowanceCheckIn } from './AllowanceCheckIn.tsx'
+import { DueSoon } from './DueSoon.tsx'
 import { randomGreeting } from './greetings.ts'
 import { LimitsCard } from './LimitsCard.tsx'
 import { EntriesCard, SetAsideCard, SpentPerDayCard, WalletsCard } from './MoneyCards.tsx'
 import { OneTapAdd } from './OneTapAdd.tsx'
-import { SavingsCard, TipBox } from './SavingsCard.tsx'
+import { SavingsCard } from './SavingsCard.tsx'
+import { UpdateNotice } from './UpdateNotice.tsx'
+import { UsualExpenses } from './UsualExpenses.tsx'
 import { StorageWarning } from './StorageWarning.tsx'
 import { useToday, type Today } from './useToday.ts'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const LONG = [tr('Sunday'), tr('Monday'), tr('Tuesday'), tr('Wednesday'), tr('Thursday'), tr('Friday'), tr('Saturday')]
 const SHORT = [tr('Su'), tr('Mo'), tr('Tu'), tr('We'), tr('Th'), tr('Fr'), tr('Sa')]
+const shortDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short' }) // phones: "Left until Sat"
 const breakDay = new Intl.DateTimeFormat(LOCALE, { timeZone: 'UTC', weekday: 'short', month: 'short', day: 'numeric' })
 const dateLine = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' })
 
@@ -49,7 +55,7 @@ function daysText(t: Today): string {
 }
 
 /** Gray stat tile inside the Today card. */
-function Stat({ title, value, sub, className = '' }: { title: string; value: ReactNode; sub?: ReactNode; className?: string }) {
+function Stat({ title, value, sub, className = '' }: { title: ReactNode; value: ReactNode; sub?: ReactNode; className?: string }) {
   return (
     <div className={`flex min-w-0 flex-col gap-0.5 rounded-[18px] bg-page px-3.5 py-3 lg:rounded-[20px] lg:px-4 lg:py-3.5 ${className}`}>
       <span className="truncate text-xs font-extrabold text-muted lg:text-sm">{title}</span>
@@ -78,9 +84,11 @@ function WeekTile({ today }: { today: string }) {
           {(up || down) && <Icon name={up ? 'arrow-up' : 'arrow-down'} className={`size-5 ${tone}`} />}
         </span>
       }
-      sub={w.diff === null ? <span className="text-muted">{tr('Nothing last week to compare')}</span> : (
+      sub={w.diff === null ? <span className="text-muted">{tr('Nothing to compare yet')}</span> : (
+        // Phones say "than last" (the tile is narrow); larger screens say "than last week".
         <span className={tone}>
-          {up ? tr('{0} more than last week', formatPeso(w.diff!)) : down ? tr('{0} less than last week', formatPeso(-w.diff!)) : tr('Same as last week')}
+          <span className="lg:hidden">{up ? tr('{0} more than last', formatPeso(w.diff!)) : down ? tr('{0} less than last', formatPeso(-w.diff!)) : tr('Same as last week')}</span>
+          <span className="hidden lg:inline">{up ? tr('{0} more than last week', formatPeso(w.diff!)) : down ? tr('{0} less than last week', formatPeso(-w.diff!)) : tr('Same as last week')}</span>
         </span>
       )}
     />
@@ -151,7 +159,7 @@ function TodayHero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
       </div>
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 lg:gap-2.5">
-        <Stat title={tr('Left until {0}', LONG[weekday(t.allowance.nextDate)])} value={formatPeso(left)} sub={<span className="text-muted lg:hidden">{tr('for {0}', daysText(t))}</span>} />
+        <Stat title={<><span className="lg:hidden">{tr('Left until {0}', shortDay.format(new Date(`${t.allowance.nextDate}T00:00:00Z`)))}</span><span className="hidden lg:inline">{tr('Left until {0}', LONG[weekday(t.allowance.nextDate)])}</span></>} value={formatPeso(left)} sub={<span className="text-muted lg:hidden">{tr('for {0}', daysText(t))}</span>} />
         <Stat className="hidden lg:flex" title={t.allowance.countClassDays && !t.breakUntil ? tr('Class days left') : tr('Days left')} value={daysText(t)} />
         <WeekTile today={r.today} />
       </div>
@@ -164,7 +172,7 @@ function TodayHero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
             parts={[{ amount: left, color: 'bg-blue' }, { amount: held, color: 'bg-map-1' }]}
           />
           <div className="flex justify-between gap-3 text-xs font-extrabold text-muted lg:text-[0.8125rem]">
-            <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-blue" />{tr('{0} left to spend', formatPeso(left))}</span>
+            <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-blue" /><span className="lg:hidden">{tr('{0} left', formatPeso(left))}</span><span className="hidden lg:inline">{tr('{0} left to spend', formatPeso(left))}</span></span>
             <span className="flex items-center gap-1.5"><span className="size-2.5 rounded-[3px] bg-map-1" />{tr('{0} held back', formatPeso(held))}</span>
           </div>
         </div>
@@ -332,43 +340,50 @@ export function Home() {
         <HomeSearch />
       </div>
 
-      {/* Phone order: Today · streak + outlook · tip · One-tap add. Desktop: Today and One-tap add on the left, streak + outlook on the right. */}
-      <div className="mt-3.5 grid gap-3.5 lg:mt-5 lg:grid-cols-3 lg:gap-5">
-        <div className="lg:col-span-2">
+      {/* Home v2. Phone, one column: Today · One-tap add · Wallets · streak + outlook · Usual expenses.
+          Desktop, two columns: left = Today, One-tap add, Wallets, Spent per day; right = streak, outlook,
+          Usual expenses, Set aside. Spent per day and Set aside show again under "Activity & plans" on
+          phones only (one copy is always hidden). min-w-0: a long wallet row must scroll, not widen the page. */}
+      <div className="mt-3.5 flex flex-col gap-3.5 lg:mt-5 lg:flex-row lg:gap-5">
+        <div className="flex min-w-0 flex-col gap-3.5 lg:flex-[2] lg:gap-5">
           {t.result.allowanceDue || (checkingIn && t.allowance.lateFrom) ? (
             <AllowanceCheckIn t={t} onCancel={t.result.allowanceDue ? undefined : () => setCheckingIn(false)} />
           ) : (
             <TodayHero t={t} onCheckIn={() => setCheckingIn(true)} />
           )}
+          <OneTapAdd />
+          <WalletsCard />
+          {/* Wrapped: the card's own "flex" would beat a "hidden" passed to it. */}
+          <div className="hidden lg:flex lg:flex-1 lg:flex-col"><SpentPerDayCard today={today} budget={t.result.dailyBudget} className="flex-1" /></div>
         </div>
-        <div className="grid grid-cols-2 gap-3 lg:row-span-2 lg:grid-cols-1 lg:grid-rows-[auto_1fr] lg:gap-5">
-          <StreakCard today={today} streak={streak} />
-          <SavingsCard t={t} />
-          <TipBox className="col-span-2 lg:hidden" />
+        <div className="flex min-w-0 flex-col gap-3.5 lg:flex-1 lg:gap-5">
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-1 lg:gap-5">
+            <StreakCard today={today} streak={streak} />
+            <SavingsCard t={t} />
+          </div>
+          <UsualExpenses />
+          <div className="hidden lg:flex lg:flex-1 lg:flex-col"><SetAsideCard className="flex-1" /></div>
         </div>
-        <div className="lg:col-span-2"><OneTapAdd /></div>
       </div>
 
-      <div className="mt-3.5 space-y-3.5 lg:mt-5 lg:space-y-5">
+      <div className="mt-3.5 space-y-3.5 empty:hidden lg:mt-5 lg:space-y-5">
         <StorageWarning />
         <BackupReminder />
+        <DueSoon today={today} />
       </div>
 
       <div className="mt-5 mb-3.5 flex items-center gap-2.5 px-1 lg:mt-6 lg:mb-5 lg:gap-3" role="presentation">
-        <span className="text-xs font-black tracking-[0.08em] text-muted uppercase lg:text-[0.8125rem]">{tr('Your money')}</span>
+        <span className="text-xs font-black tracking-[0.08em] text-muted uppercase lg:text-[0.8125rem]">{tr('Activity & plans')}</span>
         <span className="h-px flex-1 bg-pebble-2" />
       </div>
 
-      <WalletsCard />
-      {/* Phone: entries, then spent per day. Desktop: spent per day (wide) beside entries. */}
-      <div className="mt-3.5 grid gap-3.5 lg:mt-5 lg:grid-cols-3 lg:gap-5">
-        <EntriesCard today={today} spent={t.result.spentToday} />
-        <SpentPerDayCard today={today} budget={t.result.dailyBudget} className="lg:order-first lg:col-span-2" />
-      </div>
-      <div className="mt-3.5 grid gap-3.5 md:grid-cols-2 lg:mt-5 lg:gap-5">
-        <SetAsideCard />
+      <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-2 lg:gap-5">
+        <EntriesCard today={today} result={t.result} />
+        <SpentPerDayCard today={today} budget={t.result.dailyBudget} className="lg:hidden" />
+        <SetAsideCard className="lg:hidden" />
         <LimitsCard />
       </div>
+      <UpdateNotice />
     </Page>
   )
 }

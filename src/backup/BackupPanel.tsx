@@ -4,6 +4,7 @@
  *                     then downloads baon-backup-<date>.json (encrypted; opens only with the code)
  *   Lost it?          make a new code (old backups keep needing the old one), then a fresh export
  *   Restore           pick the file + type the code; replaces this phone's records
+ *   Spreadsheet       every entry as baon-entries-<date>.csv (NOT scrambled, can't be restored; csv.ts)
  * RestoreForm is also used by onboarding ("Have a backup? Restore it").
  */
 import { useEffect, useState, type FormEvent } from 'react'
@@ -13,6 +14,7 @@ import { Icon } from '../ui/kit.tsx'
 import { Modal } from '../ui/Modal.tsx'
 import type { Vault } from '../vault/vault.ts'
 import { backupStatus, makeBackup, newRecoveryCode, readBackupFile, restoreBackup, saveRecoveryCode } from './backup.ts'
+import { toCsv } from './csv.ts'
 import { LOCALE, tr } from '../i18n/i18n.ts'
 
 const field = 'mt-1.5 block min-h-12 w-full rounded-2xl bg-page px-4 text-lg font-bold text-ink outline-none focus:ring-2 focus:ring-blue/40 placeholder:text-muted/60'
@@ -33,7 +35,7 @@ function download(blob: Blob, filename: string) {
 
 /** The Backup card body: status, Export and Restore. */
 export function BackupPanel() {
-  const { vault, name, showToast } = useSession()
+  const { vault, name, transactions, wallets, showToast } = useSession()
   const [status, setStatus] = useState<{ hasCode: boolean; lastBackupAt?: string } | null>(null)
   const [dialog, setDialog] = useState<'kit' | 'newKit' | 'restore' | null>(null)
   const [busy, setBusy] = useState(false)
@@ -56,11 +58,17 @@ export function BackupPanel() {
     }
   }
 
+  /** Downloads every entry as baon-entries-<date>.csv. */
+  function exportCsv() {
+    download(new Blob([toCsv(transactions, wallets)], { type: 'text/csv;charset=utf-8' }), `baon-entries-${manilaDate()}.csv`)
+    showToast({ message: tr('Spreadsheet saved to your downloads') })
+  }
+
   return (
     <div>
       <h2 className="text-xl font-black">{status?.lastBackupAt ? `Last backup: ${when.format(new Date(status.lastBackupAt))}` : tr('Not backed up yet')}</h2>
       <p className="mt-1 font-semibold text-muted">
-        {tr('An extra copy of your records, in a file only your recovery code can open.')}</p>
+        {tr('A copy of your records that only your recovery code opens.')}</p>
       <div className="mt-5 flex flex-wrap gap-2.5">
         <button type="button" disabled={!status || busy} onClick={() => (status?.hasCode ? exportNow() : setDialog('kit'))} className={primary}>
           <Icon name="download" className="size-5" /> {tr('Export a backup')}</button>
@@ -73,6 +81,15 @@ export function BackupPanel() {
           <button type="button" onClick={() => setDialog('newKit')} className="min-h-11 font-extrabold text-blue hover:underline">{tr('Lost it? Make a new code')}</button>
         </p>
       )}
+
+      {/* Spreadsheet: readable by anyone who gets the file, so it says so. */}
+      <div className="mt-6 border-t border-page pt-5">
+        <h3 className="font-black">{tr('Spreadsheet (CSV)')}</h3>
+        <p className="mt-1 text-sm font-semibold text-muted">
+          {tr('Every entry, for Excel or Google Sheets. Not scrambled, so keep it private.')}</p>
+        <button type="button" onClick={exportCsv} className={`${secondary} mt-3`}>
+          <Icon name="file" className="size-5" /> {tr('Download as a spreadsheet')}</button>
+      </div>
 
       {(dialog === 'kit' || dialog === 'newKit') && (
         <RecoveryKitDialog

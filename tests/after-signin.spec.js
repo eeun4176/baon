@@ -61,6 +61,15 @@ test.describe('non-functional', () => {
 
   test('phone layout: no sideways scrolling on any tab', async ({ page, context }) => {
     await setUp(page, context);
+    // A long wallet row once widened the whole Home page (it must scroll inside its card instead).
+    await page.goto('/me');
+    for (const name of ['GCash', 'Maya', 'BPI', 'SeaBank', 'GoTyme']) {
+      await page.getByRole('button', { name: 'Add a wallet' }).click();
+      const dialog = page.getByRole('dialog');
+      await dialog.getByLabel('Name').fill(name);
+      await dialog.getByRole('button', { name: 'Add wallet' }).click();
+      await expect(dialog).toBeHidden();
+    }
     const nav = page.getByRole('navigation', { name: 'Main' });
     for (const tab of ['Home', 'History', 'Plan', 'Me']) {
       await nav.getByRole('link', { name: tab, exact: true }).click();
