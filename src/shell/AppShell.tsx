@@ -1,10 +1,10 @@
 /*
  * AppShell.tsx — The frame around every signed-in screen.
  *
- * Phone (< 768px): floating white pill nav (Home · History · Plan · Me) + round blue (+).
- * Tablet/desktop (≥ 768px): sidebar — logo + tagline, Add expense, Home · History · Plan ·
+ * Phone/tablet (< 1024px): floating white pill nav (Home · History · Plan · Me) + round blue (+).
+ * Desktop (≥ 1024px): sidebar — logo + tagline, Add expense, Home · History · Plan ·
  *   Streak · Me, then Backup · Help & privacy, storage used and the profile at the bottom.
- *   Collapses to icons; starts collapsed on tablets, expanded on laptops; remembered per device.
+ *   Collapses to icons; starts collapsed below 1024px, expanded on laptops; remembered per device.
  *   Smooth toggle: icons keep the same spot in both states and text never wraps — labels
  *   just fade and are clipped while the width animates (no jumping or re-wrapping).
  * Also hosts the Add dialog (opened by "?add=1" in the URL) and the Undo toast.
@@ -73,7 +73,7 @@ function SideLink({ to, label, icon, collapsed }: { to: string; label: string; i
   )
 }
 
-/** Signed-in layout: sidebar (tablet/desktop) or bottom nav (phone) around the current page. */
+/** Signed-in layout: sidebar (desktop) or bottom nav (phone/tablet) around the current page. */
 export function AppShell() {
   const [collapsed, setCollapsed] = useState(initialCollapsed)
   const [params] = useSearchParams()
@@ -122,8 +122,8 @@ export function AppShell() {
 
   return (
     <div className="flex min-h-dvh">
-      {/* ── Sidebar: tablet & desktop ───────────────────── */}
-      <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) md:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
+      {/* ── Sidebar: desktop ───────────────────────────── */}
+      <aside className={`sticky top-0 hidden h-dvh shrink-0 p-3 transition-[width] duration-300 ease-(--ease-soft) lg:block ${collapsed ? 'w-24' : 'w-[18.5rem]'}`}>
         <nav aria-label={tr('Main')} className="flex h-full flex-col rounded-[28px] bg-card p-3 shadow-[0_8px_30px_-12px_rgba(0,0,0,0.12)]">
           <div className="mb-4 flex items-center gap-2.5 overflow-hidden pt-1">
             {collapsed ? (
@@ -197,8 +197,8 @@ export function AppShell() {
 
       <Snackbar />
 
-      {/* ── Bottom nav + (+): phone only ─────────────────── */}
-      <nav aria-label={tr('Main')} className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] md:hidden">
+      {/* ── Bottom nav + (+): phone and tablet ───────────── */}
+      <nav aria-label={tr('Main')} className="fixed inset-x-0 bottom-0 z-20 mx-auto flex max-w-md items-center gap-3 px-3.5 pb-[max(env(safe-area-inset-bottom),0.875rem)] lg:hidden">
         <ul className="flex h-[68px] flex-1 items-center justify-around rounded-full bg-card px-1.5 shadow-[0_10px_30px_-6px_rgba(0,0,0,0.18)]">
           {MAIN.filter((t) => t.phone).map((t) => (
             <li key={t.to} className="flex-1">
