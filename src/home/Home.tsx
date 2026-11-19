@@ -48,7 +48,7 @@ const dateLine = new Intl.DateTimeFormat(LOCALE, { timeZone: 'Asia/Manila', week
 
 /** "4 class days", "1 day"… the days the money covers. */
 function daysText(t: Today): string {
-  const n = t.result.budgetDays
+  const n = t.allowance.countClassDays && !t.breakUntil ? t.budgetDays.length : t.result.budgetDays
   return t.allowance.countClassDays && !t.breakUntil
     ? n === 1 ? tr('{0} class day', n) : tr('{0} class days', n)
     : n === 1 ? tr('{0} day', n) : tr('{0} days', n)
