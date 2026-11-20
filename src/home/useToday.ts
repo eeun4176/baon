@@ -37,5 +37,6 @@ export function useToday(): Today {
 /** "₱720 ÷ 4 class days" — the division behind the daily budget. */
 export function divisionText(t: Today): string {
   const unit = t.allowance.countClassDays && !t.breakUntil ? 'class day' : 'day'
-  return `${formatPeso(Math.max(0, t.result.readyToSpend))} ÷ ${t.result.budgetDays} ${unit}${t.result.budgetDays === 1 ? '' : 's'}`
+  const days = t.allowance.countClassDays && !t.breakUntil ? t.budgetDays.length : t.result.budgetDays
+  return `${formatPeso(Math.max(0, t.result.readyToSpend))} ÷ ${days} ${unit}${days === 1 ? '' : 's'}`
 }
