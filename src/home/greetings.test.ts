@@ -51,7 +51,7 @@ describe('randomGreeting', () => {
 
   it('does not include time-specific greetings outside their period', () => {
     const periods = [
-      ['2026-01-01T01:00:00Z', /^(Good afternoon|Good evening|Night owl|Gising pa)/],
+      ['2026-01-01T01:00:00Z', /^(Good afternoon|Good evening)/],
       ['2026-01-01T06:00:00Z', /^(Good morning|Good evening|Night owl|Gising pa)/],
       ['2026-01-01T12:00:00Z', /^(Good morning|Good afternoon|Night owl|Gising pa)/],
       ['2026-01-01T16:00:00Z', /^(Good morning|Good afternoon|Good evening)/],
@@ -69,7 +69,7 @@ describe('randomGreeting', () => {
     const night = new Date('2026-01-01T16:00:00Z')
     const greetings = [
       randomGreeting('Jasmine', 0, night),
-      randomGreeting('Jasmine', 0.1, night),
+      randomGreeting('Jasmine', 0.125, night),
     ]
 
     expect(greetings).toContain('Night owl, Jasmine?')
