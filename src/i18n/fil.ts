@@ -303,14 +303,19 @@ export const FIL: Record<string, string> = {
   "Savings aren’t counted. Overspend today and tomorrow adjusts.": "Hindi bilang ang Savings. Sumobra ngayon, mag-a-adjust bukas.",
 
   // home/greetings.ts
-  "Hi, {0}!": "Hi, {0}!",
-  "Kumusta, {0}?": "Kumusta, {0}?",
-  "Sakto lang, {0}?": "Sakto lang, {0}?",
-  "Tipid mode, {0}!": "Tipid mode, {0}!",
-  "Let’s go, {0}!": "Tara na, {0}!",
-  "Kaya mo ’yan, {0}!": "Kaya mo ’yan, {0}!",
-  "Budget check, {0}!": "Budget check, {0}!",
-  "Ready, {0}?": "Handa ka na, {0}?",
+  "Good morning, {0}": "Magandang umaga, {0}",
+  "Good afternoon, {0}": "Magandang hapon, {0}",
+  "Good evening, {0}": "Magandang gabi, {0}",
+  "Night owl, {0}?": "Gising pa, {0}?",
+  "Gising pa, {0}?": "Gising pa, {0}?",
+  "Keep going, {0}!": "Magpatuloy, {0}!",
+  "Let’s begin, {0}!": "Magsimula tayo, {0}!",
+  "Baon check, {0}!": "Baon check, {0}!",
+  "Welcome, {0}!": "Welcome, {0}!",
+  "Welcome back, {0}!": "Kumusta ulit, {0}!",
+  "How's it going, {0}?": "Kumusta, {0}?",
+  "How's your baon, {0}?": "Kumusta ang baon, {0}?",
+  "Baon on track, {0}": "Ipon mode, {0}",
 
   // home/Home.tsx
   "No class today": "Walang pasok ngayon",
