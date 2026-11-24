@@ -143,7 +143,7 @@ function TodayHero({ t, onCheckIn }: { t: Today; onCheckIn?: () => void }) {
   ].filter(Boolean)
 
   return (
-    <section aria-labelledby="today-title" className="flex h-full animate-rise flex-col gap-3.5 rounded-[30px] bg-card px-5 py-[1.375rem] lg:gap-[1.125rem] lg:rounded-[32px] lg:px-[1.875rem] lg:py-7">
+    <section aria-labelledby="today-title" className="flex animate-rise flex-col gap-3.5 rounded-[30px] bg-card px-5 py-[1.375rem] lg:gap-[1.125rem] lg:rounded-[32px] lg:px-[1.875rem] lg:py-7">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 id="today-title" className="font-black lg:text-base">{tr('Today')}</h2>
         <Pill tone={chipTone} className="h-7 gap-1.5 px-2.5 lg:h-8 lg:px-3 lg:text-[0.8125rem]"><Icon name={chipIcon} className="size-3.5 lg:size-4" />{chipText}</Pill>
